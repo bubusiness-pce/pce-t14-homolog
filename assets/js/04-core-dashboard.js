@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.8';
+const PCE_VERSION = '3.5.10';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -1144,6 +1144,7 @@ function setStatus(type,txt){const p=document.getElementById('pill'),d=document.
 function updateTimestamp(suffix=''){const el=document.getElementById('ts');if(!el)return;el.textContent=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(suffix?' '+suffix:'');}
 
 /* === Imersão T14 — dados + render (cruzamento das bases da imersão 25–28/05/2026) === */
+/* Seguranca 28/09/2026: nomes e empresas de alunos removidos; contagens mantidas. Engenharia e fundacao: Ronaldo Ferreira */
 const IMERSAO_T14={"durante":[{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"BR CONFIRMADO","sala":false,"d":"25/05"},{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"BR CONFIRMADO","sala":false,"d":"25/05"},{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"BR CONFIRMADO","sala":true,"d":"25/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"BR CONFIRMADO","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":false,"d":"26/05"},{"s":"","sala":true,"d":"26/05"}],"dez":[{"s":"BR CONFIRMADO","sala":true,"d":"15/05"},{"s":"BR CONFIRMADO","sala":true,"d":"15/05"},{"s":"BR CONFIRMADO","sala":true,"d":"15/05"},{"s":"BR CONFIRMADO","sala":true,"d":"15/05"},{"s":"BR CONFIRMADO","sala":true,"d":"15/05"},{"s":"BR CONFIRMADO","sala":true,"d":"15/05"},{"s":"BR CONFIRMADO","sala":true,"d":"18/05"},{"s":"BR CONFIRMADO","sala":false,"d":"18/05"},{"s":"BR CONFIRMADO","sala":true,"d":"19/05"},{"s":"BR CONFIRMADO","sala":true,"d":"19/05"},{"s":"PROXIMA TURMA","sala":false,"d":"19/05"},{"s":"AUT - PROX - TURMA","sala":false,"d":"19/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":false,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"20/05"},{"s":"BR CONFIRMADO","sala":true,"d":"21/05"},{"s":"BR CONFIRMADO","sala":true,"d":"21/05"}],"prox_sala":[{"s":"PROXIMA TURMA","sala":true,"d":"06/02"}],"autprox_sala":[{"s":"AUT - PROX - TURMA","sala":true,"d":"01/04"}],"cancel_sala":[],"branco_sala":[{"s":"","sala":true,"d":"13/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"13/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"},{"s":"","sala":true,"d":"26/05"}],"conf_nao_sala":[{"s":"BR CONFIRMADO","sala":false,"d":"24/03"},{"s":"BR CONFIRMADO","sala":false,"d":"25/05"},{"s":"BR CONFIRMADO","sala":false,"d":"18/05"},{"s":"BR CONFIRMADO","sala":false,"d":"25/03"},{"s":"BR CONFIRMADO","sala":false,"d":"08/05"},{"s":"BR CONFIRMADO","sala":false,"d":"11/03"},{"s":"BR CONFIRMADO","sala":false,"d":"02/04"},{"s":"BR CONFIRMADO","sala":false,"d":"09/03"},{"s":"BR CONFIRMADO","sala":false,"d":"20/03"},{"s":"BR CONFIRMADO","sala":false,"d":"14/05"},{"s":"BR CONFIRMADO","sala":false,"d":"08/03"},{"s":"BR CONFIRMADO","sala":false,"d":"11/03"},{"s":"BR CONFIRMADO","sala":false,"d":"25/03"},{"s":"BR CONFIRMADO","sala":false,"d":"01/04"},{"s":"BR CONFIRMADO","sala":false,"d":"05/02"},{"s":"BR CONFIRMADO","sala":false,"d":"11/03"},{"s":"BR CONFIRMADO","sala":false,"d":"25/05"},{"s":"BR CONFIRMADO","sala":false,"d":"20/05"},{"s":"BR CONFIRMADO","sala":false,"d":"05/05"},{"s":"BR CONFIRMADO","sala":false,"d":"10/03"},{"s":"BR CONFIRMADO","sala":false,"d":"20/03"},{"s":"BR CONFIRMADO","sala":false,"d":"09/02"},{"s":"BR CONFIRMADO","sala":false,"d":"05/05"},{"s":"BR CONFIRMADO","sala":false,"d":"10/03"},{"s":"BR CONFIRMADO","sala":false,"d":"01/04"},{"s":"BR CONFIRMADO","sala":false,"d":"12/03"},{"s":"BR CONFIRMADO","sala":false,"d":"09/02"},{"s":"BR CONFIRMADO","sala":false,"d":"09/03"},{"s":"BR CONFIRMADO","sala":false,"d":"14/04"},{"s":"BR CONFIRMADO","sala":false,"d":"19/03"},{"s":"BR CONFIRMADO","sala":false,"d":"11/03"}],"fora_base":[{},{},{},{}],"timeline":[{"d":"18/05","v":2},{"d":"19/05","v":4},{"d":"20/05","v":8},{"d":"21/05","v":2},{"d":"25/05","v":9},{"d":"26/05","v":8}],"tot":{"sala":275,"conf":296,"conf_sala":265,"durante":17,"dez":22,"universo":402}};
 function _imtTag(s){const u=(s||'').toUpperCase();if(u.includes('CONFIRMADO'))return'<span class="imt-tag conf">Confirmado</span>';if(u.includes('CANCEL'))return'<span class="imt-tag cancel">Cancelamento</span>';if(u.includes('PROX')||u.includes('TURMA'))return'<span class="imt-tag prox">'+(u.startsWith('AUT')?'Aut próx turma':'Próxima turma')+'</span>';if(!u.trim())return'<span class="imt-tag blank">Sem status</span>';return'<span class="imt-tag blank">'+s+'</span>';}
 function _imtChip(p,opt){opt=opt||{};const seat=p.sala?'<span class="imt-seat" title="Mapeado na sala">🪑</span>':'';const nm=(p.n||'(sem nome)').replace(/[<>]/g,'');const dt=(opt.date&&p.d)?'<span class="imt-cd">'+p.d+'</span>':'';const tg=opt.tag?_imtTag(p.s):'';return'<span class="imt-chip">'+seat+'<span class="imt-cn">'+nm+'</span>'+tg+dt+'</span>';}
@@ -2003,10 +2004,10 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       const faixaLabel = faixaRaw ? faixaFatLabelGlobal(faixaRaw) : '—';
       const faixaFull  = faixaRaw || 'Sem informação';
       return `<tr>
-        <td title="${r.setor}">${r.setor.substring(0,30)}</td>
+        <td title="${manualEscape(r.setor)}">${manualEscape(r.setor.substring(0,30))}</td>
         <td class="num">${r.total}</td>
         <td class="pct">${pct}%</td>
-        <td><span class="fat-pill" title="${faixaFull} (anual)">${faixaLabel}<span class="fat-pill-unit">/ano</span></span></td>
+        <td><span class="fat-pill" title="${manualEscape(faixaFull)} (anual)">${manualEscape(faixaLabel)}<span class="fat-pill-unit">/ano</span></span></td>
       </tr>`;
     }).join('');
 
@@ -2180,8 +2181,8 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       return '<div class="top-fat-row">'
         +   '<div class="top-fat-pos" style="color:'+medColor+'">'+medalha+'</div>'
         +   '<div class="top-fat-info">'
-        +     '<div class="top-fat-nome" title="'+(r.nome||'')+'">'+nomeDisplay+'</div>'
-        +     '<div class="top-fat-faixa">'+faixaLabel+'/ano</div>'
+        +     '<div class="top-fat-nome" title="'+manualEscape(r.nome||'')+'">'+manualEscape(nomeDisplay)+'</div>'
+        +     '<div class="top-fat-faixa">'+manualEscape(faixaLabel)+'/ano</div>'
         +   '</div>'
         +   '<div class="top-fat-bar-bg"><div class="top-fat-bar-fill" style="width:'+w+'%"></div></div>'
         +   '<div class="top-fat-val">'+valorFmt+'<span class="top-fat-val-sub">/ano</span></div>'
