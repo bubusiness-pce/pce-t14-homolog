@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.7';
+const PCE_VERSION = '3.5.8';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -4011,7 +4011,7 @@ async function manualFetchAllFromCloud(){
       .is('deleted_at', null)
       .order('display_order', { ascending: true }),
     SB.from('manual_cards')
-      .select('id, tag, title, description, days_json, cover_url, section_id, display_order, updated_at, updated_by, updated_by_name')
+      .select('id, tag, title, description, days_json, cover_url, section_id, display_order, updated_at, updated_by, updated_by_name, external_url')
       .is('deleted_at', null)
       .order('display_order', { ascending: true })
   ]);
@@ -4029,7 +4029,8 @@ async function manualFetchAllFromCloud(){
       _sectionId: row.section_id || '',
       _displayOrder: row.display_order || 0,
       _updatedAt: row.updated_at,
-      _updatedByName: row.updated_by_name || ''
+      _updatedByName: row.updated_by_name || '',
+      externalUrl: row.external_url || ''
     };
   });
   return state;
@@ -4519,6 +4520,7 @@ function manualBuildCardElement(id, data){
 
   var coverBtn = authIsAdmin() ? '<button class="mcard-cover-upload" data-action="upload-cover" data-id="'+id+'">📷 '+(cover?'Trocar':'Adicionar')+' foto</button>' : '';
   var renameBtn = authIsAdmin() ? '<button class="mcard-rename-btn" data-action="rename" data-id="'+id+'">✏️ Renomear card</button>' : '';
+  var linkBtn = authIsAdmin() ? '<button class="mcard-rename-btn" data-action="set-link" data-id="'+id+'">🔗 '+(data.externalUrl?'Editar link':'Definir link')+'</button>' : '';
 
   card.innerHTML =
     '<div class="mcard-cover-wrap">'+
@@ -4530,10 +4532,10 @@ function manualBuildCardElement(id, data){
       '<div class="mcard-title">'+manualEscape(data.title)+'</div>'+
       '<div class="mcard-desc">'+manualEscape(data.desc || '')+'</div>'+
       (meta ? '<div class="mcard-meta">'+manualEscape(meta)+'</div>' : '')+
-      renameBtn +
+      renameBtn + linkBtn +
     '</div>'+
     '<div class="mcard-footer">'+
-      '<span class="mcard-count">'+sectionsCount+' '+(sectionsCount===1?'seção':'seções')+'</span>'+
+      (data.externalUrl ? '<span class="mcard-count">Abrir manual ↗</span>' : '<span class="mcard-count">'+sectionsCount+' '+(sectionsCount===1?'seção':'seções')+'</span>')+
       '<div class="mcard-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>'+
     '</div>';
 
@@ -4545,10 +4547,35 @@ function manualBuildCardElement(id, data){
       var cid = act.dataset.id;
       if (a === 'upload-cover'){ manualUploadCover(cid); return; }
       if (a === 'rename'){ manualRenameCard(cid); return; }
+      if (a === 'set-link'){ manualSetCardLink(cid); return; }
     }
+    // card com link externo abre o link em nova aba, em vez do editor interno (igual ao Manual PCE)
+    if (data.externalUrl){ window.open(data.externalUrl, '_blank', 'noopener'); return; }
     manualOpen(id);
   });
   return card;
+}
+
+// Link externo do card (coluna manual_cards.external_url), gravado por caminho
+// separado do editor (lapis), como no Manual PCE. Vazio = volta ao editor interno.
+async function manualSetCardLink(id){
+  if (!authIsAdmin()){ alert('Apenas administradores podem definir o link.'); return; }
+  var data = _manualState[id];
+  var novo = prompt('Cole a URL do manual (deixe vazio para remover o link e voltar ao editor interno):', data.externalUrl || '');
+  if (novo === null) return;
+  novo = novo.trim();
+  if (novo && !/^https?:\/\//i.test(novo)) novo = 'https://' + novo;
+  try {
+    var row = await manualUpdateCardCloud(id, { external_url: novo || null });
+    data.externalUrl = row.external_url || '';
+    data._updatedAt = row.updated_at;
+    data._updatedByName = row.updated_by_name;
+    manualSaveCache(_manualState);
+    manualRenderGrid();
+    manualToast(novo ? 'Link definido' : 'Link removido');
+  } catch(e){
+    alert('Erro ao salvar: ' + (e.message || e));
+  }
 }
 
 async function manualUpdateTrashCount(){
