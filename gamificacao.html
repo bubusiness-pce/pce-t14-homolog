@@ -219,6 +219,40 @@
   body.fs .homolog-banner{display:none}
   body.fs .placar-head .btn-ghost.exit{display:inline-block}
   .btn-ghost.exit{display:none}
+
+  /* ---------- Equipes (criar / excluir) ---------- */
+  .equipes{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+  .eq-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+  .eq-head h3{margin:0;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .eq-count{font-size:12px;color:var(--muted)}
+  .eq-list{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+  .eq-item{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-left:4px solid var(--tc,#888);border-radius:12px;padding:9px 12px}
+  .eq-dot{width:12px;height:12px;border-radius:50%;background:var(--tc);flex:0 0 auto}
+  .eq-nome{font-weight:800;font-size:14px}
+  .eq-pts{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .eq-del{border:0;background:transparent;color:var(--muted);font-family:inherit;font-size:15px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:8px;transition:.16s}
+  .eq-del:hover{color:var(--bad);background:rgba(255,107,107,.12)}
+  .eq-new{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+  .eq-new input{flex:1 1 200px;min-width:180px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--cream);font-family:inherit;font-size:14px}
+  .eq-new input:focus{outline:none;border-color:var(--accent)}
+  .eq-cores{display:flex;flex-wrap:wrap;gap:8px}
+  .sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;background:var(--sc);cursor:pointer;padding:0;transition:.16s;position:relative}
+  .sw:hover{transform:scale(1.12)}
+  .sw.sel{border-color:var(--cream);box-shadow:0 0 0 3px rgba(234,229,225,.22)}
+  .sw.used{opacity:.26;cursor:not-allowed;transform:none}
+  .sw.used::after{content:'';position:absolute;left:4px;right:4px;top:12px;height:2px;background:var(--bg);transform:rotate(-45deg)}
+  .btn-primary.eq-add{width:auto;margin-top:0;font-size:14px;padding:11px 20px;white-space:nowrap}
+
+  /* ---------- Modal de senha (acoes destrutivas) ---------- */
+  .senha-modal{position:fixed;inset:0;z-index:60;background:rgba(10,10,9,.72);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px}
+  .senha-box{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;text-align:center}
+  .senha-box h3{margin:0 0 8px;font-size:18px}
+  .senha-box p{color:var(--muted);font-size:13px;margin:0 0 18px;line-height:1.5}
+  .senha-box input{width:100%;text-align:center;letter-spacing:.4em;font-size:22px;font-weight:800;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--cream);font-family:inherit}
+  .senha-box input:focus{outline:none;border-color:var(--accent)}
+  .senha-err{color:var(--bad);font-size:13px;margin-top:10px;min-height:18px}
+  .senha-btns{display:flex;gap:10px;justify-content:center;margin-top:6px}
+  .senha-btns .btn-ghost,.senha-btns .btn-danger{flex:1}
 </style>
 </head>
 <body class="env-homologation">
@@ -281,6 +315,19 @@
 
         <div id="cards" class="cards"><!-- gcards injetados --></div>
 
+        <div class="equipes">
+          <div class="eq-head">
+            <h3>Equipes</h3>
+            <span class="eq-count" id="eq-count">&mdash;</span>
+          </div>
+          <div id="eq-list" class="eq-list"></div>
+          <div class="eq-new">
+            <input id="eq-nome" type="text" maxlength="18" placeholder="Nome da nova equipe">
+            <div id="eq-cores" class="eq-cores"></div>
+            <button class="btn-primary eq-add" onclick="criarEquipe()">+ Criar equipe</button>
+          </div>
+        </div>
+
         <div class="admin-foot">
           <div class="log">
             <h3>Últimas atualizações</h3>
@@ -328,6 +375,19 @@
     </section>
   </main>
 
+  <div id="senha-modal" class="senha-modal" style="display:none">
+    <div class="senha-box">
+      <h3 id="senha-titulo">Confirmar</h3>
+      <p id="senha-texto"></p>
+      <input id="senha-input" type="password" inputmode="numeric" maxlength="12" placeholder="&bull; &bull; &bull; &bull;" autocomplete="off">
+      <div id="senha-err" class="senha-err"></div>
+      <div class="senha-btns">
+        <button class="btn-ghost" onclick="senhaCancelar()">Cancelar</button>
+        <button class="btn-danger" id="senha-ok" onclick="senhaConfirmar()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <canvas id="fx"></canvas>
   <div id="toasts"></div>
 
@@ -343,14 +403,20 @@
   var CACHE_KEY = 'pce_gam_state_v1';
   var PIN_KEY   = 'pce_gam_pin_v1';
 
-  var GRUPOS = [
-    {grupo:'amarelo', nome:'Amarelo', cor:'#f5c542'},
-    {grupo:'rosa',    nome:'Rosa',    cor:'#ff6fb5'},
-    {grupo:'azul',    nome:'Azul',    cor:'#4fa8ff'},
-    {grupo:'verde',   nome:'Verde',   cor:'#63f858'}
-  ];
+  // Equipes vem do banco (tabela gamificacao_grupos). Criar e excluir pelo Painel.
+  var GRUPOS = [];
   var COR = {}; var NOME = {};
-  GRUPOS.forEach(function(g){ COR[g.grupo]=g.cor; NOME[g.grupo]=g.nome; });
+
+  // Paleta oficial de equipes: 6 cores, uma por equipe (sem repetir).
+  var PALETA = [
+    {nome:'Amarelo', cor:'#f5c542'},
+    {nome:'Rosa',    cor:'#ff6fb5'},
+    {nome:'Azul',    cor:'#4fa8ff'},
+    {nome:'Verde',   cor:'#63f858'},
+    {nome:'Roxo',    cor:'#a78bfa'},
+    {nome:'Laranja', cor:'#ff8a3d'}
+  ];
+  var MAX_EQUIPES = PALETA.length;
 
   var SB = null, online = false, lastPts = {};
   try { if (window.supabase && window.supabase.createClient) SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
@@ -406,8 +472,12 @@
     computeRowH();
   }
   function computeRowH(){
-    ROW_H = Math.max(84, Math.min(150, Math.round(window.innerHeight * 0.14)));
-    $('ranking').style.height = (ROW_H*4 + GAP*3) + 'px';
+    var n = Math.max(1, GRUPOS.length);
+    // espaco util da area do placar, dividido pelo numero de equipes
+    var disp = Math.max(280, window.innerHeight - (document.body.classList.contains('fs') ? 150 : 300));
+    ROW_H = Math.round((disp - GAP*(n-1)) / n);
+    ROW_H = Math.max(52, Math.min(150, ROW_H));
+    $('ranking').style.height = (ROW_H*n + GAP*(n-1)) + 'px';
     GRUPOS.forEach(function(g){ var r=$('row-'+g.grupo); if(r) r.style.height = ROW_H+'px'; });
   }
 
@@ -482,10 +552,30 @@
 
   // ---------- estado ----------
   var state = [];
+
+  function assinatura(list){
+    return (list||[]).map(function(g){ return g.grupo+'|'+g.nome+'|'+g.cor; }).join(',');
+  }
+  // Redesenha placar, cards e lista de equipes quando o conjunto de equipes muda.
+  function setGrupos(rows){
+    var novo = (rows||[]).map(function(r){
+      return {grupo:r.grupo, nome:r.nome||r.grupo, cor:r.cor||'#888888'};
+    });
+    if(assinatura(novo) === assinatura(GRUPOS)) return false;
+    GRUPOS = novo;
+    COR = {}; NOME = {};
+    GRUPOS.forEach(function(g){ COR[g.grupo]=g.cor; NOME[g.grupo]=g.nome; });
+    lastPts = {};
+    buildRanking(); buildCards(); renderEquipes(true);
+    return true;
+  }
+
   function applyState(rows){
     state = rows;
+    setGrupos(rows);
     renderPlacar(rows);
     renderAdminPts(rows);
+    renderEquipesPts(rows);
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({rows:rows, at:Date.now()})); } catch(e){}
     $('foot-updated').textContent = 'Última leitura: ' + new Date().toLocaleTimeString('pt-BR');
   }
@@ -500,12 +590,12 @@
   async function fetchState(){
     if(!SB){ setConn(false); return; }
     try {
-      var res = await SB.from('gamificacao_grupos').select('grupo,pontos').order('pontos',{ascending:false});
+      var res = await SB.from('gamificacao_grupos').select('grupo,nome,cor,pontos,ordem').order('ordem',{ascending:true});
       if(res.error) throw res.error;
       setConn(true);
-      // garante os 4 grupos mesmo se a query vier incompleta
-      var map = {}; (res.data||[]).forEach(function(r){ map[r.grupo]=r.pontos; });
-      var rows = GRUPOS.map(function(g){ return {grupo:g.grupo, pontos: map[g.grupo]!=null ? map[g.grupo] : 0}; });
+      var rows = (res.data||[]).map(function(r){
+        return {grupo:r.grupo, nome:r.nome, cor:r.cor, pontos: r.pontos!=null ? r.pontos : 0};
+      });
       applyState(rows);
     } catch(e){ setConn(false); }
   }
@@ -542,17 +632,128 @@
     el.value=''; window.ajustar(grupo, sign*v);
   };
 
-  window.zerar = async function(){
-    if(!confirm('Zerar TODOS os pontos e iniciar uma nova rodada?\nEsta ação não pode ser desfeita.')) return;
-    if(!confirm('Confirma mesmo? Todos os grupos voltam a 0.')) return;
+  // ---------- modal de senha (toda acao que apaga pede a senha) ----------
+  var senhaAcao = null;
+  function pedirSenha(titulo, texto, rotulo, acao){
+    senhaAcao = acao;
+    $('senha-titulo').textContent = titulo;
+    $('senha-texto').textContent  = texto;
+    $('senha-ok').textContent     = rotulo;
+    $('senha-err').textContent    = '';
+    $('senha-input').value        = '';
+    $('senha-modal').style.display = 'flex';
+    setTimeout(function(){ var el=$('senha-input'); if(el) el.focus(); }, 40);
+  }
+  window.senhaCancelar = function(){
+    senhaAcao = null;
+    $('senha-modal').style.display = 'none';
+    $('senha-input').value = '';
+  };
+  window.senhaConfirmar = async function(){
+    if(!senhaAcao) return;
+    var v = ($('senha-input').value||'').trim();
+    if(!v){ $('senha-err').textContent = 'Digite a senha.'; return; }
+    var btn = $('senha-ok'); btn.disabled = true;
     try {
-      var res = await SB.rpc('gamificacao_zerar', {p_pin:pin()});
-      if(res.error) throw res.error;
-      toast('Placar zerado', 'ok'); lastPts={}; await fetchState(); await fetchLog();
+      await senhaAcao(v);          // o servidor recusa senha errada
+      senhaAcao = null;
+      $('senha-modal').style.display = 'none';
+      $('senha-input').value = '';
     } catch(e){
-      if(/PIN/i.test(e.message||'')){ toast('PIN inválido', 'err'); lock(); }
-      else toast('Falha ao zerar: ' + (e.message||'erro'), 'err');
+      if(/PIN/i.test(e.message||'')) $('senha-err').textContent = 'Senha incorreta.';
+      else { $('senha-err').textContent = (e.message||'Falha na operação'); }
     }
+    btn.disabled = false;
+  };
+
+  window.zerar = function(){
+    pedirSenha(
+      'Zerar placar',
+      'Todas as equipes voltam a zero e uma nova rodada começa. Digite a senha para confirmar.',
+      'Zerar placar',
+      async function(senha){
+        var res = await SB.rpc('gamificacao_zerar', {p_pin:senha});
+        if(res.error) throw res.error;
+        toast('Placar zerado', 'ok'); lastPts={};
+        await fetchState(); await fetchLog();
+      }
+    );
+  };
+
+  // ---------- equipes: lista, paleta, criar e excluir ----------
+  var corSel = null;
+
+  function renderEquipes(forcar){
+    var box = $('eq-list'); if(!box) return;
+    if(forcar !== true && box.getAttribute('data-sig') === assinatura(GRUPOS)){ renderPaleta(); return; }
+    box.setAttribute('data-sig', assinatura(GRUPOS));
+    $('eq-count').textContent = GRUPOS.length === 1 ? '1 equipe' : GRUPOS.length + ' equipes';
+    if(!GRUPOS.length){
+      box.innerHTML = '<span class="eq-pts">nenhuma equipe cadastrada</span>';
+    } else {
+      box.innerHTML = GRUPOS.map(function(g){
+        return '<div class="eq-item" style="--tc:'+g.cor+'">'+
+            '<span class="eq-dot"></span>'+
+            '<span class="eq-nome">'+escapeHtml(g.nome)+'</span>'+
+            '<span class="eq-pts" id="eqp-'+g.grupo+'">0 pts</span>'+
+            '<button class="eq-del" title="Excluir equipe" onclick="excluirEquipe(\''+g.grupo+'\')">&#10005;</button>'+
+          '</div>';
+      }).join('');
+      renderEquipesPts(state);
+    }
+    renderPaleta();
+  }
+  function renderEquipesPts(rows){
+    (rows||[]).forEach(function(r){
+      var el = $('eqp-'+r.grupo); if(el) el.textContent = r.pontos + ' pts';
+    });
+  }
+  function renderPaleta(){
+    var box = $('eq-cores'); if(!box) return;
+    var usadas = {};
+    GRUPOS.forEach(function(g){ usadas[String(g.cor).toLowerCase()] = 1; });
+    if(corSel && usadas[corSel.toLowerCase()]) corSel = null;
+    box.innerHTML = PALETA.map(function(p){
+      var usada = !!usadas[p.cor.toLowerCase()];
+      return '<button class="sw'+(usada?' used':'')+((corSel===p.cor)?' sel':'')+'" '+
+        'style="--sc:'+p.cor+'" '+(usada?'disabled ':'')+
+        'title="'+p.nome+(usada?' (em uso)':'')+'" onclick="pickCor(\''+p.cor+'\')"></button>';
+    }).join('');
+  }
+  window.pickCor = function(c){ corSel = c; renderPaleta(); };
+
+  window.criarEquipe = async function(){
+    var el = $('eq-nome'); if(!el) return;
+    var nome = (el.value||'').trim();
+    if(!nome){ toast('Informe o nome da equipe', 'err'); el.focus(); return; }
+    if(!corSel){ toast('Escolha uma cor para a equipe', 'err'); return; }
+    if(GRUPOS.length >= MAX_EQUIPES){ toast('Limite de ' + MAX_EQUIPES + ' equipes', 'err'); return; }
+    try {
+      var res = await SB.rpc('gamificacao_grupo_criar', {p_nome:nome, p_cor:corSel, p_pin:pin()});
+      if(res.error) throw res.error;
+      el.value = ''; corSel = null;
+      toast('Equipe ' + nome + ' criada', 'ok');
+      await fetchState(); await fetchLog();
+    } catch(e){
+      if(/PIN/i.test(e.message||'')){ toast('PIN inválido — entre novamente', 'err'); lock(); }
+      else toast('Não foi possível criar: ' + (e.message||'erro'), 'err');
+    }
+  };
+
+  window.excluirEquipe = function(grupo){
+    var nome = NOME[grupo] || grupo;
+    if(GRUPOS.length <= 1){ toast('É preciso manter ao menos uma equipe', 'err'); return; }
+    pedirSenha(
+      'Excluir equipe',
+      'A equipe ' + nome + ' e os pontos dela serão removidos do placar. Digite a senha para confirmar.',
+      'Excluir equipe',
+      async function(senha){
+        var res = await SB.rpc('gamificacao_grupo_excluir', {p_grupo:grupo, p_pin:senha});
+        if(res.error) throw res.error;
+        toast('Equipe ' + nome + ' excluída', 'ok');
+        await fetchState(); await fetchLog();
+      }
+    );
   };
 
   window.setMotivo = function(v){ if($('motivo')) $('motivo').value = v; };
@@ -565,9 +766,9 @@
   window.unlock = async function(){
     var v = ($('pin').value||'').trim();
     if(!v){ $('gate-err').textContent='Digite o PIN.'; return; }
-    // valida o PIN fazendo um ajuste neutro (delta 0): o servidor rejeita PIN errado
+    // valida o PIN no servidor, sem depender de nenhuma equipe existir
     try {
-      var res = await SB.rpc('gamificacao_ajustar', {p_grupo:'amarelo', p_delta:0, p_motivo:null, p_pin:v});
+      var res = await SB.rpc('gamificacao_pin_ok', {p_pin:v});
       if(res.error) throw res.error;
       try { sessionStorage.setItem(PIN_KEY, v); } catch(e){}
       $('gate-err').textContent=''; $('pin').value='';
@@ -801,7 +1002,7 @@
     var v=($('pin-c').value||'').trim();
     if(!v){ $('gate-c-err').textContent='Digite o PIN.'; return; }
     try {
-      var res=await SB.rpc('gamificacao_ajustar', {p_grupo:'amarelo', p_delta:0, p_motivo:null, p_pin:v});
+      var res=await SB.rpc('gamificacao_pin_ok', {p_pin:v});
       if(res.error) throw res.error;
       try { sessionStorage.setItem(PIN_KEY, v); } catch(e){}
       $('gate-c-err').textContent=''; $('pin-c').value=''; showCampeao();
@@ -816,8 +1017,19 @@
   buildCards();
   fxInit();
   (function(){ var pc=document.getElementById('pin-c'); if(pc) pc.addEventListener('keydown', function(e){ if(e.key==='Enter') window.unlockCampeao(); }); })();
-  // posiciona as 4 linhas já no boot (cache, ou zeros) — não depende de rede
-  if(!loadCache()){ applyState(GRUPOS.map(function(g){ return {grupo:g.grupo, pontos:0}; })); }
+  // enter cria equipe; esc fecha o modal de senha; enter confirma a senha
+  (function(){
+    var en = document.getElementById('eq-nome');
+    if(en) en.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); window.criarEquipe(); } });
+    var si = document.getElementById('senha-input');
+    if(si) si.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); window.senhaConfirmar(); } });
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape' && document.getElementById('senha-modal').style.display==='flex') window.senhaCancelar();
+    });
+  })();
+  // posiciona as linhas já no boot (cache), sem depender de rede
+  loadCache();
+  renderEquipes(true);
   fetchState();
   subscribeRealtime();
   setInterval(function(){ fetchState(); if(curView==='admin') fetchLog(); }, POLL_MS);
