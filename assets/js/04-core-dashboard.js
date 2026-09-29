@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.13';
+const PCE_VERSION = '3.5.14';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -195,6 +195,16 @@ function paintNetworking(turma,turmaValida){
       h+='<div class="np-fora-item"><strong>'+_npEsc(p.nome||'(sem nome)')+'</strong> · CPF '+_npEsc(p.cpf||'(sem CPF)')+(p.email?' · '+_npEsc(p.email):'')+'</div>';
     });
     h+='</div></div>';
+  }
+
+  /* 29/09/2026: lista completa de quem confirmou (nome, status na turma, CPF mascarado), recolhida. */
+  const lista=(d.confirmados||[]).slice().sort(function(a,b){return String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR');});
+  if(lista.length){
+    h+='<details class="np-atencao-box"><summary class="np-dup-title" style="cursor:pointer;margin-bottom:0">📋 Ver '+(lista.length===1?'a pessoa que confirmou':'as '+lista.length+' pessoas que confirmaram')+'</summary><div class="np-atencao-list" style="margin-top:12px">';
+    lista.forEach(function(p){
+      h+='<div class="np-atencao-item"><strong>'+_npEsc(p.nome||'(sem nome)')+'</strong><span class="np-atencao-cpf">'+_npEsc(p.status||'(sem status)')+' · CPF '+_npEsc(p.cpf||'(sem CPF)')+'</span></div>';
+    });
+    h+='</div></details>';
   }
 
   let quando='';
@@ -3092,11 +3102,13 @@ function admRenderGerencial(){
      Requer store.br carregado (Dashboard já busca no boot). */
   try{
     var rows=(store.br&&store.br.rows)||[];
-    /* Networking: T15 tem endpoint próprio; T14 usa a análise local. */
-    if(typeof paintNetworkingT15==='function'){
-      var _tv=null;try{var _pr=(store.br&&store.br.stats&&store.br.stats.presenca)||{};var _tc=_pr.totalConfirmados||((_pr.brConfirmado||0)+(_pr.brUs||0)+(_pr.usConfirmado||0)+(_pr.confirmado||0));var _sr=_pr.semRetorno||0;_tv=(_pr.turmaValida!=null?_pr.turmaValida:(_tc+_sr))+(typeof computePendingTransfer==='function'?computePendingTransfer(store.br,'T15'):0);}catch(e){}
-      paintNetworkingT15(_tv);
-      if(typeof fetchNetworkingT15==='function')fetchNetworkingT15().then(function(ok){if(ok)paintNetworkingT15(_tv);});
+    /* Networking: a turma ativa tem endpoint próprio (T15: nt15, T16: nt16); T14 usa a análise local.
+       29/09/2026: pinta a turma ativa (TURMA_ATIVA), com a mesma turma válida da faixa. */
+    if(typeof paintNetworking==='function'){
+      var _npK=(typeof TURMA_ATIVA==='string'&&TURMA_ATIVA)?TURMA_ATIVA:'t15';var _npTurma=_npK.toUpperCase();var _npSt=(store[_npK]&&store[_npK].stats)?store[_npK]:store.br;
+      var _tv=null;try{var _pr=(_npSt&&_npSt.stats&&_npSt.stats.presenca)||{};var _tc=_pr.totalConfirmados||((_pr.brConfirmado||0)+(_pr.brUs||0)+(_pr.usConfirmado||0)+(_pr.confirmado||0));var _sr=_pr.semRetorno||0;_tv=(_pr.turmaValida!=null?_pr.turmaValida:(_tc+_sr))+(typeof computePendingTransfer==='function'?computePendingTransfer(_npSt,_npTurma):0);}catch(e){}
+      paintNetworking(_npTurma,_tv);
+      fetchNetworking(_npTurma).then(function(ok){if(ok)paintNetworking(_npTurma,_tv);});
     }
     /* Conciliação T15 */
     var _cSl=document.getElementById('adm-conc-sl');var _cGr=document.getElementById('adm-conc-grid');
