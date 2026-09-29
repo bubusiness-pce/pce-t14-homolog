@@ -2546,3 +2546,9 @@ body{background:var(--bg)}
 .mhero-btn2.pri:disabled{opacity:.55;cursor:wait}
 .mhero-msg{font-size:12.5px;color:#f5c542;min-height:16px;margin-top:10px}
 @media(max-width:900px){.mhero-prev{height:140px}.mhero-acts{flex-wrap:wrap}}
+/* 29/09/2026 · a faixa da Noite de Networking no lugar da "Faixa de evento", com o card dos números abaixo */
+#br-funil-meta-wrap .np-faixa{margin:18px 0 0}
+#np-card .np-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#np-card .np-stat{padding:10px 12px}
+#np-card .np-stat-val{font-size:26px}
+@media (max-width:640px){#np-card .np-grid{grid-template-columns:1fr}}
