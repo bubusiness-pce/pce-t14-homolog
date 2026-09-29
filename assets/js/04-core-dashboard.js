@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.11';
+const PCE_VERSION = '3.5.12';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -3706,8 +3706,22 @@ function authShowModal(tab){
   }, 100);
 }
 function authHideModal(){
-  document.getElementById('auth-overlay').classList.remove('open');
+  var ov = document.getElementById('auth-overlay');
+  /* Login na entrada (29/09/2026): sem sessao ativa, a tela de login nao fecha. */
+  if (ov.classList.contains('gate') && !authIsLogged()) return;
+  ov.classList.remove('open');
+  ov.classList.remove('gate');
   authClearMessages();
+}
+/* Login na entrada (29/09/2026): quem abre o link sem sessao cai direto na tela de login,
+   a mesma do Manual/Admin, cobrindo o dashboard inteiro e sem botao de fechar. */
+function authShowGate(){
+  var ov = document.getElementById('auth-overlay');
+  if (!ov || authIsLogged()) return;
+  ov.classList.add('gate');
+  var h = ov.querySelector('.auth-card h2'); if (h) h.textContent = '🔐 Acessar o PCE Dashboard';
+  var s = ov.querySelector('.auth-card .auth-sub'); if (s) s.textContent = 'Entre com sua conta ou crie uma. Novas contas passam pela aprovação de um administrador.';
+  authShowModal('login');
 }
 function authSwitchTab(tab){
   document.getElementById('auth-tab-login').classList.toggle('active', tab === 'login');
@@ -3749,6 +3763,7 @@ function authTogglePw(inputId, btn){
 }
 
 async function authDoForgot(){
+  if (!_supabaseReady && window.__bootstrapManual){ try{ await window.__bootstrapManual(); }catch(e){} }
   if (!_supabaseReady){ authError('Cliente Supabase indisponivel'); return; }
   var email = document.getElementById('auth-forgot-email').value.trim();
   if (!email){ authError('Informe um e-mail valido'); return; }
@@ -3782,6 +3797,7 @@ function authClearMessages(){
   document.getElementById('auth-info').classList.remove('show');
 }
 async function authDoLogin(){
+  if (!_supabaseReady && window.__bootstrapManual){ try{ await window.__bootstrapManual(); }catch(e){} }
   if (!_supabaseReady){ authError('Cliente Supabase indisponivel'); return; }
   var email = document.getElementById('auth-login-email').value.trim();
   var pw    = document.getElementById('auth-login-pw').value;
@@ -3792,9 +3808,12 @@ async function authDoLogin(){
     var r = await SB.auth.signInWithPassword({ email: email, password: pw });
     if (r.error) throw r.error;
     await authOnLogin(r.data.user);
-    try{analyticsLogLogin();}catch(e){}
-    authHideModal();
-    manualToast('Bem-vindo de volta!');
+    /* Conta pendente: authOnLogin desloga e mostra o aviso; a janela fica aberta para a pessoa ler. */
+    if (authIsLogged()){
+      try{analyticsLogLogin();}catch(e){}
+      authHideModal();
+      manualToast('Bem-vindo de volta!');
+    }
   } catch(e){
     authError(authTranslateError(e.message || 'Falha ao entrar'));
   } finally {
@@ -3802,6 +3821,7 @@ async function authDoLogin(){
   }
 }
 async function authDoSignup(){
+  if (!_supabaseReady && window.__bootstrapManual){ try{ await window.__bootstrapManual(); }catch(e){} }
   if (!_supabaseReady){ authError('Cliente Supabase indisponivel'); return; }
   var name  = document.getElementById('auth-signup-name').value.trim();
   var email = document.getElementById('auth-signup-email').value.trim();
@@ -3846,6 +3866,8 @@ async function authDoLogout(){
   _currentUser = null;
   _currentProfile = null;
   authUpdateUI();
+  /* Login na entrada: ao sair, recarrega e volta para a tela de login sem deixar dado na tela. */
+  location.reload(); return;
   if (document.getElementById('page-manual').classList.contains('active')){
     manualShowLocked();
   }
@@ -5172,6 +5194,8 @@ document.addEventListener('click', function(e){
           Logger.info('BOOT','Sessao salva encontrada — carregando Supabase em segundo plano');
           setTimeout(function(){
             window.__bootstrapManual().then(function(){
+              /* Login na entrada: sessao salva mas vencida -> volta para a tela de login. */
+              if (!authIsLogged()){ try{ authShowGate(); }catch(e){} return; }
               try{
                 /* re-renderiza a pagina atual: se for restrita, o gate agora libera */
                 var _at = ['nps','experts','admin'].filter(function(pg){
@@ -5182,6 +5206,10 @@ document.addEventListener('click', function(e){
               }catch(e){}
             });
           }, 400);
+        } else {
+          /* Login na entrada (29/09/2026): sem sessao salva, abre a tela de login e carrega o Supabase. */
+          try{ authShowGate(); }catch(e){}
+          window.__bootstrapManual().then(function(){ try{ if (authIsLogged()) authHideModal(); }catch(e){} });
         }
       }catch(e){ if(typeof Logger!=='undefined') Logger.warn('BOOT','check de sessao',{err:e.message}); }
     }, 100);
