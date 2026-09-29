@@ -542,7 +542,7 @@
       var up = it.delta >= 0;
       return '<div class="log-item">'+
         '<span class="log-dot" style="background:'+(COR[it.grupo]||'#888')+'"></span>'+
-        '<span class="lg-name">'+(NOME[it.grupo]||it.grupo)+'</span>'+
+        '<span class="lg-name">'+escapeHtml(NOME[it.grupo]||it.grupo)+'</span>'+
         '<span class="lg-delta '+(up?'up':'down')+'">'+(up?'+':'')+it.delta+'</span>'+
         (it.motivo ? '<span style="color:var(--muted);font-size:12px">· '+escapeHtml(it.motivo)+'</span>' : '')+
         '<span class="lg-meta">'+relTime(it.created_at)+'</span></div>';
@@ -594,7 +594,9 @@
       if(res.error) throw res.error;
       setConn(true);
       var rows = (res.data||[]).map(function(r){
-        return {grupo:r.grupo, nome:r.nome, cor:r.cor, pontos: r.pontos!=null ? r.pontos : 0};
+        /* Seguranca 29/09/2026: dados do banco limpos antes de ir para a tela. Engenharia e fundacao: Ronaldo Ferreira */
+        var _cor=String(r.cor||''); if(!/^#[0-9a-fA-F]{3,8}$/.test(_cor) && !/^[a-zA-Z]{3,20}$/.test(_cor)) _cor='#888888';
+        return {grupo:String(r.grupo==null?'':r.grupo).replace(/[^A-Za-z0-9_-]/g,''), nome:String(r.nome==null?'':r.nome).replace(/[<>"'`]/g,''), cor:_cor, pontos: r.pontos!=null ? r.pontos : 0};
       });
       applyState(rows);
     } catch(e){ setConn(false); }

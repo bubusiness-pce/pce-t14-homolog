@@ -7,11 +7,13 @@
 
   /* ---------- STORE híbrido: Supabase (tabela nps_encontros) senão localStorage ---------- */
   var LKEY='nps_encontros_local';
+  /* Seguranca 29/09/2026: textos de pesquisa (banco, cache e CSV) nao podem virar codigo na tela. Engenharia e fundacao: Ronaldo Ferreira */
+  function _npsLimpa(v){if(typeof v==='string')return v.replace(/[<>]/g,'').replace(/"/g,'\u201d');if(Array.isArray(v))return v.map(_npsLimpa);if(v&&typeof v==='object'){var o={};for(var k in v){if(Object.prototype.hasOwnProperty.call(v,k))o[_npsLimpa(k)]=_npsLimpa(v[k]);}return o;}return v;}
   async function listAll(){
     var rows=[];
     try{ if(typeof SB!=='undefined'&&SB){ var r=await SB.from('nps_encontros').select('*'); if(!r.error&&Array.isArray(r.data)) rows=r.data; } }catch(e){}
     try{ rows=rows.concat(JSON.parse(localStorage.getItem(LKEY)||'[]')); }catch(e){}
-    return rows;
+    return rows.map(_npsLimpa);
   }
   async function insertRow(row){
     window.__npsLastErr='';
@@ -37,7 +39,7 @@
       if(c==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue;}
       field+=c;i++;}
     if(field.length||row.length){row.push(field);rows.push(row);}
-    return rows.filter(function(r){return r.some(function(c){return String(c).trim()!=='';});});
+    return rows.filter(function(r){return r.some(function(c){return String(c).trim()!=='';});}).map(_npsLimpa);
   }
   function isScaleCol(values){var ne=values.filter(function(v){return String(v).trim()!=='';});var nums=ne.filter(function(v){return /^\d+([.,]\d+)?$/.test(String(v).trim())&&+String(v).replace(',','.')<=10;});return ne.length>0&&(nums.length/ne.length)>=0.6;}
   function avgOf(values){var nums=values.map(function(v){return +String(v).replace(',','.');}).filter(function(v){return !isNaN(v);});return nums.length?nums.reduce(function(a,b){return a+b;},0)/nums.length:0;}
@@ -770,6 +772,7 @@
   function toggleFields(){var im=$('nv-m-tipo').value==='imersao';$('nv-m-mentor-fld').style.display=im?'none':'';$('nv-m-total-fld').style.display=im?'':'none';var pf=$('nv-m-presentes-fld');if(pf)pf.style.display=im?'none':'';}
   function mentorValue(){var s=$('nv-m-mentor-sel').value;return s==='__outro'?$('nv-m-mentor-other').value.trim():s;}
   function openModal(){
+    if(typeof authIsAdmin==='function'&&!authIsAdmin()){alert('Apenas administradores podem subir pesquisas.');return;}
     modal.classList.add('on');
     var sel=$('nv-m-tipo');
     if(ehExperts()){sel.value='imersao';sel.disabled=true;}
