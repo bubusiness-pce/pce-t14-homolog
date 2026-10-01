@@ -27,7 +27,8 @@ function mpceShowLocked(){var lk=document.getElementById('mpce-locked'),ld=docum
 function mpceShowLoading(){var lk=document.getElementById('mpce-locked'),ld=document.getElementById('mpce-loading'),cv=document.getElementById('mpce-cards-view');if(lk)lk.style.display='none';if(ld)ld.style.display='block';if(cv)cv.style.display='none';}
 function mpceShowCards(){var lk=document.getElementById('mpce-locked'),ld=document.getElementById('mpce-loading'),cv=document.getElementById('mpce-cards-view');if(lk)lk.style.display='none';if(ld)ld.style.display='none';if(cv)cv.style.display='';}
 async function mpceBootCloud(){
-  if(!authIsLogged()){mpceShowLocked();return;}
+  /* Versao publica (01/10/2026): o Manual PCE abre sem login, so para leitura. Editar continua exigindo login. */
+  if(!_supabaseReady&&typeof window.__bootstrapManual==='function'){mpceShowLoading();try{await window.__bootstrapManual();}catch(e){}}
   if(!_supabaseReady){mpceShowLoading();return;}
   mpceShowLoading();
   try{var state=await mpceFetchAllFromCloud();_mpceState=state;mpceSaveCache(state);var b=document.getElementById('mpce-cloud-banner');if(b)b.classList.remove('show');mpceRenderGrid();mpceShowCards();}

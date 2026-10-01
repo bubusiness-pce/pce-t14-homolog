@@ -2607,3 +2607,11 @@ body{background:var(--bg)}
   #br-funil-meta-wrap>.faixa-vazia,#br-funil-meta-wrap>#np-card{grid-column:2;grid-row:2;margin-top:0!important}
   #br-funil-meta-wrap>#prod-t15-sl,#br-funil-meta-wrap>#prod-t15-grid{grid-column:1/-1}
 }
+
+/* versao publica · 01/10/2026: sem login o dashboard abre direto; o botao Entrar fica no topo para a equipe */
+body:not(.modo-publico) #btn-entrar{display:none}
+.modo-publico .estoque-toolbar{display:none}
+.estoque-nome-txt,.estoque-logo-txt{display:inline-block;padding:6px 0}
+.estoque-qtd-txt{font-weight:700}
+.estoque-sem-foto{opacity:.45}
+.pub-nota{font-size:12.5px;line-height:1.5;color:var(--muted,#9a9a95);padding:14px 4px}

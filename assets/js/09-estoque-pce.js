@@ -94,6 +94,8 @@
 
   function estoqueRender(){
     var tb=document.getElementById('estoque-tbody'); if(!tb) return;
+    /* Versao publica (01/10/2026): sem login a lista e so para leitura. */
+    if(document.body.classList.contains('modo-publico')){ _renderLeitura(tb); _updateStats(); return; }
     if(!_estoque.length){
       tb.innerHTML='<tr><td colspan="6"><div class="estoque-empty">Nenhum item ainda. Clique em \u201CAdicionar item\u201D para comecar.</div></td></tr>';
     } else {
@@ -117,6 +119,23 @@
     }
     _updateStats();
   }
+
+  function _renderLeitura(tb){
+    if(!_estoque.length){ tb.innerHTML='<tr><td colspan="6"><div class="estoque-empty">Nenhum item cadastrado.</div></td></tr>'; return; }
+    var logoTxt={'':'\u2014','ANTIGO':'Logo Antigo','NOVO':'Logo Novo'};
+    tb.innerHTML=_estoque.map(function(it,i){
+      var foto = it.foto ? '<div class="estoque-foto-wrap"><img class="estoque-thumb" src="'+_esc(it.foto)+'" onclick="estoqueViewFoto(\''+it.id+'\')" alt="foto"></div>' : '<span class="estoque-sem-foto">\u2014</span>';
+      return '<tr class="estoque-row" data-id="'+it.id+'">'
+        + '<td class="estoque-idx hide-sm">'+(i+1)+'</td>'
+        + '<td><span class="estoque-nome-txt">'+_esc(it.nome)+'</span></td>'
+        + '<td><span class="estoque-logo-txt">'+_esc(logoTxt[it.logo||'']||it.logo)+'</span></td>'
+        + '<td class="c"><span class="estoque-qtd-txt">'+(Number(it.quantidade)||0)+'</span></td>'
+        + '<td class="estoque-foto-cell">'+foto+'</td>'
+        + '<td class="c"></td>'
+        + '</tr>';
+    }).join('');
+  }
+  window.estoqueRender=estoqueRender;
 
   function _updateStats(){
     var itens=_estoque.length;
@@ -234,7 +253,9 @@
           _estoque=rows.map(function(r){ return {id:r.id,nome:r.nome||'',logo:r.logo||'',quantidade:Number(r.quantidade)||0,foto:r.foto||null,ordem:r.ordem||0}; });
           _saveCache(); estoqueRender(); _markDirty(false);
         } else {
-          // nuvem vazia na 1a vez: grava a lista atual (semente/cache) para inicializar
+          // nuvem vazia na 1a vez: grava a lista atual (semente/cache) para inicializar.
+          // Versao publica: so a equipe logada grava; o visitante so le.
+          if(document.body.classList.contains('modo-publico')) return;
           _estoque.forEach(function(it,i){ it.ordem=i; });
           _upsertAll().then(function(){ _markDirty(false); }).catch(function(){});
         }

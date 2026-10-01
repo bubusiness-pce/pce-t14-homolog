@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.19';
+const PCE_VERSION = '3.5.20';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -25,8 +25,12 @@ const DATA_SOURCES = {
    logado com perfil aprovado. Os enderecos das portas ficam guardados como segredo no porteiro.
    Engenharia e fundacao: Ronaldo Ferreira */
 const DASH_PROXY_BASE='https://amibetbgzwaayhyxnank.supabase.co/functions/v1/dash-proxy';
+/* Versao publica (01/10/2026): sem login, a leitura vai para o porteiro publico (dash-public). Ele entrega os
+   mesmos numeros sem dado pessoal: nome, CPF e empresa viram codigo; contato, familia e texto livre ficam de fora.
+   Com login da equipe, a leitura continua no dash-proxy, com o dado completo para o Painel ADM. */
+const DASH_PUBLIC_BASE='https://amibetbgzwaayhyxnank.supabase.co/functions/v1/dash-public';
 async function dashSessionToken(){try{if(!window.SB)return null;const r=await SB.auth.getSession();return (r&&r.data&&r.data.session&&r.data.session.access_token)||null;}catch(e){return null;}}
-async function dashFetchRes(src,signal){const tok=await dashSessionToken();if(!tok)throw new Error('SEM_LOGIN');return fetch(DASH_PROXY_BASE+'?src='+encodeURIComponent(src),{signal:signal,cache:'no-store',headers:{'Authorization':'Bearer '+tok,'apikey':(typeof SUPABASE_KEY!=='undefined'?SUPABASE_KEY:'')}});}
+async function dashFetchRes(src,signal){const chave=(typeof SUPABASE_KEY!=='undefined'?SUPABASE_KEY:'');const tok=await dashSessionToken();if(tok){const r=await fetch(DASH_PROXY_BASE+'?src='+encodeURIComponent(src),{signal:signal,cache:'no-store',headers:{'Authorization':'Bearer '+tok,'apikey':chave}});if(r.status!==401)return r;}return fetch(DASH_PUBLIC_BASE+'?src='+encodeURIComponent(src),{signal:signal,cache:'no-store',headers:{'Authorization':'Bearer '+chave,'apikey':chave}});}
 async function dashFetch(src,timeoutMs){const ctrl=new AbortController();const tm=setTimeout(function(){ctrl.abort();},timeoutMs||30000);try{const res=await dashFetchRes(src,ctrl.signal);if(!res.ok)throw new Error('HTTP '+res.status);return await res.json();}finally{clearTimeout(tm);}}
 function dashSrc(u){return (typeof u==='string'&&u.indexOf('proxy:')===0)?u.slice(6):null;}
 const SCHEMA = {
@@ -356,7 +360,7 @@ function validateUsPayload(raw){const errors=[];if(!raw||typeof raw!=='object'){
 function normalizeStatus(raw){if(!raw||typeof raw!=='string')return'';const s=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/\.+$/,'').replace(/\s+/g,' ');if(s==='BR + US CONFIRMAOD')return'BR + US CONFIRMADO';if(s==='BR + US CONFIRMADO')return'BR + US CONFIRMADO';if(s==='PROXIMA TURMA')return'PROXIMA TURMA';if(s==='SEM RETORNO')return'SEM RETORNO';if(s==='BR CONFIRMADO')return'BR CONFIRMADO';if(s==='US CONFIRMADO')return'US CONFIRMADO';if(s==='CONFIRMADO')return'CONFIRMADO';if(s==='CANCELAMENTO')return'CANCELAMENTO';if(s==='NAO VAI PARTICIPAR')return'NAO VAI PARTICIPAR';if(s==='NAO CHAMAR')return'NAO CHAMAR';if(s==='TROCA DE CONS')return'TROCA DE CONS';return s;}
 function normalizeOnboarding(raw){if(!raw||typeof raw!=='string')return'NAO_INICIADO';const s=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/\.+$/,'').replace(/\s+/g,' ');if(s==='REALIZADO')return'REALIZADO';if(s==='INICIADO')return'INICIADO';if(s==='SEM RETORNO')return'SEM_RETORNO';if(s==='NAO INICIADO')return'NAO_INICIADO';if(s.includes('PENDENTE'))return'PENDENTE';return'NAO_INICIADO';}
 function computeStatsFromRows(rows){const presenca={brConfirmado:0,brUs:0,usConfirmado:0,confirmado:0,semRetorno:0,cancelamento:0,proximaTurma:0,naoVaiParticipar:0,naoChamar:0,trocaCons:0,totalConfirmados:0,turmaValida:0};const onboarding={realizado:0,iniciado:0,pendente:0,naoIniciado:0};const operacional={whatsOk:0,typeformOk:0,typeformEnv:0,contratoOk:0,typeformOkConfirmados:0,typeformOkSemRetorno:0,typeformOkValida:0};const eventos={brasil:0,orlando:0};for(const r of rows){const p=normalizeStatus(r.presenca);const isConfirmado=(p==='BR CONFIRMADO'||p==='BR + US CONFIRMADO'||p==='US CONFIRMADO'||p==='CONFIRMADO');const isSemRetorno=(p==='SEM RETORNO');if(p==='BR CONFIRMADO')presenca.brConfirmado++;else if(p==='BR + US CONFIRMADO')presenca.brUs++;else if(p==='US CONFIRMADO')presenca.usConfirmado++;else if(p==='CONFIRMADO')presenca.confirmado++;else if(p==='SEM RETORNO')presenca.semRetorno++;else if(p==='CANCELAMENTO')presenca.cancelamento++;else if(p==='PROXIMA TURMA')presenca.proximaTurma++;else if(p==='NAO VAI PARTICIPAR')presenca.naoVaiParticipar++;else if(p==='NAO CHAMAR')presenca.naoChamar++;else if(p==='TROCA DE CONS')presenca.trocaCons++;const ob=normalizeOnboarding(r.onboarding);if(ob==='REALIZADO')onboarding.realizado++;else if(ob==='PENDENTE')onboarding.pendente++;else if(ob==='INICIADO')onboarding.iniciado++;else onboarding.naoIniciado++;if((r.whats||'').toUpperCase()==='SIM')operacional.whatsOk++;const tf=(r.typeform||'').toUpperCase();const tfPreenchido=(tf==='PREENCHIDO');if(tfPreenchido)operacional.typeformOk++;else if(tf==='ENVIADO')operacional.typeformEnv++;if(tfPreenchido&&isConfirmado)operacional.typeformOkConfirmados++;if(tfPreenchido&&isSemRetorno)operacional.typeformOkSemRetorno++;if((r.contrato||'').toUpperCase()==='SIM')operacional.contratoOk++;const ev=(r.evento||'').toUpperCase();if(ev.includes('ORLANDO'))eventos.orlando++;else eventos.brasil++;}presenca.totalConfirmados=presenca.brConfirmado+presenca.brUs+presenca.usConfirmado+presenca.confirmado;presenca.turmaValida=presenca.totalConfirmados+presenca.semRetorno;operacional.typeformOkValida=operacional.typeformOkConfirmados+operacional.typeformOkSemRetorno;return{presenca,onboarding,operacional,eventos};}
-function normalizeBrPayload(raw){try{const t0=Date.now();const{valid,errors}=validateBrPayload(raw);if(!valid){Logger.error('NORMALIZE','Payload Brasil inválido — descartando',{errors,raw:typeof raw});return null;}const rows=raw.rows;const stats=(raw.stats&&raw.stats.presenca)?raw.stats:computeStatsFromRows(rows);if(!stats.presenca){Logger.warn('NORMALIZE','stats.presenca ausente — recalculando',{total:rows.length});}const result={rows,stats,total:rows.length,updated:raw.updated||new Date().toISOString(),version:raw.version||'unknown',source:'api_live',pendingTransfers:Array.isArray(raw.pendingTransfers)?raw.pendingTransfers:undefined,pendingTransferCount:(typeof raw.pendingTransferCount==='number')?raw.pendingTransferCount:undefined,dossieForaOnboarding:Array.isArray(raw.dossieForaOnboarding)?raw.dossieForaOnboarding:undefined,cartas:(raw.cartas&&typeof raw.cartas==='object')?raw.cartas:undefined,frases:(raw.frases&&typeof raw.frases==='object')?raw.frases:undefined,conciliacao:(raw.conciliacao&&typeof raw.conciliacao==='object')?raw.conciliacao:undefined};Logger.perf('NORMALIZE','normalizeBrPayload',t0);return result;}catch(e){Logger.error('NORMALIZE','Exceção em normalizeBrPayload',{message:e.message});return null;}}
+function normalizeBrPayload(raw){try{const t0=Date.now();const{valid,errors}=validateBrPayload(raw);if(!valid){Logger.error('NORMALIZE','Payload Brasil inválido — descartando',{errors,raw:typeof raw});return null;}const rows=raw.rows;const stats=(raw.stats&&raw.stats.presenca)?raw.stats:computeStatsFromRows(rows);if(!stats.presenca){Logger.warn('NORMALIZE','stats.presenca ausente — recalculando',{total:rows.length});}const result={rows,stats,total:rows.length,updated:raw.updated||new Date().toISOString(),version:raw.version||'unknown',source:'api_live',pendingTransfers:Array.isArray(raw.pendingTransfers)?raw.pendingTransfers:undefined,pendingTransferCount:(typeof raw.pendingTransferCount==='number')?raw.pendingTransferCount:undefined,dossieForaOnboarding:Array.isArray(raw.dossieForaOnboarding)?raw.dossieForaOnboarding:undefined,cartas:(raw.cartas&&typeof raw.cartas==='object')?raw.cartas:undefined,frases:(raw.frases&&typeof raw.frases==='object')?raw.frases:undefined,conciliacao:(raw.conciliacao&&typeof raw.conciliacao==='object')?raw.conciliacao:undefined,publico:(raw.publico&&typeof raw.publico==='object')?raw.publico:undefined};Logger.perf('NORMALIZE','normalizeBrPayload',t0);return result;}catch(e){Logger.error('NORMALIZE','Exceção em normalizeBrPayload',{message:e.message});return null;}}
 function normalizeUsPayload(raw){try{const{valid,errors}=validateUsPayload(raw);if(!valid){Logger.error('NORMALIZE','Payload Orlando inválido — descartando',{errors});return null;}const total=raw.total;const confirmados=raw.confirmados;const stats=raw.stats||{confirmado:confirmados,semRetorno:0,cancelamento:0,outros:0};return{rows:raw.rows||[],total,confirmados,stats,updated:raw.updated||new Date().toISOString(),version:raw.version||'unknown',source:'api_live'};}catch(e){Logger.error('NORMALIZE','Exceção em normalizeUsPayload',{message:e.message});return null;}}
 const store={br:{rows:null,stats:null,updated:null,version:null,source:null},t15:{rows:null,stats:null,updated:null,version:null,source:null},t16:{rows:null,stats:null,updated:null,version:null,source:null},us:{data:null,updated:null,version:null,source:null},meta:{brLoading:false,isOffline:false,currentView:'t16',lastFetchAt:null,fetchCount:0,fetchToken:0}};
 /* Espelho somente leitura para diagnostico por console. Nao usar em logica. */
@@ -369,6 +373,9 @@ function storeUpdateT(key, payload){
   store[key].pendingTransfers=payload.pendingTransfers;store[key].pendingTransferCount=payload.pendingTransferCount;store[key].dossieForaOnboarding=payload.dossieForaOnboarding;
   /* V54.1: blocos de producao (Cartas/Frases). Sem estas duas linhas o payload chega mas morre aqui e o card cai no cache. */
   store[key].cartas=payload.cartas;store[key].frases=payload.frases;store[key].conciliacao=payload.conciliacao;
+  /* Versao publica (01/10/2026): contagens prontas do porteiro publico. Com login da equipe nao vem, e o
+     Perfil volta a contar direto das linhas. */
+  store[key].publico=payload.publico;
   Logger.info('STORE',key+' atualizado',{total:payload.rows.length,source:store[key].source,cartas:!!payload.cartas,frases:!!payload.frases,conciliacao:!!payload.conciliacao});
   return true;
 }
@@ -1286,7 +1293,8 @@ const mb=document.getElementById('month-bar');try{document.querySelectorAll('.fa
    O codigo das outras visoes continua intacto: para trazer uma de volta, basta
    devolve-la a lista de visiveis aqui. */
 function configTurmaButtons(mode){dashMode='atual';[['br',false],['t15',false],['t16',true],['geral',false]].forEach(function(p){const b=document.getElementById('vbtn-'+p[0]);if(b)b.style.display=p[1]?'':'none';});switchView(TURMA_ATIVA);}
-var PAGINAS_RESTRITAS={nps:'NPS — PCE',experts:'NPS — Experts',admin:'Painel ADM'};
+/* Versao publica (01/10/2026): so o Painel ADM pede login. NPS e Experts abrem para quem tem o link. */
+var PAGINAS_RESTRITAS={admin:'Painel ADM'};
 function gatedLogin(){
   var pr=(typeof window.__bootstrapManual==='function')?window.__bootstrapManual():Promise.resolve();
   Promise.resolve(pr).catch(function(){}).then(function(){
@@ -1348,11 +1356,13 @@ function switchPage(p){
     return;
   }
   window.__gatedPending=null;
-  try{analyticsPageEnter(p);}catch(e){}const isTurmas=(p==='turmas');const pageEl=isTurmas?'dash':p;const activePages=isTurmas?['dash','perfil','insights']:[pageEl];['dash','perfil','faq','insights','manual','manual-pce','nps','experts','estoque','locked','manutencao','admin'].forEach(pg=>{const el=document.getElementById('page-'+pg);if(el)el.classList.toggle('active',activePages.includes(pg));});const dashPg=document.getElementById('page-dash');if(dashPg){dashPg.classList.toggle('mode-turmas',isTurmas);dashPg.classList.toggle('mode-atual',!isTurmas);}var _pp=document.getElementById('page-perfil');if(_pp)_pp.classList.toggle('standalone',p==='perfil');var _pb=document.getElementById('perfil-body');if(_pb)_pb.style.display='';var _pi=document.getElementById('page-insights');if(_pi)_pi.classList.remove('as-subtab');['dash','turmas','perfil','faq','insights','manual','manual-pce','nps','experts','estoque','admin'].forEach(nv=>{const nav=document.getElementById('nav-'+nv);if(nav)nav.classList.toggle('active',nv===p);});const isDashLike=(p==='dash'||isTurmas);const showSwitch=(isDashLike||p==='perfil'||p==='insights');const viewBtns=document.getElementById('view-btns-container');if(viewBtns)viewBtns.style.display=showSwitch?'flex':'none';const titles={dash:'Dashboard',turmas:'Turmas — Histórico',perfil:'Perfil da Turma',faq:'FAQ — PCE',insights:'Insights Correlacionais',manual:'Manual — Experts','manual-pce':'Manual — PCE','nps':'NPS — PCE','experts':'NPS — Experts','estoque':'Estoque PCE','admin':'Painel ADM'};const titleEl=document.getElementById('page-title');if(titleEl)titleEl.textContent=titles[p]||'';if(showSwitch)configTurmaButtons(isTurmas?'turmas':'dash');if(isTurmas){try{switchView('br');}catch(e){}setTimeout(()=>{try{buildPerfil();}catch(e){}try{if(window.renderInsightsCorrelacionais)window.renderInsightsCorrelacionais();}catch(e){}},150);}else if(p==='dash'){if(store.meta.currentView!==TURMA_ATIVA){try{switchView(TURMA_ATIVA);}catch(e){}}}else if(p==='perfil'){try{showPerfilSub('perfil');}catch(e){}try{buildPerfil();}catch(e){}}if(p==='nps'||p==='experts'){if(typeof window.__npsMount==='function')window.__npsMount(p==='experts'?'experts':'pce',p==='experts'?'nv-host-experts':'nv-host-pce');}
+  try{analyticsPageEnter(p);}catch(e){}const isTurmas=(p==='turmas');const pageEl=isTurmas?'dash':p;const activePages=isTurmas?['dash','perfil','insights']:[pageEl];['dash','perfil','faq','insights','manual','manual-pce','nps','experts','estoque','locked','manutencao','admin'].forEach(pg=>{const el=document.getElementById('page-'+pg);if(el)el.classList.toggle('active',activePages.includes(pg));});const dashPg=document.getElementById('page-dash');if(dashPg){dashPg.classList.toggle('mode-turmas',isTurmas);dashPg.classList.toggle('mode-atual',!isTurmas);}var _pp=document.getElementById('page-perfil');if(_pp)_pp.classList.toggle('standalone',p==='perfil');var _pb=document.getElementById('perfil-body');if(_pb)_pb.style.display='';var _pi=document.getElementById('page-insights');if(_pi)_pi.classList.remove('as-subtab');['dash','turmas','perfil','faq','insights','manual','manual-pce','nps','experts','estoque','admin'].forEach(nv=>{const nav=document.getElementById('nav-'+nv);if(nav)nav.classList.toggle('active',nv===p);});const isDashLike=(p==='dash'||isTurmas);const showSwitch=(isDashLike||p==='perfil'||p==='insights');const viewBtns=document.getElementById('view-btns-container');if(viewBtns)viewBtns.style.display=showSwitch?'flex':'none';const titles={dash:'Dashboard',turmas:'Turmas — Histórico',perfil:'Perfil da Turma',faq:'FAQ — PCE',insights:'Insights Correlacionais',manual:'Manual — Experts','manual-pce':'Manual — PCE','nps':'NPS — PCE','experts':'NPS — Experts','estoque':'Estoque PCE','admin':'Painel ADM'};const titleEl=document.getElementById('page-title');if(titleEl)titleEl.textContent=titles[p]||'';if(showSwitch)configTurmaButtons(isTurmas?'turmas':'dash');if(isTurmas){try{switchView('br');}catch(e){}setTimeout(()=>{try{buildPerfil();}catch(e){}try{if(window.renderInsightsCorrelacionais)window.renderInsightsCorrelacionais();}catch(e){}},150);}else if(p==='dash'){if(store.meta.currentView!==TURMA_ATIVA){try{switchView(TURMA_ATIVA);}catch(e){}}}else if(p==='perfil'){try{showPerfilSub('perfil');}catch(e){}try{buildPerfil();}catch(e){}}if(p==='nps'||p==='experts'){const _npEscopo=p==='experts'?'experts':'pce',_npHost=p==='experts'?'nv-host-experts':'nv-host-pce';const _npMonta=function(){if(typeof window.__npsMount==='function')window.__npsMount(_npEscopo,_npHost);};_npMonta();/* Versao publica: sem login o Supabase ainda nao carregou; carrega e remonta para ler as notas. */if(!_supabaseReady&&typeof window.__bootstrapManual==='function'){window.__bootstrapManual().then(_npMonta,function(){});}}
 if(p==='manual'){manualBootCloud();}else if(p==='manual-pce'){if(typeof mpceBootCloud==='function')mpceBootCloud();}else if(p==='estoque'){if(typeof estoqueBootCloud==='function')estoqueBootCloud();}else if(p==='admin'){if(typeof admBoot==='function')admBoot();}}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
 function refreshManual(){Loader.show('Atualizando');const btn=document.getElementById('btnR');if(btn){btn.disabled=true;btn.classList.add('spinning');}const safetyTimer=setTimeout(()=>{if(btn){btn.disabled=false;btn.classList.remove('spinning');}setStatus('neu','Pronto');},10000);fetchAllData(false).finally(()=>{clearTimeout(safetyTimer);if(btn){btn.disabled=false;btn.classList.remove('spinning');}});}
 /* Perfil standalone (aba "Perfil da Turma") = template vazio para T15; Turmas = dados T14 */
+/* Versao publica (01/10/2026): verdadeiro quando a tela mostra o pacote publico (sem dado pessoal). */
+function _ehPublico(){try{const s=_perfilSrc();if(s&&s.publico)return true;}catch(e){}return document.body.classList.contains('modo-publico');}
 function _isStandalonePerfil(){const np=document.getElementById('nav-perfil'),nt=document.getElementById('nav-turmas');return !!(np&&np.classList.contains('active'))&&!(nt&&nt.classList.contains('active'));}
 function _perfilSrc(){
   if(_isStandalonePerfil()){
@@ -1561,7 +1571,11 @@ function buildPerfil() {
 
     // ── Religião (com normalização de acentos + unificação Católico/Católica em um único indicador) ──
     const relMap = {};
-    d.forEach(r => {
+    /* Versao publica (01/10/2026): religiao e dado sensivel e nao vai na linha do aluno. O porteiro publico manda
+       so a contagem por categoria, com as mesmas regras abaixo e sobre os mesmos confirmados. */
+    const _relPub = (_perfilSrc().publico || {}).religiao;
+    if (_relPub) Object.keys(_relPub).forEach(k => { relMap[k] = _relPub[k]; });
+    else d.forEach(r => {
       const rel = (r.religiao||'').trim();
       if (!rel || rel.length < 2) { relMap['Não informado'] = (relMap['Não informado']||0)+1; return; }
       const ru = rel.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
@@ -2242,10 +2256,13 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       return;
     }
     const max = items[0].fatMedio;
+    /* Versao publica (01/10/2026): sem login o Top 10 nao mostra nome; mostra o segmento da empresa. */
+    const _pubTop = _ehPublico();
     el.innerHTML = items.map(function(r, i) {
       const w = max > 0 ? Math.round(r.fatMedio / max * 100) : 0;
       // Nome: até 22 chars, primeiros 2 nomes
-      let nomeDisplay = r.nome ? r.nome.trim().split(/\s+/).slice(0,2).join(' ') : 'Não informado';
+      let nomeDisplay = _pubTop ? (String(r.modeloNeg||r.setor||'').trim() || 'Segmento não informado')
+        : (r.nome ? r.nome.trim().split(/\s+/).slice(0,2).join(' ') : 'Não informado');
       if (nomeDisplay.length > 22) nomeDisplay = nomeDisplay.substring(0,20) + '…';
       const faixaLabel = faixaFatLabelGlobal(r.faixaFat);
       const valorFmt = fmtBRLGlobal(r.fatMedio);
@@ -2254,7 +2271,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       return '<div class="top-fat-row">'
         +   '<div class="top-fat-pos" style="color:'+medColor+'">'+medalha+'</div>'
         +   '<div class="top-fat-info">'
-        +     '<div class="top-fat-nome" title="'+manualEscape(r.nome||'')+'">'+manualEscape(nomeDisplay)+'</div>'
+        +     '<div class="top-fat-nome" title="'+manualEscape(_pubTop?'':(r.nome||''))+'">'+manualEscape(nomeDisplay)+'</div>'
         +     '<div class="top-fat-faixa">'+manualEscape(faixaLabel)+'/ano</div>'
         +   '</div>'
         +   '<div class="top-fat-bar-bg"><div class="top-fat-bar-fill" style="width:'+w+'%"></div></div>'
@@ -2284,6 +2301,12 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       renderWordCloud(gerarWordCloud(confirmados),                   total);
       renderFamilia(gerarFamilia(confirmados));
       renderIntencoes(gerarIntencoes(confirmados),                   total);
+      /* Versao publica (01/10/2026): as respostas abertas (sonhos, metas, dores, o que querem aprender) nao saem
+         do servidor sem login. Estes quatro quadros dependem delas e mostram o aviso no lugar. */
+      if (_ehPublico()) ['ins-dores','ins-prior','ins-wcloud','ins-intencoes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="ins-empty pub-nota">🔒 Este quadro usa as respostas abertas dos alunos. Fica visível para a equipe, com login.</div>';
+      });
 
       console.log('[INSIGHTS] Renderizado com sucesso. Confirmados:', total,
         '| Com família:', confirmados.filter(r=>r.conjuge).length,
@@ -2638,7 +2661,8 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       ${topCli.length>0 ? `<p>O perfil de clientes é predominantemente ${cliFrase}.</p>` : ''}
     `;
     const elBody = document.getElementById('diag-body');
-    if (elBody) elBody.innerHTML = html;
+    /* Versao publica (01/10/2026): dores e aprendizados vem das respostas abertas e ficam para a equipe. */
+    if (elBody) elBody.innerHTML = html + (_ehPublico() ? '<p class="pub-nota">🔒 As dores e o que a turma quer aprender vêm das respostas abertas dos alunos e aparecem para a equipe, com login.</p>' : '');
 
     // Leitura Estratégica — bullets dinâmicos
     const bullets = [];
@@ -4034,6 +4058,11 @@ async function authOnLogin(user){
 function authUpdateUI(){
   /* Painel ADM aparece/some conforme o perfil. Roda em login, logout e restore de sessão. */
   try{ if(typeof admSyncNav==='function') admSyncNav(); }catch(e){}
+  /* Versao publica (01/10/2026): sem login, o botao "Entrar" aparece no topo e o estoque fica so para leitura. */
+  try{
+    document.body.classList.toggle('modo-publico', !(_currentUser && _currentProfile));
+    if (typeof window.estoqueRender === 'function') window.estoqueRender();
+  }catch(e){}
   var chip = document.getElementById('user-chip');
   if (_currentUser && _currentProfile){
     chip.classList.add('show');
@@ -4467,8 +4496,9 @@ function manualShowCards(){
   document.getElementById('manual-cards-view').style.display = '';
 }
 async function manualBootCloud(){
-  if (!authIsLogged()){ manualShowLocked(); return; }
+  /* Versao publica (01/10/2026): o manual abre sem login, so para leitura. Editar continua exigindo admin. */
   manualShowLoading();
+  if (!_supabaseReady && typeof window.__bootstrapManual === 'function'){ try{ await window.__bootstrapManual(); }catch(e){} }
   try {
     var state = await manualFetchAllFromCloud();
     _manualState = state;
@@ -5269,8 +5299,8 @@ document.addEventListener('click', function(e){
           Logger.info('BOOT','Sessao salva encontrada — carregando Supabase em segundo plano');
           setTimeout(function(){
             window.__bootstrapManual().then(function(){
-              /* Login na entrada: sessao salva mas vencida -> volta para a tela de login. */
-              if (!authIsLogged()){ try{ authShowGate(); }catch(e){} return; }
+              /* Versao publica (01/10/2026): sessao salva mas vencida segue no modo publico, sem tela de login. */
+              if (!authIsLogged()) return;
               try{
                 /* re-renderiza a pagina atual: se for restrita, o gate agora libera */
                 var _at = ['nps','experts','admin'].filter(function(pg){
@@ -5282,9 +5312,8 @@ document.addEventListener('click', function(e){
             });
           }, 400);
         } else {
-          /* Login na entrada (29/09/2026): sem sessao salva, abre a tela de login e carrega o Supabase. */
-          try{ authShowGate(); }catch(e){}
-          window.__bootstrapManual().then(function(){ try{ if (authIsLogged()) authHideModal(); }catch(e){} });
+          /* Versao publica (01/10/2026): sem sessao salva, o dashboard abre direto, sem tela de login.
+             A equipe entra pelo botao "Entrar" do topo (Painel ADM e edicao). */
         }
       }catch(e){ if(typeof Logger!=='undefined') Logger.warn('BOOT','check de sessao',{err:e.message}); }
     }, 100);
