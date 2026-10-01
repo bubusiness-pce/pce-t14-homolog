@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.15';
+const PCE_VERSION = '3.5.16';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -124,11 +124,21 @@ function paintNetworking(turma,turmaValida){
   if(elS)elS.textContent=conf+' de '+base+' na turma válida · '+pctTurma+'% confirmados';
   /* Os 3 números e a distribuição por status servem ao card do dashboard e ao
      detalhamento do ADM: o mesmo número nos dois lugares. */
-  let gridH='<div class="np-grid">';
-  gridH+='<div class="np-stat"><div class="np-stat-lbl">Total Confirmados</div><div class="np-stat-val">'+conf+'</div><div class="np-stat-sub">'+pctTurma+'% da turma válida ('+base+')</div></div>';
-  gridH+='<div class="np-stat"><div class="np-stat-lbl">Responderam o formulário</div><div class="np-stat-val">'+(t.respostasUnicas||0)+'</div><div class="np-stat-sub">'+(t.respostasBrutas||0)+' preenchimentos → '+(t.respostasUnicas||0)+' pessoas únicas</div></div>';
-  gridH+='<div class="np-stat"><div class="np-stat-lbl">Fora da turma</div><div class="np-stat-val"'+(t.orfaos?' style="color:var(--amber)"':'')+'>'+(t.orfaos||0)+'</div><div class="np-stat-sub">'+(t.orfaos?'precisam investigação':'todos identificados')+'</div></div>';
-  gridH+='</div>';
+  /* 01/10/2026: no Painel ADM cada número abre a lista de quem forma o número (data-np-lista).
+     No card do dashboard (clicavel=false) o HTML sai igual ao de antes. */
+  const npGrid=function(clicavel){
+    const st=function(lbl,val,sub,estiloVal,lista){
+      return '<div class="np-stat'+(clicavel?' np-stat-click" data-np-lista="'+lista+'" role="button" tabindex="0" title="Ver quem são':'')+'">'
+        +'<div class="np-stat-lbl">'+lbl+'</div><div class="np-stat-val"'+estiloVal+'>'+val+'</div><div class="np-stat-sub">'+sub+'</div>'
+        +(clicavel?'<div class="np-stat-ver">Ver quem são ›</div>':'')+'</div>';
+    };
+    return '<div class="np-grid">'
+      +st('Total Confirmados',conf,pctTurma+'% da turma válida ('+base+')','','confirmados')
+      +st('Responderam o formulário',(t.respostasUnicas||0),(t.respostasBrutas||0)+' preenchimentos → '+(t.respostasUnicas||0)+' pessoas únicas','','respondentes')
+      +st('Fora da turma',(t.orfaos||0),(t.orfaos?'precisam investigação':'todos identificados'),(t.orfaos?' style="color:var(--amber)"':''),'fora')
+      +'</div>';
+  };
+  const gridH=npGrid(false);
 
   /* Distribuição por status na turma */
   const porStatus=d.porStatus||{};
@@ -161,7 +171,11 @@ function paintNetworking(turma,turmaValida){
     return;
   }
 
-  let h=gridH;
+  /* Link "abrir na planilha" na linha exata da pessoa (a porta manda planilha.id, os gids e a linha). */
+  const pl=d.planilha||{};
+  const linkLinha=function(gid,linha){return (pl.id&&gid!=null&&linha)?'https://docs.google.com/spreadsheets/d/'+encodeURIComponent(pl.id)+'/edit#gid='+gid+'&range=A'+linha:'';};
+  const abrirNaPlanilha=function(gid,linha){const u=linkLinha(gid,linha);return u?' · <a class="np-abrir" href="'+u+'" target="_blank" rel="noopener">abrir na planilha</a>':'';};
+  let h=npGrid(true)+'<div class="np-lista-aberta" id="np-lista-aberta" hidden></div>';
 
   /* Coluna O defasada: o número da planilha e o cruzamento ao vivo discordam. */
   if(d.divergencia){
@@ -213,24 +227,40 @@ function paintNetworking(turma,turmaValida){
   if(orf.length){
     h+='<div class="np-fora-box"><div class="np-fora-title">⚠️ '+orf.length+' confirmaram no formulário mas não estão na Onboarding '+turma+'</div><div class="np-fora-list">';
     orf.forEach(function(p){
-      h+='<div class="np-fora-item"><strong>'+_npEsc(p.nome||'(sem nome)')+'</strong> · CPF '+_npEsc(p.cpf||'(sem CPF)')+(p.email?' · '+_npEsc(p.email):'')+'</div>';
+      h+='<div class="np-fora-item"><strong>'+_npEsc(p.nome||'(sem nome)')+'</strong> · CPF '+_npEsc(p.cpf||'(sem CPF)')+(p.email?' · '+_npEsc(p.email):'')+abrirNaPlanilha(pl.gidRespostas,p.linha)+'</div>';
     });
     h+='</div></div>';
-  }
-
-  /* 29/09/2026: lista completa de quem confirmou (nome, status na turma, CPF mascarado), recolhida. */
-  const lista=(d.confirmados||[]).slice().sort(function(a,b){return String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR');});
-  if(lista.length){
-    h+='<details class="np-atencao-box"><summary class="np-dup-title" style="cursor:pointer;margin-bottom:0">📋 Ver '+(lista.length===1?'a pessoa que confirmou':'as '+lista.length+' pessoas que confirmaram')+'</summary><div class="np-atencao-list" style="margin-top:12px">';
-    lista.forEach(function(p){
-      h+='<div class="np-atencao-item"><strong>'+_npEsc(p.nome||'(sem nome)')+'</strong><span class="np-atencao-cpf">'+_npEsc(p.status||'(sem status)')+' · CPF '+_npEsc(p.cpf||'(sem CPF)')+'</span></div>';
-    });
-    h+='</div></details>';
   }
 
   h+='<div class="np-source live">● LIVE — cruzamento no Apps Script da '+turma+' · '+conf+' confirmados'+quando+(d.cpfMascarado?' · CPF mascarado':'')+'</div>';
 
   el.innerHTML=h;
+
+  /* 01/10/2026: os 3 números do ADM abrem, logo abaixo deles, a lista de quem forma cada número.
+     E-mail e CPF seguem mascarados; o contato completo abre na planilha, na linha da pessoa. */
+  const porNome=function(a,b){return String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR');};
+  const item=function(p,detalhe,gid,linha){return '<div class="np-atencao-item"><strong>'+_npEsc(p.nome||'(sem nome)')+'</strong><span class="np-atencao-cpf">'+detalhe+abrirNaPlanilha(gid,linha)+'</span></div>';};
+  const nResp=t.respostasUnicas||0, nFora=t.orfaos||0;
+  const listas={
+    confirmados:{titulo:(conf===1?'A pessoa confirmada':'As '+conf+' pessoas confirmadas')+' na Noite de Networking',
+      itens:(d.confirmados||[]).slice().sort(porNome).map(function(p){return item(p,_npEsc(p.status||'(sem status)')+' · CPF '+_npEsc(p.cpf||'(sem CPF)'),pl.gidOnboarding,p.linha);})},
+    respondentes:{titulo:(nResp===1?'A pessoa que respondeu':'As '+nResp+' pessoas que responderam')+' o formulário',
+      itens:(d.respondentes||[]).slice().sort(porNome).map(function(p){return item(p,(p.naTurma?_npEsc(p.status||'(sem status)'):'fora da turma')+' · CPF '+_npEsc(p.cpf||'(sem CPF)'),pl.gidRespostas,p.linha);})},
+    fora:{titulo:nFora+' '+(nFora===1?'pessoa respondeu o formulário e não está':'pessoas responderam o formulário e não estão')+' na Onboarding '+turma,
+      itens:(d.orfaos||[]).map(function(p){return item(p,'CPF '+_npEsc(p.cpf||'(sem CPF)')+(p.email?' · '+_npEsc(p.email):''),pl.gidRespostas,p.linha);})}
+  };
+  const abrirLista=function(k){
+    const box=el.querySelector('#np-lista-aberta');const L=listas[k];if(!box||!L)return;
+    const fechar=(box.dataset.k===k&&!box.hidden);
+    el.querySelectorAll('.np-stat-click').forEach(function(x){x.classList.toggle('on',!fechar&&x.getAttribute('data-np-lista')===k);});
+    if(fechar){box.hidden=true;box.dataset.k='';return;}
+    box.dataset.k=k;
+    box.innerHTML='<div class="np-dup-title" style="margin-bottom:10px">'+L.titulo+'</div><div class="np-atencao-list">'+(L.itens.join('')||'<div class="np-empty">Ninguém nesta lista agora.</div>')+'</div>'
+      +'<div class="np-lista-nota">E-mail e CPF aparecem mascarados no painel. O contato completo está na planilha da '+turma+', no botão "abrir na planilha".</div>';
+    box.hidden=false;
+  };
+  el.onclick=function(ev){const s=ev.target.closest?ev.target.closest('[data-np-lista]'):null;if(s&&el.contains(s))abrirLista(s.getAttribute('data-np-lista'));};
+  el.onkeydown=function(ev){if(ev.key!=='Enter'&&ev.key!==' ')return;const s=ev.target.closest?ev.target.closest('[data-np-lista]'):null;if(!s)return;ev.preventDefault();abrirLista(s.getAttribute('data-np-lista'));};
 }
 function paintNetworkingT15(turmaValida){return paintNetworking('T15',turmaValida);}
 
