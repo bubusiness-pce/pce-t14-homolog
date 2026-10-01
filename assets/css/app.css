@@ -2561,3 +2561,49 @@ body{background:var(--bg)}
 .np-lista-nota{font-size:11px;color:var(--muted,#888);margin-top:10px}
 .np-abrir{color:var(--green,#f5a623);font-weight:700;text-decoration:none;white-space:nowrap}
 .np-abrir:hover{text-decoration:underline}
+
+/* ===== 01/10/2026 · primeira dobra no horizontal e no vertical (aprovado pelo Carlos) ===== */
+/* Noite de Networking num card só (qualquer tela): a faixa vira o cabeçalho e o número grande
+   substitui o "Total confirmados" do card */
+#np-card{border-color:rgba(245,166,35,.32);background:linear-gradient(90deg,rgba(245,166,35,.08),rgba(245,166,35,.015));padding:18px 22px}
+#np-card>.np-faixa{margin:0;padding:0 0 4px;border:0;background:none;box-shadow:none;animation:none}
+#np-card>.np-faixa::before{display:none}
+#np-card .np-faixa-title{letter-spacing:.08em}
+#np-card-content{margin-top:8px!important}
+#np-card .np-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:10px}
+#np-card .np-grid>.np-stat:first-child{display:none}
+#np-card .np-stat{padding:8px 12px}
+#np-card .np-stat-val{font-size:24px}
+#np-card .np-stat-sub{margin-top:2px}
+#np-card .np-source{margin-top:6px}
+#np-card:has(>#np-faixa:not([style*="none"])){display:block!important}
+@media (max-width:640px){#np-card .np-grid{grid-template-columns:1fr}}
+/* A partir de 769 px: indicadores mais baixos, anéis do mapa numa linha e Typeform compacto.
+   O desenho da plenária (#seatmap-floor) não muda. */
+@media (min-width:769px){
+  .kr-cell{padding:12px 18px 10px}
+  .kr-n{font-size:40px}
+  #seatmap-sub .sm-occ{display:flex;flex-wrap:nowrap;align-items:center;gap:10px 18px}
+  #seatmap-sub .sm-occ>*{min-width:0}
+  .seatmap-desc{margin-bottom:10px}
+  .seatmap-legend{margin:10px 0 12px}
+  .tf-card{padding:18px 22px}
+  #meta-confirm{margin-top:8px!important}
+  .tf-card .meta-wrap{flex-direction:row;align-items:center;gap:18px;padding:2px 0 0}
+  .tf-card .meta-gauge{width:90px;height:90px}
+  .tf-card .meta-info-val{font-size:30px}
+  .tf-card .meta-info-faltam{margin-top:4px}
+  .tf-card .meta-badge{margin-top:6px}
+  #br-funil-meta-wrap>.sl{margin-bottom:8px}
+}
+/* Vertical (tela em pé): mapa na largura toda; Typeform e Noite de Networking lado a lado */
+@media (orientation:portrait) and (min-width:769px){
+  .kpi-ribbon{grid-template-columns:repeat(5,1fr);gap:10px}
+  .kr-cell:last-child{grid-column:auto}
+  .dash-grid{grid-template-columns:1fr}
+  .dash-grid>#br-funil-meta-wrap{order:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;align-items:start}
+  #br-funil-meta-wrap>.sl:first-child{grid-column:1;grid-row:1}
+  #br-funil-meta-wrap>.tf-grid{grid-column:1;grid-row:2}
+  #br-funil-meta-wrap>.faixa-vazia,#br-funil-meta-wrap>#np-card{grid-column:2;grid-row:2;margin-top:0!important}
+  #br-funil-meta-wrap>#prod-t15-sl,#br-funil-meta-wrap>#prod-t15-grid{grid-column:1/-1}
+}

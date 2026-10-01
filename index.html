@@ -13,7 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <!-- Supabase + Sortable lazy-loaded sob demanda (só quando o Manual abre) — economiza ~250KB no boot -->
 <script src="assets/js/01-manual-deps.js?v=3.2.0"></script>
-<link rel="stylesheet" href="assets/css/app.css?v=3.5.16">
+<link rel="stylesheet" href="assets/css/app.css?v=3.5.18">
 
 <!-- ═══════════════════════════════════════════════════════════════════════
      v49_sugestao — UX REFRESH 2025/2026
@@ -187,9 +187,8 @@
             <div class="card tf-card" style="grid-column:1/-1"><div class="ct ct-title">Confirmados com Typeform</div><div class="cs">Meta = todos os confirmados com Typeform preenchido</div><div id="meta-confirm" style="margin-top:12px"></div></div>
           </div>
           <div class="card faixa-vazia"><div class="ct ct-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Faixa de evento</div><div class="cs faixa-vazia-txt">Nenhuma noite de networking configurada para a <span class="faixa-vazia-turma">T16</span>. Quando houver, o contador de confirmados aparece aqui.</div></div>
-          <!-- 29/09/2026 · a faixa da Noite de Networking ocupa o lugar reservado da "Faixa de evento" -->
-          <div class="np-faixa" id="np-faixa" style="display:none"><div class="np-faixa-icon">🎤</div><div class="np-faixa-text"><div class="np-faixa-title" id="np-faixa-title">Confirmados na Noite de Networking de Maio</div><div class="np-faixa-sub" id="np-faixa-sub"></div></div><div class="np-faixa-count" id="np-faixa-count">—</div></div>
-          <div class="card" id="np-card" style="display:none;margin-top:12px"><div class="ct ct-title"><span>Confirmações da Noite de Networking — <span id="np-card-turma">T16</span></span></div><div class="cs">Quem respondeu o formulário da noite e se está na turma</div><div id="np-card-content" style="margin-top:12px"></div></div>
+          <!-- 01/10/2026 · Noite de Networking num card só: a faixa é o cabeçalho do card, no lugar reservado da "Faixa de evento" -->
+          <div class="card" id="np-card" style="display:none;margin-top:12px"><div class="np-faixa" id="np-faixa" style="display:none"><div class="np-faixa-icon">🎤</div><div class="np-faixa-text"><div class="np-faixa-title" id="np-faixa-title">Confirmados na Noite de Networking de Maio</div><div class="np-faixa-sub" id="np-faixa-sub"></div></div><div class="np-faixa-count" id="np-faixa-count">—</div></div><div id="np-card-content" style="margin-top:12px"></div></div>
           <div class="sl" id="prod-t15-sl" style="display:none">Produção T15 — Cartas Proféticas &amp; Frases do Cliente</div>
           <div class="g2" id="prod-t15-grid" style="display:none">
             <div class="card" id="prod-cartas-card"><div class="ct">📜 Cartas Proféticas — T15</div><div class="cs">Contagem por status da coluna ATIVIDADE · aba “Carta Profética - T15”</div><div id="prod-cartas" style="margin-top:12px"></div></div>
@@ -668,7 +667,7 @@
   <button class="mob-tab" data-mob="estoque" onclick="switchPage('estoque')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><span>Estoque</span></button>
   <button class="mob-tab" data-mob="menu" onclick="toggleMobileNav()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>Menu</span></button>
 </nav>
-<script src="assets/js/04-core-dashboard.js?v=3.5.17"></script>
+<script src="assets/js/04-core-dashboard.js?v=3.5.18"></script>
 
 <script src="assets/js/05-manual-pce.js?v=3.5.5"></script>
 
