@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.18';
+const PCE_VERSION = '3.5.19';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -64,7 +64,7 @@ async function fetchNetworking(turma,force){
   n.state='loading';
   try{
     const ctrl=new AbortController();
-    const tm=setTimeout(function(){ctrl.abort();},12000);
+    const tm=setTimeout(function(){ctrl.abort();},30000); // 01/10/2026: 30 s como as outras fontes (a porta do Apps Script às vezes demora)
     const res=dashSrc(n.url)?await dashFetchRes(dashSrc(n.url),ctrl.signal):await fetch(n.url,{signal:ctrl.signal,cache:'no-store'});
     clearTimeout(tm);
     if(!res.ok) throw new Error('HTTP '+res.status);
