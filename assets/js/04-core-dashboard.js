@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.16';
+const PCE_VERSION = '3.5.17';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -253,14 +253,16 @@ function paintNetworking(turma,turmaValida){
     const box=el.querySelector('#np-lista-aberta');const L=listas[k];if(!box||!L)return;
     const fechar=(box.dataset.k===k&&!box.hidden);
     el.querySelectorAll('.np-stat-click').forEach(function(x){x.classList.toggle('on',!fechar&&x.getAttribute('data-np-lista')===k);});
-    if(fechar){box.hidden=true;box.dataset.k='';return;}
-    box.dataset.k=k;
+    if(fechar){box.hidden=true;box.dataset.k='';el.dataset.npAberta='';return;}
+    box.dataset.k=k;el.dataset.npAberta=k;
     box.innerHTML='<div class="np-dup-title" style="margin-bottom:10px">'+L.titulo+'</div><div class="np-atencao-list">'+(L.itens.join('')||'<div class="np-empty">Ninguém nesta lista agora.</div>')+'</div>'
       +'<div class="np-lista-nota">E-mail e CPF aparecem mascarados no painel. O contato completo está na planilha da '+turma+', no botão "abrir na planilha".</div>';
     box.hidden=false;
   };
   el.onclick=function(ev){const s=ev.target.closest?ev.target.closest('[data-np-lista]'):null;if(s&&el.contains(s))abrirLista(s.getAttribute('data-np-lista'));};
   el.onkeydown=function(ev){if(ev.key!=='Enter'&&ev.key!==' ')return;const s=ev.target.closest?ev.target.closest('[data-np-lista]'):null;if(!s)return;ev.preventDefault();abrirLista(s.getAttribute('data-np-lista'));};
+  /* O painel é redesenhado quando os dados chegam ou são atualizados; a lista que estava aberta volta aberta. */
+  if(el.dataset.npAberta&&listas[el.dataset.npAberta])abrirLista(el.dataset.npAberta);
 }
 function paintNetworkingT15(turmaValida){return paintNetworking('T15',turmaValida);}
 
