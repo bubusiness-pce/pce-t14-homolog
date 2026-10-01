@@ -2611,6 +2611,7 @@ body{background:var(--bg)}
 /* versao publica · 01/10/2026: sem login o dashboard abre direto; o botao Entrar fica no topo para a equipe */
 body:not(.modo-publico) #btn-entrar{display:none}
 .modo-publico .estoque-toolbar{display:none}
+.modo-publico #nv-btn-upload,.modo-publico .nv-ttab-new{display:none}
 .estoque-nome-txt,.estoque-logo-txt{display:inline-block;padding:6px 0}
 .estoque-qtd-txt{font-weight:700}
 .estoque-sem-foto{opacity:.45}
