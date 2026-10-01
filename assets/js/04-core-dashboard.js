@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.20';
+const PCE_VERSION = '3.5.21';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -2305,7 +2305,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
          do servidor sem login. Estes quatro quadros dependem delas e mostram o aviso no lugar. */
       if (_ehPublico()) ['ins-dores','ins-prior','ins-wcloud','ins-intencoes'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = '<div class="ins-empty pub-nota">🔒 Este quadro usa as respostas abertas dos alunos. Fica visível para a equipe, com login.</div>';
+        if (el) el.innerHTML = '<div class="pub-nota pub-quadro">🔒 Este quadro usa as respostas abertas dos alunos. Fica visível para a equipe, com login.</div>';
       });
 
       console.log('[INSIGHTS] Renderizado com sucesso. Confirmados:', total,

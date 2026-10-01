@@ -2615,3 +2615,4 @@ body:not(.modo-publico) #btn-entrar{display:none}
 .estoque-qtd-txt{font-weight:700}
 .estoque-sem-foto{opacity:.45}
 .pub-nota{font-size:12.5px;line-height:1.5;color:var(--muted,#9a9a95);padding:14px 4px}
+.pub-quadro{display:flex;align-items:center;justify-content:center;min-height:120px;text-align:center}
