@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.22';
+const PCE_VERSION = '3.5.23';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -2294,16 +2294,18 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
         return;
       }
 
-      renderInsBar('ins-dores',    gerarRankingDores(confirmados),   total);
+      /* Versao publica (05/10/2026): as respostas abertas nao vem para o navegador. Estes quatro quadros chegam
+         prontos do servidor (publico.abertos, calculados com as mesmas funcoes deste arquivo). */
+      const _ab = _ehPublico() ? ((_perfilSrc().publico || {}).abertos || null) : null;
+      renderInsBar('ins-dores',    _ab ? _ab.dores : gerarRankingDores(confirmados),   total);
       renderTopFaturamento(gerarTopFaturamento(confirmados));
-      renderInsBar('ins-prior',    gerarPrioridades(confirmados),    total);
+      renderInsBar('ins-prior',    _ab ? _ab.prior : gerarPrioridades(confirmados),    total);
       renderMapaFaturamento(gerarMapaFaturamento(confirmados),       total);
-      renderWordCloud(gerarWordCloud(confirmados),                   total);
+      renderWordCloud(_ab ? _ab.wcloud : gerarWordCloud(confirmados),                   total);
       renderFamilia(gerarFamilia(confirmados));
-      renderIntencoes(gerarIntencoes(confirmados),                   total);
-      /* Versao publica (01/10/2026): as respostas abertas (sonhos, metas, dores, o que querem aprender) nao saem
-         do servidor sem login. Estes quatro quadros dependem delas e mostram o aviso no lugar. */
-      if (_ehPublico()) ['ins-dores','ins-prior','ins-wcloud','ins-intencoes'].forEach(id => {
+      renderIntencoes(_ab ? _ab.intencoes : gerarIntencoes(confirmados),                   total);
+      /* Sem o pacote do servidor (copia antiga guardada no navegador), o aviso continua no lugar. */
+      if (_ehPublico() && !_ab) ['ins-dores','ins-prior','ins-wcloud','ins-intencoes'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '<div class="pub-nota pub-quadro">🔒 Este quadro usa as respostas abertas dos alunos. Fica visível para a equipe, com login.</div>';
       });
@@ -2618,15 +2620,18 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
     const pctMedio = totalFat>0 ? Math.round((pequeno+medio+grande)/totalFat*100) : 0;
     const pctAcimaMM = totalFat>0 ? Math.round((medio+grande)/totalFat*100) : 0;
 
+    // Versao publica (05/10/2026): as contagens de dores e aprendizados chegam prontas do servidor (publico.abertos.diag)
+    const _abd = _ehPublico() ? (((_perfilSrc().publico || {}).abertos || {}).diag || null) : null;
+
     // Top 3 dores
-    const dorTextos = data.map(r => r.problemas || '');
-    const dorCounts = classificaTopico(dorTextos, TOPICOS_DOR);
+    const dorTextos = _abd ? [] : data.map(r => r.problemas || '');
+    const dorCounts = _abd ? _abd.dorCounts : classificaTopico(dorTextos, TOPICOS_DOR);
     const topDores = topN(dorCounts, 3);
-    const dorTotal = dorTextos.filter(t=>t&&t.length>2).length || total;
+    const dorTotal = (_abd ? _abd.dorTotal : dorTextos.filter(t=>t&&t.length>2).length) || total;
 
     // Top 3 aprendizados
-    const aprenderTextos = data.map(r => r.aprenderPCE || r.aprender || '');
-    const aprCounts = classificaTopico(aprenderTextos, TOPICOS_APRENDER);
+    const aprenderTextos = _abd ? [] : data.map(r => r.aprenderPCE || r.aprender || '');
+    const aprCounts = _abd ? _abd.aprCounts : classificaTopico(aprenderTextos, TOPICOS_APRENDER);
     const topApr = topN(aprCounts, 3);
 
     // Tipo de cliente
@@ -2661,8 +2666,8 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       ${topCli.length>0 ? `<p>O perfil de clientes é predominantemente ${cliFrase}.</p>` : ''}
     `;
     const elBody = document.getElementById('diag-body');
-    /* Versao publica (01/10/2026): dores e aprendizados vem das respostas abertas e ficam para a equipe. */
-    if (elBody) elBody.innerHTML = html + (_ehPublico() ? '<p class="pub-nota">🔒 As dores e o que a turma quer aprender vêm das respostas abertas dos alunos e aparecem para a equipe, com login.</p>' : '');
+    /* Versao publica: sem o pacote do servidor (copia antiga guardada no navegador), o aviso continua. */
+    if (elBody) elBody.innerHTML = html + (_ehPublico() && !_abd ? '<p class="pub-nota">🔒 As dores e o que a turma quer aprender vêm das respostas abertas dos alunos e aparecem para a equipe, com login.</p>' : '');
 
     // Leitura Estratégica — bullets dinâmicos
     const bullets = [];
