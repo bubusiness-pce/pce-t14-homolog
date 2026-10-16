@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.23';
+const PCE_VERSION = '3.5.24';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -24,7 +24,10 @@ const DATA_SOURCES = {
    Toda leitura passa pelo porteiro (Edge Function dash-proxy no Supabase), que so responde a usuario
    logado com perfil aprovado. Os enderecos das portas ficam guardados como segredo no porteiro.
    Engenharia e fundacao: Ronaldo Ferreira */
-const DASH_PROXY_BASE='https://amibetbgzwaayhyxnank.supabase.co/functions/v1/dash-proxy';
+/* 16/10/2026 (homologação): porteiro com cópia de reserva. Se o Google demorar mais de 12 s, ele entrega a última
+   resposta boa (o campo 'updated' mostra a hora dela) e busca a nova por trás. Antes, a tela desistia aos 30 s e
+   caía no 'Modo cache' com o quadro da T16 girando. */
+const DASH_PROXY_BASE='https://amibetbgzwaayhyxnank.supabase.co/functions/v1/dash-proxy-reserva';
 /* Versao publica (01/10/2026): sem login, a leitura vai para o porteiro publico (dash-public). Ele entrega os
    mesmos numeros sem dado pessoal: nome, CPF e empresa viram codigo; contato, familia e texto livre ficam de fora.
    Com login da equipe, a leitura continua no dash-proxy, com o dado completo para o Painel ADM. */
