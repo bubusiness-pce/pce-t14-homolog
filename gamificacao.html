@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
-  PCE 2.0 — GAMIFICAÇÃO DA IMERSÃO (index standalone, HOMOLOG)
+  MENTOR DE LÍDERES — GAMIFICAÇÃO DA IMERSÃO (link gamificacao.html). Desde 28/10/2026 este link é do MELID:
+  logo, leão de fundo e placar próprio (gamificacao_melid_*), a pedido do Carlos Cordeiro. O PCE ganha link próprio.
   Engenharia e fundação do ecossistema PCE 2.0: Ronaldo Ferreira.
   ------------------------------------------------------------------
   Placar de pontos corridos em tempo real para a gamificação da
@@ -12,7 +13,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>[HOMOLOG] PCE — Gamificação da Imersão</title>
+<title>[HOMOLOG] Mentor de Líderes — Gamificação da Imersão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -303,7 +304,7 @@
       <div id="ranking"><!-- team-rows injetadas --></div>
       <div class="placar-foot">
         <span id="foot-updated">—</span>
-        <span>PCE · 10 em 12 · atualiza automaticamente</span>
+        <span>Mentor de Líderes · atualiza automaticamente</span>
       </div>
     </section>
 
@@ -417,10 +418,10 @@
   var SUPABASE_URL = 'https://pggcbvafkwyqyvlkiyti.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnZ2NidmFma3d5cXl2bGtpeXRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTY5NDMsImV4cCI6MjEwMTA5Mjk0M30.y2FaXpreVN_eeFMmlWDuQUXCN3C69qI8ooTcRl2k7ZI';
   var POLL_MS   = 3000;
-  var CACHE_KEY = 'pce_gam_state_v1';
-  var PIN_KEY   = 'pce_gam_pin_v1';
+  var CACHE_KEY = 'melid_gam_state_v1';
+  var PIN_KEY   = 'melid_gam_pin_v1';
 
-  // Equipes vem do banco (tabela gamificacao_grupos). Criar e excluir pelo Painel.
+  // Equipes vem do banco (tabela gamificacao_melid_grupos). Criar e excluir pelo Painel.
   var GRUPOS = [];
   var COR = {}; var NOME = {};
 
@@ -614,7 +615,7 @@
   async function fetchState(){
     if(!SB){ setConn(false); return; }
     try {
-      var res = await SB.from('gamificacao_grupos').select('grupo,nome,cor,pontos,ordem').order('ordem',{ascending:true});
+      var res = await SB.from('gamificacao_melid_grupos').select('grupo,nome,cor,pontos,ordem').order('ordem',{ascending:true});
       if(res.error) throw res.error;
       setConn(true);
       var rows = (res.data||[]).map(function(r){
@@ -629,7 +630,7 @@
   async function fetchLog(){
     if(!SB || !online) return;
     try {
-      var res = await SB.from('gamificacao_log').select('grupo,delta,motivo,created_at').order('created_at',{ascending:false}).limit(14);
+      var res = await SB.from('gamificacao_melid_log').select('grupo,delta,motivo,created_at').order('created_at',{ascending:false}).limit(14);
       if(!res.error) renderLog(res.data||[]);
     } catch(e){}
   }
@@ -641,7 +642,7 @@
     if(!SB){ toast('Sem SDK do Supabase carregado', 'err'); return; }
     var motivo = ($('motivo') ? $('motivo').value : '') || null;
     try {
-      var res = await SB.rpc('gamificacao_ajustar', {p_grupo:grupo, p_delta:delta, p_motivo:motivo, p_pin:pin()});
+      var res = await SB.rpc('gamificacao_melid_ajustar', {p_grupo:grupo, p_delta:delta, p_motivo:motivo, p_pin:pin()});
       if(res.error) throw res.error;
       toast(NOME[grupo] + ' ' + (delta>=0?'+':'') + delta + ' pts', delta>=0?'ok':'');
       await fetchState(); await fetchLog();
@@ -698,7 +699,7 @@
       'Todas as equipes voltam a zero e uma nova rodada começa. Digite a senha para confirmar.',
       'Zerar placar',
       async function(senha){
-        var res = await SB.rpc('gamificacao_zerar', {p_pin:senha});
+        var res = await SB.rpc('gamificacao_melid_zerar', {p_pin:senha});
         if(res.error) throw res.error;
         toast('Placar zerado', 'ok'); lastPts={};
         await fetchState(); await fetchLog();
@@ -775,7 +776,7 @@
     if(!corSel){ toast('Escolha uma cor para a equipe', 'err'); return; }
     if(GRUPOS.length >= MAX_EQUIPES){ toast('Limite de ' + MAX_EQUIPES + ' equipes', 'err'); return; }
     try {
-      var res = await SB.rpc('gamificacao_grupo_criar', {p_nome:nome, p_cor:corSel, p_pin:pin()});
+      var res = await SB.rpc('gamificacao_melid_grupo_criar', {p_nome:nome, p_cor:corSel, p_pin:pin()});
       if(res.error) throw res.error;
       el.value = ''; corSel = null; nomeAuto = '';
       toast('Equipe ' + nome + ' criada', 'ok');
@@ -794,7 +795,7 @@
       'A equipe ' + nome + ' e os pontos dela serão removidos do placar. Digite a senha para confirmar.',
       'Excluir equipe',
       async function(senha){
-        var res = await SB.rpc('gamificacao_grupo_excluir', {p_grupo:grupo, p_pin:senha});
+        var res = await SB.rpc('gamificacao_melid_grupo_excluir', {p_grupo:grupo, p_pin:senha});
         if(res.error) throw res.error;
         toast('Equipe ' + nome + ' excluída', 'ok');
         await fetchState(); await fetchLog();
@@ -814,7 +815,7 @@
     if(!v){ $('gate-err').textContent='Digite o PIN.'; return; }
     // valida o PIN no servidor, sem depender de nenhuma equipe existir
     try {
-      var res = await SB.rpc('gamificacao_pin_ok', {p_pin:v});
+      var res = await SB.rpc('gamificacao_melid_pin_ok', {p_pin:v});
       if(res.error) throw res.error;
       try { sessionStorage.setItem(PIN_KEY, v); } catch(e){}
       $('gate-err').textContent=''; $('pin').value='';
@@ -873,8 +874,8 @@
   function subscribeRealtime(){
     if(!SB || !SB.channel) return;
     try {
-      SB.channel('gam-live')
-        .on('postgres_changes', {event:'*', schema:'public', table:'gamificacao_grupos'}, function(){ fetchState(); if(curView==='admin') fetchLog(); })
+      SB.channel('gam-melid-live')
+        .on('postgres_changes', {event:'*', schema:'public', table:'gamificacao_melid_grupos'}, function(){ fetchState(); if(curView==='admin') fetchLog(); })
         .subscribe();
     } catch(e){}
   }
@@ -1055,7 +1056,7 @@
     var v=($('pin-c').value||'').trim();
     if(!v){ $('gate-c-err').textContent='Digite o PIN.'; return; }
     try {
-      var res=await SB.rpc('gamificacao_pin_ok', {p_pin:v});
+      var res=await SB.rpc('gamificacao_melid_pin_ok', {p_pin:v});
       if(res.error) throw res.error;
       try { sessionStorage.setItem(PIN_KEY, v); } catch(e){}
       $('gate-c-err').textContent=''; $('pin-c').value=''; showCampeao();
