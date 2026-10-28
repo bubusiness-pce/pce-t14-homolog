@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.24';
+const PCE_VERSION = '3.5.25';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -4558,8 +4558,7 @@ function manualFormatMeta(data){
     var mm = String(d.getMonth()+1).padStart(2,'0');
     var hh = String(d.getHours()).padStart(2,'0');
     var mi = String(d.getMinutes()).padStart(2,'0');
-    meta = 'Atualizado em ' + dd + '/' + mm + ' as ' + hh + ':' + mi;
-    if (data._updatedByName) meta += ' por ' + data._updatedByName;
+    meta = 'Última atualização: ' + dd + '/' + mm + ' às ' + hh + ':' + mi;
   }
   return meta;
 }
