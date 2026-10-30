@@ -4,6 +4,7 @@
   Amigo secreto da imersão. O aluno entra pelo QR do telão (ou pelo link do grupo) com o nome completo,
   sorteia o protegido e registra os mimos. Tudo passa pelas funções gamificacao_anjo_* do banco, sem tabela direta.
   Formato do endereço: anjo.html?e=<codigo>
+  Tela do dia a dia: o nome do protegido abre sempre escondido (borrado), e as reações (brilho e corações) ficam só em volta do botão tocado.
   Visual e inicialização do Supabase seguem a página gamificacao-febracis.html.
 -->
 <html lang="pt-BR">
@@ -177,7 +178,7 @@
   .cont{font-size:14px;font-weight:700;color:var(--accent-soft);white-space:nowrap}
   .tipos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .tipo{appearance:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:76px;padding:12px 4px;border-radius:14px;border:1px solid rgba(var(--accent-rgb),.55);background:rgba(var(--accent-rgb),.1);color:var(--cream);font:700 14px 'Montserrat',system-ui,sans-serif;transition:background .15s,transform .12s}
-  .tipo svg{width:26px;height:26px;color:var(--accent)}
+  .tipo .ic{font-size:26px;line-height:1}
   .tipo:hover{background:rgba(var(--accent-rgb),.22)}
   .tipo:active{transform:scale(.97)}
   .tipo:disabled{opacity:.45;cursor:not-allowed;transform:none}
@@ -194,12 +195,30 @@
 @media (prefers-reduced-motion: reduce){.btn.coracao .emoji{transition:none}}
 .ok-linha{font-size:14.5px;color:var(--ok);font-weight:600}
   .turma{text-align:center;font-size:14px;color:var(--muted)}
+  .dica-time{border:1px solid rgba(216,160,56,.45);background:rgba(216,160,56,.10);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5;color:var(--cream)}
+  .dica-time strong{color:var(--accent-soft)}
+  .dica-curta{font-size:13px;opacity:.85}
   .rodape{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
   .encerrada{font-weight:700;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,10,46,.55)}
 
   .quem{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px;width:100%}
   .quem li{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(0,10,46,.5);border:1px solid var(--line);font-size:15px;text-align:left}
   .quem li span:last-child{color:var(--accent-soft);font-weight:700;white-space:nowrap}
+
+  /* nome do protegido escondido por padrão: borrado e sem seleção */
+  .nome-grande{transition:filter .3s}
+  .prot.oculto .nome-grande{filter:blur(9px);-webkit-user-select:none;user-select:none;pointer-events:none}
+  .olho{appearance:none;cursor:pointer;min-height:44px;padding:8px 18px;border-radius:99px;border:1px solid var(--line);background:rgba(0,10,46,.6);color:var(--cream);font:700 14px 'Montserrat',system-ui,sans-serif;display:inline-flex;align-items:center;gap:8px;transition:border-color .15s,color .15s}
+  .olho:hover{border-color:var(--accent);color:var(--accent-soft)}
+
+  /* reações curtas: ficam dentro da tela, em volta do botão tocado, e saem sozinhas */
+  #fx{position:fixed;inset:0;z-index:30;overflow:hidden;pointer-events:none}
+  .particula{position:absolute;left:0;top:0;pointer-events:none;font-style:normal;line-height:1;animation:voa .95s cubic-bezier(.15,.7,.3,1) forwards}
+  @keyframes voa{0%{opacity:1;transform:translate(-50%,-50%) scale(.6)}70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.05) rotate(var(--rot))}}
+  .brinde{position:absolute;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);max-width:calc(100vw - 32px);background:rgba(0,24,84,.96);border:1px solid rgba(var(--accent-rgb),.6);border-radius:99px;padding:9px 18px;font-size:14px;font-weight:700;white-space:nowrap;box-shadow:0 10px 28px rgba(0,0,0,.5);animation:brinde 1.8s ease forwards}
+  @keyframes brinde{0%{opacity:0;transform:translate(-50%,8px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+  .pop{display:inline-block;animation:pop .45s ease-out}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}
 
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}
@@ -225,6 +244,7 @@
   <p class="sr" id="status" role="status" aria-live="polite"></p>
 </div>
 <div id="flash"></div>
+<div id="fx" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -253,11 +273,7 @@
   var MSG_REDE = 'Não conseguimos falar com o servidor. Confira a internet e tente de novo.';
   var TERMINAIS = {evento:1, nao_abriu:1, nao_achou:1, fora:1};
 
-  var ICONES = {
-    Bilhete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6.5L20.5 7"/></svg>',
-    Presente: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="9" width="17" height="11" rx="2"/><path d="M12 9v11M3.5 13h17M12 9c-1-4-5.5-4.5-5.5-1.8C6.5 9 9 9 12 9zm0 0c1-4 5.5-4.5 5.5-1.8C17.5 9 15 9 12 9z"/></svg>',
-    Gentileza: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C5.5 16 3 12 4.6 8.9c1.4-2.6 5-2.7 7.4.2 2.4-2.9 6-2.8 7.4-.2 1.6 3.1-.9 7.1-7.4 11.6z"/></svg>'
-  };
+  var ICONES = {Bilhete: '💌', Presente: '🎁', Gentileza: '🤗'};
   var TIPOS = ['Bilhete', 'Presente', 'Gentileza'];
   var ANJO = '<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="9" rx="12" ry="4" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24 44C11 35 7 27.5 11.5 22.5c3.4-3.8 9-3 12.5 1.6 3.5-4.6 9.1-5.4 12.5-1.6C41 27.5 37 35 24 44z" fill="currentColor"/></svg>';
 
@@ -288,7 +304,8 @@
     e: null,         // último estado devolvido pelo banco
     busy: false,
     flash: null,     // {t:'erro', txt} só na tela do sorteio; nas ações o aviso vai para #flash
-    estreia: false,  // anima o cartão do protegido uma única vez
+    revelando: false, // tela "Seu protegido é", só logo depois do sorteio
+    oculto: true,    // nome do protegido escondido; não é guardado, volta a true toda vez que a tela abre
     faiscaAnjo: true // faíscas do "Seu anjo era" uma única vez
   };
 
@@ -411,7 +428,7 @@
       return;
     }
     S.nome = nome; gravarNome(nome);
-    S.e = d; S.flash = null;
+    S.e = d; S.flash = null; S.oculto = true; S.revelando = false;
     principal(true);
   }
 
@@ -421,8 +438,8 @@
     var e = S.e, ev = e.evento;
     if (ev.status === 'encerrado' && !(e.sorteou && e.revelou)) { mostrar(htmlEncerradaSemProtegido(), rolar); return; }
     if (!e.sorteou || !e.revelou) { mostrar(htmlPronto(), rolar); return; }
-    var estreia = S.estreia; S.estreia = false;
-    mostrar(htmlJogo(estreia), rolar);
+    if (S.revelando) { mostrar(htmlRevelaProtegido(), rolar); return; }
+    mostrar(htmlJogo(), rolar);
   }
   function htmlEncerradaSemProtegido(){
     var e = S.e;
@@ -474,46 +491,79 @@
       '</section>';
   }
 
-  function htmlJogo(estreia){
+  // revelação logo depois do sorteio: única hora em que o nome aparece sozinho, com brilho
+  function htmlRevelaProtegido(){
+    var e = S.e;
+    return '<section class="prot estreia" aria-label="Seu protegido">' + faiscas(20) +
+      '<span class="rot">Seu protegido é</span>' +
+      '<span class="nome-grande" data-foco tabindex="-1">' + esc(e.protegido) + '</span>' +
+      '<span class="ajuda">Cuide em segredo. ' + esc(primeiro(e.protegido)) + ' não pode descobrir que é você.</span></section>' +
+      '<div class="dica-time"><strong>Não sabe quem é?</strong> Se você não conhece essa pessoa ou ainda não a encontrou na sala, procure alguém do time com discrição. Eles mostram quem é, para o seu mimo não ir para a pessoa errada.</div>' +
+      '<button class="btn" data-acao="comecar">Entendi, vamos começar</button>' +
+      '<p class="turma">Daqui para a frente o nome fica escondido. Para vê-lo, toque em “Toque para ver”.</p>';
+  }
+
+  // frases que citam o protegido: com o nome escondido, dizem "seu protegido"
+  function primProt(){ return primeiro(S.e.protegido); }
+  function numHoje(){ var e = S.e; return ((e.mimos_por_dia || [])[e.evento.dia - 1]) || 0; }
+  function numChegaram(){ var e = S.e; return e.protegido_recebeu_hoje || (e.protegido_confirmou_hoje ? 1 : 0); }
+  function txtOlho(){ return S.oculto ? '👁 Toque para ver' : '🙈 Esconder'; }
+  function txtSegredo(){ return 'Cuide em segredo. ' + (S.oculto ? 'Seu protegido' : primProt()) + ' não pode descobrir que é você.'; }
+  function txtPergunta(){ var q = S.oculto ? 'seu protegido' : primProt(); return numHoje() ? 'Mais um para ' + q + '?' : 'Já mimou ' + q + ' hoje?'; }
+  function txtChegaram(){ var n = numChegaram(); return (S.oculto ? 'Seu protegido' : primProt()) + ' marcou que recebeu ' + (n === 1 ? '1 mimo' : n + ' mimos') + ' hoje.'; }
+
+  // mostra ou esconde o nome sem refazer a tela
+  function alternarNome(){
+    S.oculto = !S.oculto;
+    var p = $('c-prot'), n = $('c-nome'), o = $('c-olho'), t;
+    if (p) p.classList.toggle('oculto', S.oculto);
+    if (n) { if (S.oculto) n.setAttribute('aria-hidden', 'true'); else n.removeAttribute('aria-hidden'); }
+    if (o) o.textContent = txtOlho();
+    if ((t = $('c-seg'))) t.textContent = txtSegredo();
+    if ((t = $('c-perg'))) t.textContent = txtPergunta();
+    if ((t = $('c-ok'))) t.textContent = txtChegaram();
+    dizer(S.oculto ? 'Nome escondido.' : 'Nome à mostra.');
+  }
+
+  function htmlJogo(){
     var e = S.e, ev = e.evento, enc = ev.status === 'encerrado';
-    var prim = primeiro(e.protegido);
     var porDia = e.mimos_por_dia || [];
-    var hoje = porDia[ev.dia - 1] || 0;
+    var hoje = numHoje();
     var off = (enc || S.busy) ? ' disabled' : '';
     var h = '';
 
     if (e.aviso) {
-      h += '<section class="aviso-troca" role="status"><span><strong>Seu protegido mudou.</strong> A partir de agora você cuida de ' + esc(e.protegido) + '. Os mimos que você já fez continuam valendo.</span>' +
+      h += '<section class="aviso-troca" role="status"><span><strong>Seu protegido mudou.</strong> A pessoa de antes saiu da imersão. Toque em “Toque para ver” para conhecer o novo. Os mimos que você já fez continuam valendo.</span>' +
         '<button class="btn mini" data-acao="ciente"' + (S.busy ? ' disabled' : '') + '>Entendi</button></section>';
     }
 
-    h += '<section class="prot ' + (estreia ? 'estreia' : '') + '" aria-label="Seu protegido">' + (estreia ? faiscas(20) : '') +
-      '<span class="rot">' + (estreia ? 'Seu protegido é' : 'Seu protegido') + '</span>' +
-      '<span class="nome-grande" ' + (estreia ? 'data-foco tabindex="-1"' : '') + '>' + esc(e.protegido) + '</span>' +
-      (enc ? '' : '<span class="ajuda">Cuide em segredo. ' + esc(prim) + ' não pode descobrir que é você.</span>') + '</section>';
+    h += '<section class="prot' + (S.oculto ? ' oculto' : '') + '" id="c-prot" aria-label="Seu protegido"><span class="rot">Seu protegido</span>' +
+      '<span class="nome-grande" id="c-nome"' + (S.oculto ? ' aria-hidden="true"' : '') + '>' + esc(e.protegido) + '</span>' +
+      '<button class="olho" type="button" id="c-olho" data-acao="olho">' + txtOlho() + '</button>' +
+      (enc ? '' : '<span class="ajuda" id="c-seg">' + esc(txtSegredo()) + '</span>' +
+        '<span class="ajuda dica-curta">Não sabe quem é? Procure alguém do time com discrição.</span>') + '</section>';
 
-    h += '<section class="cartao sec" aria-label="Mimo do dia"><div class="sec-topo"><h2>Mimo do dia</h2><span class="cont">' +
+    h += '<section class="cartao sec" aria-label="Mimo do dia"><div class="sec-topo"><h2>Mimo do dia</h2><span class="cont" id="c-hoje">' +
       (hoje ? hoje + ' hoje' : 'Nenhum hoje') + '</span></div>';
     if (enc) h += '<p class="encerrada" role="status">A dinâmica foi encerrada.</p>';
-    else h += '<p class="ajuda">' + (hoje ? 'Mais um para ' + esc(prim) + '?' : 'Já mimou ' + esc(prim) + ' hoje?') + '</p>';
+    else h += '<p class="ajuda" id="c-perg">' + esc(txtPergunta()) + '</p>';
     h += '<div class="tipos">' + TIPOS.map(function(t){
-      return '<button class="tipo" data-acao="mimo" data-tipo="' + t + '"' + off + '>' + ICONES[t] + '<span>' + t + '</span></button>';
+      return '<button class="tipo" data-acao="mimo" data-tipo="' + t + '"' + off + '><span class="ic" aria-hidden="true">' + ICONES[t] + '</span><span>' + t + '</span></button>';
     }).join('') + '</div>';
     if (ev.dias > 1) {
       h += '<ul class="dias" aria-label="Seus mimos por dia">' + porDia.map(function(n, i){
         var d = i + 1;
-        return '<li class="' + (d === ev.dia ? 'hoje' : '') + '"><span>Dia ' + d + '</span><strong>' + (d > ev.dia ? '–' : n) + '</strong></li>';
+        return '<li class="' + (d === ev.dia ? 'hoje' : '') + '"><span>Dia ' + d + '</span><strong' + (d === ev.dia ? ' id="d-hoje"' : '') + '>' + (d > ev.dia ? '–' : n) + '</strong></li>';
       }).join('') + '</ul>';
     }
-    var chegaram = e.protegido_recebeu_hoje || (e.protegido_confirmou_hoje ? 1 : 0);
-    if (chegaram) h += '<p class="ok-linha">' + esc(prim) + ' marcou que recebeu ' + (chegaram === 1 ? '1 mimo' : chegaram + ' mimos') + ' hoje.</p>';
+    if (numChegaram()) h += '<p class="ok-linha" id="c-ok">' + esc(txtChegaram()) + '</p>';
     h += '</section>';
 
     h += '<section class="cartao sec" aria-label="E o seu anjo?"><h2>E o seu anjo?</h2>' +
       '<p class="ajuda">Alguém da turma está cuidando de você. A cada mimo que chegar, toque na carinha.</p>' +
       '<button class="btn coracao ' + (e.recebi_hoje ? 'marcado' : 'sec') + '" data-acao="recebi"' + off + '><span class="emoji" aria-hidden="true">😍</span>' +
       (e.recebi_hoje ? 'Recebi mais um mimo' : 'Recebi um mimo') + '</button>' +
-      (e.recebi_hoje ? '<p class="recebi-cont">Hoje você recebeu <strong>' + (e.recebi_hoje === 1 ? '1 mimo' : e.recebi_hoje + ' mimos') + '</strong>' +
+      (e.recebi_hoje ? '<p class="recebi-cont">Hoje você recebeu <strong id="c-recebi">' + (e.recebi_hoje === 1 ? '1 mimo' : e.recebi_hoje + ' mimos') + '</strong>' +
         '<button class="link" data-acao="desfazer-recebi"' + off + '>Desfazer o último</button></p>' : '') +
       '</section>';
 
@@ -526,9 +576,54 @@
     return h;
   }
 
+  // ---------- reações curtas, só em volta do botão tocado ----------
+  function semMovimento(){
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+  }
+  function explosao(origem, tipo){
+    var fx = $('fx');
+    if (!fx || !origem || semMovimento()) return;
+    var ro = origem.getBoundingClientRect();
+    var cx = ro.left + ro.width / 2, cy = ro.top + ro.height / 2;
+    var simbolos = tipo === 'coracao' ? ['💖','💛','💗','♥','✨'] : ['✦','✧','✨','💛','✦'];
+    var cores = ['#F2C86B','#D8A038','#FFFFFF','#FF6FA5'];
+    for (var i = 0; i < 16; i++) {
+      var p = document.createElement('i');
+      p.className = 'particula';
+      p.textContent = simbolos[i % simbolos.length];
+      var ang = tipo === 'coracao' ? (-Math.PI / 2 + (Math.random() - .5) * 1.9) : (Math.random() * Math.PI * 2);
+      var dist = 40 + Math.random() * (tipo === 'coracao' ? 90 : 62);
+      p.style.left = cx.toFixed(0) + 'px'; p.style.top = cy.toFixed(0) + 'px';
+      p.style.color = cores[i % cores.length];
+      p.style.fontSize = (13 + Math.random() * 10).toFixed(0) + 'px';
+      p.style.setProperty('--dx', Math.round(Math.cos(ang) * dist) + 'px');
+      p.style.setProperty('--dy', Math.round(Math.sin(ang) * dist - (tipo === 'coracao' ? 24 : 0)) + 'px');
+      p.style.setProperty('--rot', Math.round((Math.random() - .5) * 120) + 'deg');
+      p.style.animationDelay = (Math.random() * .08).toFixed(2) + 's';
+      fx.appendChild(p);
+      setTimeout(function(el){ return function(){ if (el.parentNode) el.parentNode.removeChild(el); }; }(p), 1300);
+    }
+  }
+  function pulo(id){
+    var el = $(id);
+    if (!el || semMovimento()) return;
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  }
+  var brindeT = null;
+  function brinde(txt){
+    var fx = $('fx');
+    if (!fx) return;
+    var velho = fx.querySelector('.brinde'); if (velho) velho.parentNode.removeChild(velho);
+    clearTimeout(brindeT);
+    var b = document.createElement('div'); b.className = 'brinde'; b.textContent = txt; fx.appendChild(b);
+    brindeT = setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b); }, 1900);
+    dizer(txt);
+  }
+
   // ---------- ações dentro da tela principal ----------
-  async function agir(fn, extra, carregando, aoOk){
+  async function agir(fn, extra, carregando, aoOk, depois){
     if (S.busy) return;
+    var tinhaAviso = !!(S.e && S.e.aviso);
     S.busy = true; S.flash = null;
     avisar('carregando', carregando); principal(false);
     var d = null, falha = null;
@@ -551,9 +646,11 @@
       return;
     }
     S.e = d;
+    if (d.aviso && !tinhaAviso) S.oculto = true;   // protegido novo: vem escondido
     var msg = aoOk && aoOk(d);
     avisar(msg ? 'ok' : '', msg || '');
     principal(false);
+    if (depois) depois(d);
   }
 
   async function sortear(){
@@ -604,7 +701,7 @@
       principal(true);
       return;
     }
-    S.e = resp; S.estreia = true; S.flash = null;
+    S.e = resp; S.revelando = true; S.oculto = true; S.flash = null;
     dizer('Seu protegido é ' + resp.protegido + '.');
     principal(true);
   }
@@ -615,17 +712,27 @@
     if (!b || b.disabled) return;
     var a = b.getAttribute('data-acao');
     if (a === 'sortear') sortear();
-    else if (a === 'mimo') agir('gamificacao_anjo_mimo', {p_tipo: b.getAttribute('data-tipo')}, 'Registrando seu mimo…', function(d){
-      return 'Mimo registrado. Hoje você já fez ' + ((d.mimos_por_dia || [])[d.evento.dia - 1] || 0) + '.';
-    });
-    else if (a === 'recebi') agir('gamificacao_anjo_recebi', {p_delta: 1}, 'Anotando…', function(d){
-      var n = d.recebi_hoje || 0;
-      return 'Anotado. Hoje você já recebeu ' + (n === 1 ? '1 mimo' : n + ' mimos') + '.';
-    });
+    else if (a === 'comecar') { S.revelando = false; S.oculto = true; dizer(''); principal(true); }
+    else if (a === 'olho') alternarNome();
+    else if (a === 'mimo') {
+      var tipo = b.getAttribute('data-tipo');
+      if (!S.busy) explosao(b, 'brilho');
+      agir('gamificacao_anjo_mimo', {p_tipo: tipo}, 'Registrando seu mimo…', null, function(){
+        pulo('c-hoje'); pulo('d-hoje');
+        brinde((tipo === 'Gentileza' ? 'Gentileza registrada' : tipo + ' registrado') + ' ✨');
+      });
+    }
+    else if (a === 'recebi') {
+      if (!S.busy) explosao(b.querySelector('.emoji') || b, 'coracao');
+      agir('gamificacao_anjo_recebi', {p_delta: 1}, 'Anotando…', null, function(){
+        pulo('c-recebi');
+        brinde('Que bom! Mimo recebido 💖');
+      });
+    }
     else if (a === 'desfazer-recebi') agir('gamificacao_anjo_recebi', {p_delta: -1}, 'Desfazendo…', function(){ return 'Último toque desfeito.'; });
     else if (a === 'ciente') agir('gamificacao_anjo_ciente', null, 'Anotando…', function(){ return ''; });
-    else if (a === 'atualizar') agir('gamificacao_anjo_meu', null, 'Atualizando…', function(){ return 'Tela atualizada.'; });
-    else if (a === 'sair' || a === 'outro-nome') { apagarNome(); S.nome = ''; S.e = null; S.flash = null; avisar('', ''); topo(); sondar(); }
+    else if (a === 'atualizar') { S.oculto = true; agir('gamificacao_anjo_meu', null, 'Atualizando…', function(){ return 'Tela atualizada.'; }); }
+    else if (a === 'sair' || a === 'outro-nome') { apagarNome(); S.nome = ''; S.e = null; S.flash = null; S.oculto = true; S.revelando = false; avisar('', ''); topo(); sondar(); }
     else if (a === 'verificar') { if (S.nome) entrar(S.nome, false); else sondar(); }
     else if (a === 'recarregar') location.reload();
   });
