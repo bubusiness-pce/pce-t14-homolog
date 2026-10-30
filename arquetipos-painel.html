@@ -101,9 +101,21 @@
   .copia p{font-size:13.5px;color:var(--muted);margin-bottom:6px}
 
   /* chave do plano de ação da turma */
-  .chave{display:flex;flex-direction:column;gap:6px}
-  .chave .rot{font-size:13px;font-weight:700;color:var(--muted)}
-  .chave .dias{align-self:flex-start}
+  .chave{display:flex;flex-direction:column;gap:12px;padding:16px;border:2px solid var(--accent);border-radius:16px;background:rgba(216,160,56,.08)}
+  .chave-kicker{font:800 11.5px var(--fonte);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-soft)}
+  .chave h4{margin:4px 0 0;font:800 19px/1.3 var(--fonte);color:var(--cream)}
+  .chave-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .opcao{appearance:none;cursor:pointer;text-align:left;display:grid;grid-template-columns:24px 1fr;column-gap:12px;row-gap:4px;align-items:start;
+    padding:16px;border-radius:14px;border:2px solid var(--line-2);background:rgba(0,12,72,.6);color:var(--cream);font:inherit;transition:border-color .15s,background .15s}
+  .opcao:hover{border-color:var(--accent)}
+  .op-marca{grid-row:1 / span 2;width:24px;height:24px;border-radius:50%;border:2px solid var(--muted);margin-top:1px}
+  .op-titulo{font:800 17px/1.25 var(--fonte)}
+  .op-texto{font-size:13.5px;line-height:1.45;color:var(--muted)}
+  .opcao[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--ink)}
+  .opcao[aria-pressed="true"] .op-texto{color:var(--ink)}
+  .opcao[aria-pressed="true"] .op-marca{border-color:var(--ink);background:var(--ink);box-shadow:inset 0 0 0 5px var(--accent)}
+  .chave-status{margin:0;font-size:15.5px;line-height:1.4}
+  .chave-status b{color:var(--accent-soft)}
 
   /* seleção e ações em lote */
   .chk{display:inline-flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;font-weight:700}
@@ -198,8 +210,8 @@
     header.top .logo{height:34px}
     .kicker{font-size:12px}
   }
+  @media (max-width:640px){.chave-opcoes{grid-template-columns:1fr}}
   @media (max-width:480px){.btn{white-space:normal}.cartao{padding:14px}.acoes .btn{flex:1 1 100%}
-    .chave .dias{align-self:stretch}.chave .dias button{flex:1 1 0;white-space:normal;padding:9px 8px;line-height:1.25}
     #lote-barra{bottom:6px}}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}#espera i,.barra>i{width:100%;opacity:.5}}
 </style>
@@ -247,12 +259,19 @@
       <div class="campo turma-campo"><label for="turma">Turma</label>
         <input id="turma" type="text" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="t2-mentor" aria-describedby="turma-dica">
         <span class="ajuda" id="turma-dica">Texto curto, sem acento e sem espaço. Deixe vazio para respostas sem turma.</span></div>
-      <div class="chave"><span class="rot" id="chave-rot">Plano de ação desta turma</span>
-        <div class="dias" id="chave" role="group" aria-labelledby="chave-rot">
-          <button type="button" data-chave="0" aria-pressed="true">Depois (o time libera)</button>
-          <button type="button" data-chave="1" aria-pressed="false">Junto com a devolutiva</button>
+      <div class="chave">
+        <div><span class="chave-kicker">Decisão do time</span>
+          <h4 id="chave-rot">O que o aluno desta turma recebe ao terminar o teste?</h4></div>
+        <div class="chave-opcoes" id="chave" role="group" aria-labelledby="chave-rot">
+          <button type="button" class="opcao" data-chave="0" aria-pressed="true"><span class="op-marca" aria-hidden="true"></span>
+            <span class="op-titulo">Só o diagnóstico</span>
+            <span class="op-texto">A devolutiva na hora. O plano de ação fica guardado para vocês liberarem depois, como bônus.</span></button>
+          <button type="button" class="opcao" data-chave="1" aria-pressed="false"><span class="op-marca" aria-hidden="true"></span>
+            <span class="op-titulo">Diagnóstico + plano de ação</span>
+            <span class="op-texto">A devolutiva e o plano de ação juntos, na hora.</span></button>
         </div>
-        <span class="ajuda">Vale para quem terminar o teste daqui em diante. Quem já fez sem o plano recebe quando vocês liberarem.</span>
+        <p class="chave-status" id="chave-status" aria-live="polite"></p>
+        <span class="ajuda">Vale para quem terminar o teste daqui em diante. Quem já fez sem o plano recebe quando vocês liberarem na lista abaixo.</span>
         <span class="ajuda" id="chave-aviso" hidden>Não foi possível ler a chave das turmas agora. Atualize a página; se continuar, avise o suporte.</span></div>
       <div class="link-linha"><span class="rot">Link do teste</span><code id="link-txt"></code></div>
       <div class="acoes">
@@ -401,6 +420,8 @@
     var junto = chaveDa(S.turma);
     var bs = $('chave').querySelectorAll('button');
     for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', String((bs[i].getAttribute('data-chave') === '1') === junto));
+    $('chave-status').innerHTML = (S.turma ? 'Turma <b>' + esc(S.turma) + '</b>' : 'Respostas <b>sem turma</b>') + ': o aluno recebe <b>'
+      + (junto ? 'o diagnóstico e o plano de ação' : 'só o diagnóstico') + '</b>.';
     $('chave-aviso').hidden = S.turmasOk;
   }
   async function gravarChave(junto){
