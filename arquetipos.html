@@ -152,6 +152,10 @@
   .baixar .status{font-size:14px;font-weight:600;color:var(--accent-soft)}
   .baixar .status:empty{display:none}
   .envio{display:flex;flex-direction:column;gap:10px}
+  .tarefas-opcao{display:flex;flex-direction:column;gap:4px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(216,160,56,.45);border-radius:14px;background:rgba(216,160,56,.08)}
+  .tarefas-opcao label{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+  .tarefas-opcao input{width:18px;height:18px;accent-color:#D8A038;flex:none}
+  .tarefas-opcao span{font-size:13px;opacity:.8}
   .envio .acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .envio .carreg{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:600;color:var(--accent-soft)}
   .recomecar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:14px;color:var(--muted)}
@@ -400,7 +404,7 @@ const VER = PARAMS.get("ver");   // modo time: id da resposta
 let estado;
 function zerar(){
   estado = {nome:"", contato:"", genero:"", fatos:new Set(), respostas:new Array(D.statements.length).fill(null), atual:0, tela:"tela-capa",
-    somenteLeitura:false, verInfo:null, enviado:null, enviando:false, envio:null, envioMsg:""};
+    somenteLeitura:false, verInfo:null, enviado:null, enviando:false, envio:null, envioMsg:"", comTarefas:false};
 }
 zerar();
 
@@ -598,11 +602,12 @@ function secoes(r, onde){
       const d = x.d;
       const frase = x.natural
         ? preencher(D.modelos.natural, {pede: d.pede, forca: c.forca}) + (i === 0 ? " " + c.cuidado : "")
-        : preencher(D.modelos.ampliar, {pede: d.pede, forca: c.forca, traco_ref: D.novos[x.ref].traco_ref});
+        : preencher(D.modelos.ampliar, {pede: d.pede, forca: c.forca, traco_ref: D.novos[x.ref].traco_ref})
+            .replace(", as ações abaixo mostram por onde começar.", estado.comTarefas ? ", as ações abaixo mostram por onde começar." : ", vale trabalhar esta dimensão.");
       const quem = D.novos[x.ref].quem_ref, quemFrase = quem.includes(",") ? quem + "," : quem;  // aposto fecha com vírgula, como no exemplo aprovado
       const acoes = (x.natural ? d.natural : d.ampliar).map(t => '<li>' + esc(preencher(t, campos(r, {quem_ref: quemFrase}))) + '</li>').join("");
       return '<div class="bl dim"><div class="top"><span class="pos">' + (i + 1) + 'ª</span><h3>' + esc(d.nome) + '</h3><span class="chip ' + (x.natural ? "c-ok" : "c-alt") + '">' + (x.natural ? "natural" : "para ampliar") + '</span></div>'
-        + '<p class="muted">' + esc(frase) + '</p><ol>' + acoes + '</ol></div>';
+        + '<p class="muted">' + esc(frase) + '</p>' + (estado.comTarefas ? '<ol>' + acoes + '</ol>' : '') + '</div>';
     }));
   const vis = D.visualComm[r.dom];
   const s5 = [
@@ -637,6 +642,7 @@ function bannerVer(){
 function resultado(r){
   atual = r; pdfPronto = null;
   let h = bannerVer();
+  if(estado.somenteLeitura) h += '<div class="tarefas-opcao"><label for="c-tarefas"><input type="checkbox" id="c-tarefas"' + (estado.comTarefas ? ' checked' : '') + '> Incluir as tarefas de cada dimensão</label><span>Opcional. O aluno recebe a devolutiva sem as tarefas; marque para baixar a versão com tarefas e enviar a ele.</span></div>';
   h += '<div id="envio-slot">' + envioHTML() + '</div>';
   h += barraBaixar();
   h += '<section class="capa-tela" aria-label="Capa do relatório">' + capaHTML(r) + '</section>';
@@ -645,6 +651,8 @@ function resultado(r){
   if(!estado.somenteLeitura) h += '<div class="recomecar"><button type="button" class="btn-sec" id="b-novo">Começar um teste novo</button><span id="novo-aviso"></span></div>';
   $("#tela-resultado").innerHTML = h;
   document.querySelectorAll("[data-baixar]").forEach(b => b.onclick = () => baixar());
+  const ct = $("#c-tarefas");
+  if(ct) ct.onchange = () => { estado.comTarefas = ct.checked; resultado(atual); const c = $("#c-tarefas"); if(c) c.focus(); };
   ligarEnvio();
   const novo = $("#b-novo");
   if(novo) novo.onclick = () => {
