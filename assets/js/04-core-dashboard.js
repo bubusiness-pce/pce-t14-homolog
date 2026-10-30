@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.26';
+const PCE_VERSION = '3.5.27';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -4140,19 +4140,20 @@ function manualLoadCache(){
 // HOMOLOGAÇÃO (30/10/2026): card da Dinâmica do Anjo visível só aqui, até o "aprovado" do Carlos.
 // Na produção ele entra pelas tabelas manualpce_cards e manual_cards. NÃO copiar este trecho para o pce-t14.
 function homologCardAnjo(state){
-  if (state['gamificacao-ao-vivo-anjo']) return state;
+  // 30/10/2026: o Anjo já está na tabela de cards (produção); daqui só sai o Teste de Arquétipos, até o "aprovado" do Carlos
+  if (state['gamificacao-ao-vivo-arquetipos']) return state;
   var ordem = 0;
   Object.keys(state).forEach(function(k){ if (state[k]._sectionId === 'gamificacao-ao-vivo') ordem = Math.max(ordem, state[k]._displayOrder || 0); });
-  state['gamificacao-ao-vivo-anjo'] = {
-    tag: 'Painel ao vivo · Anjo',
-    title: 'Dinâmica do Anjo',
-    desc: 'Amigo secreto da imersão: cada aluno sorteia o protegido pelo QR do telão. Lista e sorteio: pelo Painel, com o PIN. Telão: botão do QR e tela cheia. Encerramento: revelar os anjos é opcional.',
+  state['gamificacao-ao-vivo-arquetipos'] = {
+    tag: 'Teste · Arquétipos',
+    title: 'Teste de Arquétipos',
+    desc: 'Teste de arquétipos de comunicação da Febracis. O aluno responde pelo link e recebe a devolutiva em PDF. Link e respostas: pelo Painel, com o PIN.',
     days: [], acaoCS: [], anexos: [],
-    _coverUrl: 'assets/img/capas/capa-anjo.png',
+    _coverUrl: 'assets/img/capas/capa-arquetipos.png',
     _sectionId: 'gamificacao-ao-vivo',
     _displayOrder: ordem + 1,
     _updatedAt: null, _updatedByName: '',
-    externalUrl: 'https://bubusiness-pce.github.io/pce-t14-homolog/anjo-painel.html'
+    externalUrl: 'https://bubusiness-pce.github.io/pce-t14-homolog/arquetipos-painel.html'
   };
   return state;
 }
