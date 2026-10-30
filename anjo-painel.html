@@ -410,7 +410,7 @@
       mimosDia[m.dia] = (mimosDia[m.dia] || 0) + m.n;
     });
     var recebi = {};
-    (P.recebi || []).forEach(function(r){ recebi[r.protegido + ':' + r.dia] = true; });
+    (P.recebi || []).forEach(function(r){ recebi[r.protegido + ':' + r.dia] = r.n || 1; });
     var sortearam = ativos.filter(function(p){ return p.protegido != null; });
     sortearam.sort(function(a, b){
       var oa = a.ordem == null ? 1e9 : a.ordem, ob = b.ordem == null ? 1e9 : b.ordem;
@@ -675,7 +675,7 @@
   // aba 2: mimos do dia
   function situacao(a, d){
     var C = S.C, ev = S.painel.evento, b = a.protegido;
-    var dados = C.mimosAnjo[a.id + ':' + d] || 0, conf = !!C.recebi[b + ':' + d];
+    var dados = C.mimosAnjo[a.id + ':' + d] || 0, conf = C.recebi[b + ':' + d] || 0;
     var hojeAinda = d === ev.dia && horaBR() < HORA_CORTE;
     if (d > ev.dia) return {peso: 4, cls: 'neutro', txt: 'O dia ainda não chegou'};
     if (!a.revelou) return {peso: 1, cls: 'alerta', txt: 'Ainda não viu o protegido'};
@@ -685,6 +685,7 @@
     }
     if (dados === 0) return {peso: 2, cls: 'neutro', txt: 'Protegido recebeu, anjo não marcou'};
     if (!conf) return {peso: 2, cls: 'neutro', txt: 'Mimou, falta o protegido confirmar'};
+    if (dados > conf) return {peso: 2, cls: 'alerta', txt: 'Anjo marcou ' + dados + ', chegaram ' + conf};
     return {peso: 3, cls: 'ok', txt: 'Em dia'};
   }
   function htmlMimos(){
@@ -704,10 +705,10 @@
       '<div class="kpi"><span class="kpi-num">' + conf + '<small> de ' + prots.length + '</small></span><span class="kpi-rot">protegidos que confirmaram o recebimento</span></div></div>' +
       '<section class="bloco"><div class="bloco-topo"><h3>Mimos de cada anjo</h3><span class="ajuda">vermelho primeiro</span></div>' +
       '<p class="ajuda">No dia de hoje, a linha só fica vermelha a partir das ' + HORA_CORTE + 'h.</p>' +
-      '<div class="rolagem" data-rol="mimos"><table class="tabela larga"><thead><tr><th>Anjo</th><th>Cuida de</th><th class="num">Mimos</th><th>Protegido confirmou?</th><th>Situação</th><th></th></tr></thead><tbody>' +
+      '<div class="rolagem" data-rol="mimos"><table class="tabela larga"><thead><tr><th>Anjo</th><th>Cuida de</th><th class="num">Anjo deu</th><th class="num">Protegido recebeu</th><th>Situação</th><th></th></tr></thead><tbody>' +
       linhas.map(function(l){
         return '<tr class="' + (l.st.peso === 0 ? 'linha-risco' : '') + '"><td>' + esc(l.a.nome) + '</td><td>' + esc(l.b ? l.b.nome : '–') + '</td><td class="num">' + (C.mimosAnjo[l.a.id + ':' + d] || 0) +
-          '</td><td>' + (C.recebi[l.a.protegido + ':' + d] ? '<span class="sim">Sim</span>' : '<span class="nao">Ainda não</span>') + '</td><td><span class="pill ' + l.st.cls + '">' + l.st.txt + '</span></td><td>' + botaoRemover(l.a.id, 'Saiu da imersão') + '</td></tr>';
+          '</td><td class="num">' + (C.recebi[l.a.protegido + ':' + d] ? '<span class="sim">' + C.recebi[l.a.protegido + ':' + d] + '</span>' : '<span class="nao">0</span>') + '</td><td><span class="pill ' + l.st.cls + '">' + l.st.txt + '</span></td><td>' + botaoRemover(l.a.id, 'Saiu da imersão') + '</td></tr>';
       }).join('') + '</tbody></table></div></section>';
   }
 

@@ -186,7 +186,13 @@
   .dias li strong{font-size:18px;color:var(--cream);font-variant-numeric:tabular-nums;line-height:1.25}
   .dias li.hoje{border-color:var(--accent);background:rgba(var(--accent-rgb),.16)}
   .dias li.hoje strong{color:var(--accent-soft)}
-  .ok-linha{font-size:14.5px;color:var(--ok);font-weight:600}
+  .btn.coracao{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;font-size:16px;padding:14px 16px}
+.btn.coracao .emoji{font-size:30px;line-height:1;display:inline-block;transition:transform .2s}
+.btn.coracao:active .emoji{transform:scale(1.25)}
+.recebi-cont{margin-top:10px;font-size:14.5px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;justify-content:center}
+.recebi-cont strong{color:var(--ok)}
+@media (prefers-reduced-motion: reduce){.btn.coracao .emoji{transition:none}}
+.ok-linha{font-size:14.5px;color:var(--ok);font-weight:600}
   .turma{text-align:center;font-size:14px;color:var(--muted)}
   .rodape{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
   .encerrada{font-weight:700;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,10,46,.55)}
@@ -499,13 +505,17 @@
         return '<li class="' + (d === ev.dia ? 'hoje' : '') + '"><span>Dia ' + d + '</span><strong>' + (d > ev.dia ? '–' : n) + '</strong></li>';
       }).join('') + '</ul>';
     }
-    if (e.protegido_confirmou_hoje) h += '<p class="ok-linha">' + esc(prim) + ' marcou que recebeu carinho hoje.</p>';
+    var chegaram = e.protegido_recebeu_hoje || (e.protegido_confirmou_hoje ? 1 : 0);
+    if (chegaram) h += '<p class="ok-linha">' + esc(prim) + ' marcou que recebeu ' + (chegaram === 1 ? '1 mimo' : chegaram + ' mimos') + ' hoje.</p>';
     h += '</section>';
 
     h += '<section class="cartao sec" aria-label="E o seu anjo?"><h2>E o seu anjo?</h2>' +
-      '<p class="ajuda">Alguém da turma está cuidando de você. Quando chegar um mimo, marque aqui.</p>' +
-      '<button class="btn ' + (e.recebi_hoje ? 'marcado' : 'sec') + '" data-acao="recebi" aria-pressed="' + (e.recebi_hoje ? 'true' : 'false') + '"' + off + '>' +
-      (e.recebi_hoje ? 'Recebi um mimo hoje (toque para desmarcar)' : 'Recebi um mimo hoje') + '</button></section>';
+      '<p class="ajuda">Alguém da turma está cuidando de você. A cada mimo que chegar, toque na carinha.</p>' +
+      '<button class="btn coracao ' + (e.recebi_hoje ? 'marcado' : 'sec') + '" data-acao="recebi"' + off + '><span class="emoji" aria-hidden="true">😍</span>' +
+      (e.recebi_hoje ? 'Recebi mais um mimo' : 'Recebi um mimo') + '</button>' +
+      (e.recebi_hoje ? '<p class="recebi-cont">Hoje você recebeu <strong>' + (e.recebi_hoje === 1 ? '1 mimo' : e.recebi_hoje + ' mimos') + '</strong>' +
+        '<button class="link" data-acao="desfazer-recebi"' + off + '>Desfazer o último</button></p>' : '') +
+      '</section>';
 
     h += htmlRevelacao();
 
@@ -608,9 +618,11 @@
     else if (a === 'mimo') agir('gamificacao_anjo_mimo', {p_tipo: b.getAttribute('data-tipo')}, 'Registrando seu mimo…', function(d){
       return 'Mimo registrado. Hoje você já fez ' + ((d.mimos_por_dia || [])[d.evento.dia - 1] || 0) + '.';
     });
-    else if (a === 'recebi') agir('gamificacao_anjo_recebi', null, 'Anotando…', function(d){
-      return d.recebi_hoje ? 'Anotado. Que bom que o carinho chegou.' : 'Marcação desfeita.';
+    else if (a === 'recebi') agir('gamificacao_anjo_recebi', {p_delta: 1}, 'Anotando…', function(d){
+      var n = d.recebi_hoje || 0;
+      return 'Anotado. Hoje você já recebeu ' + (n === 1 ? '1 mimo' : n + ' mimos') + '.';
     });
+    else if (a === 'desfazer-recebi') agir('gamificacao_anjo_recebi', {p_delta: -1}, 'Desfazendo…', function(){ return 'Último toque desfeito.'; });
     else if (a === 'ciente') agir('gamificacao_anjo_ciente', null, 'Anotando…', function(){ return ''; });
     else if (a === 'atualizar') agir('gamificacao_anjo_meu', null, 'Atualizando…', function(){ return 'Tela atualizada.'; });
     else if (a === 'sair' || a === 'outro-nome') { apagarNome(); S.nome = ''; S.e = null; S.flash = null; avisar('', ''); topo(); sondar(); }
