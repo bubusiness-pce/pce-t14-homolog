@@ -187,6 +187,10 @@
   .dias li strong{font-size:18px;color:var(--cream);font-variant-numeric:tabular-nums;line-height:1.25}
   .dias li.hoje{border-color:var(--accent);background:rgba(var(--accent-rgb),.16)}
   .dias li.hoje strong{color:var(--accent-soft)}
+  .confirma{border:1px solid rgba(var(--accent-rgb),.55);background:rgba(0,10,46,.72);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .confirma p{font-size:15px;font-weight:700;line-height:1.4;color:var(--cream)}
+  .confirma-bt{display:flex;flex-wrap:wrap;gap:8px}
+  .confirma-bt .btn{flex:1 1 120px;width:auto;min-height:48px;padding:10px 12px;font-size:15px}
   .btn.coracao{width:100%;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;font-size:16px;padding:14px 16px}
 .btn.coracao .emoji{font-size:30px;line-height:1;display:inline-block;transition:transform .2s}
 .btn.coracao:active .emoji{transform:scale(1.25)}
@@ -303,6 +307,7 @@
     nome: '',        // nome digitado, como o banco recebe
     e: null,         // último estado devolvido pelo banco
     busy: false,
+    conf: null,      // confirmação aberta: 'Bilhete' | 'Presente' | 'Gentileza' | 'recebi' | null
     flash: null,     // {t:'erro', txt} só na tela do sorteio; nas ações o aviso vai para #flash
     revelando: false, // tela "Seu protegido é", só logo depois do sorteio
     oculto: true,    // nome do protegido escondido; não é guardado, volta a true toda vez que a tela abre
@@ -428,7 +433,7 @@
       return;
     }
     S.nome = nome; gravarNome(nome);
-    S.e = d; S.flash = null; S.oculto = true; S.revelando = false;
+    S.e = d; S.flash = null; S.conf = null; S.oculto = true; S.revelando = false;
     principal(true);
   }
 
@@ -512,6 +517,44 @@
   function txtPergunta(){ var q = S.oculto ? 'seu protegido' : primProt(); return numHoje() ? 'Mais um para ' + q + '?' : 'Já mimou ' + q + ' hoje?'; }
   function txtChegaram(){ var n = numChegaram(); return (S.oculto ? 'Seu protegido' : primProt()) + ' marcou que recebeu ' + (n === 1 ? '1 mimo' : n + ' mimos') + ' hoje.'; }
 
+  // confirmação antes de registrar: uma só aberta por vez, dentro do próprio cartão
+  var CONF = {
+    Bilhete:   {q: 'Confirma que entregou um bilhete para ', sim: 'Sim, entreguei'},
+    Presente:  {q: 'Confirma que deu um presente para ',    sim: 'Sim, dei'},
+    Gentileza: {q: 'Confirma que fez uma gentileza para ',  sim: 'Sim, fiz'},
+    recebi:    {q: 'Confirma que recebeu um mimo hoje', sim: 'Sim, recebi'}
+  };
+  function txtConf(k){ return CONF[k].q + (k === 'recebi' ? '' : (S.oculto ? 'seu protegido' : primProt())) + '?'; }
+  function htmlConf(k){
+    return '<div class="confirma" id="c-conf" role="group" aria-labelledby="c-conf-q"><p id="c-conf-q">' + esc(txtConf(k)) + '</p>' +
+      '<div class="confirma-bt"><button class="btn" type="button" data-acao="conf-sim" data-conf-foco>' + CONF[k].sim + '</button>' +
+      '<button class="btn sec" type="button" data-acao="conf-nao">Cancelar</button></div></div>';
+  }
+  function desligado(){ return (S.e.evento.status === 'encerrado' || S.busy) ? ' disabled' : ''; }
+  function htmlTipos(){
+    if (TIPOS.indexOf(S.conf) >= 0) return htmlConf(S.conf);
+    var off = desligado();
+    return '<div class="tipos">' + TIPOS.map(function(t){
+      return '<button class="tipo" data-acao="mimo" data-tipo="' + t + '"' + off + '><span class="ic" aria-hidden="true">' + ICONES[t] + '</span><span>' + t + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function htmlRecebiBt(){
+    if (S.conf === 'recebi') return htmlConf('recebi');
+    var e = S.e;
+    return '<button class="btn coracao ' + (e.recebi_hoje ? 'marcado' : 'sec') + '" data-acao="recebi"' + desligado() + '><span class="emoji" aria-hidden="true">😍</span>' +
+      (e.recebi_hoje ? 'Recebi mais um mimo' : 'Recebi um mimo') + '</button>';
+  }
+  // troca só as duas áreas, sem refazer a tela; devolve o foco ao botão de origem ao cancelar
+  function atualizarConf(voltarA){
+    var t = $('c-tipos'), r = $('c-rbt'), f;
+    if (!t || !r || !S.e) return;
+    t.innerHTML = htmlTipos(); r.innerHTML = htmlRecebiBt();
+    if (S.conf) f = document.querySelector('[data-conf-foco]');
+    else if (voltarA) f = document.querySelector(voltarA === 'recebi' ? '[data-acao="recebi"]' : '[data-tipo="' + voltarA + '"]');
+    if (f) { try { f.focus(); } catch (x) {} }
+  }
+  function fecharConf(){ var k = S.conf; S.conf = null; atualizarConf(k); }
+
   // mostra ou esconde o nome sem refazer a tela
   function alternarNome(){
     S.oculto = !S.oculto;
@@ -522,6 +565,7 @@
     if ((t = $('c-seg'))) t.textContent = txtSegredo();
     if ((t = $('c-perg'))) t.textContent = txtPergunta();
     if ((t = $('c-ok'))) t.textContent = txtChegaram();
+    if (S.conf && (t = $('c-conf-q'))) t.textContent = txtConf(S.conf);
     dizer(S.oculto ? 'Nome escondido.' : 'Nome à mostra.');
   }
 
@@ -547,9 +591,7 @@
       (hoje ? hoje + ' hoje' : 'Nenhum hoje') + '</span></div>';
     if (enc) h += '<p class="encerrada" role="status">A dinâmica foi encerrada.</p>';
     else h += '<p class="ajuda" id="c-perg">' + esc(txtPergunta()) + '</p>';
-    h += '<div class="tipos">' + TIPOS.map(function(t){
-      return '<button class="tipo" data-acao="mimo" data-tipo="' + t + '"' + off + '><span class="ic" aria-hidden="true">' + ICONES[t] + '</span><span>' + t + '</span></button>';
-    }).join('') + '</div>';
+    h += '<div id="c-tipos">' + htmlTipos() + '</div>';
     if (ev.dias > 1) {
       h += '<ul class="dias" aria-label="Seus mimos por dia">' + porDia.map(function(n, i){
         var d = i + 1;
@@ -561,8 +603,7 @@
 
     h += '<section class="cartao sec" aria-label="E o seu anjo?"><h2>E o seu anjo?</h2>' +
       '<p class="ajuda">Alguém da turma está cuidando de você. A cada mimo que chegar, toque na carinha.</p>' +
-      '<button class="btn coracao ' + (e.recebi_hoje ? 'marcado' : 'sec') + '" data-acao="recebi"' + off + '><span class="emoji" aria-hidden="true">😍</span>' +
-      (e.recebi_hoje ? 'Recebi mais um mimo' : 'Recebi um mimo') + '</button>' +
+      '<div id="c-rbt">' + htmlRecebiBt() + '</div>' +
       (e.recebi_hoje ? '<p class="recebi-cont">Hoje você recebeu <strong id="c-recebi">' + (e.recebi_hoje === 1 ? '1 mimo' : e.recebi_hoje + ' mimos') + '</strong>' +
         '<button class="link" data-acao="desfazer-recebi"' + off + '>Desfazer o último</button></p>' : '') +
       '</section>';
@@ -624,7 +665,7 @@
   async function agir(fn, extra, carregando, aoOk, depois){
     if (S.busy) return;
     var tinhaAviso = !!(S.e && S.e.aviso);
-    S.busy = true; S.flash = null;
+    S.busy = true; S.flash = null; S.conf = null;
     avisar('carregando', carregando); principal(false);
     var d = null, falha = null;
     try { d = await chamar(fn, extra); } catch (e) { falha = e; }
@@ -714,16 +755,19 @@
     if (a === 'sortear') sortear();
     else if (a === 'comecar') { S.revelando = false; S.oculto = true; dizer(''); principal(true); }
     else if (a === 'olho') alternarNome();
-    else if (a === 'mimo') {
-      var tipo = b.getAttribute('data-tipo');
+    else if (a === 'mimo') { if (!S.busy) { S.conf = b.getAttribute('data-tipo'); atualizarConf(); } }
+    else if (a === 'recebi') { if (!S.busy) { S.conf = 'recebi'; atualizarConf(); } }
+    else if (a === 'conf-nao') fecharConf();
+    else if (a === 'conf-sim' && S.conf && S.conf !== 'recebi') {
+      var tipo = S.conf;
       if (!S.busy) explosao(b, 'brilho');
       agir('gamificacao_anjo_mimo', {p_tipo: tipo}, 'Registrando seu mimo…', null, function(){
         pulo('c-hoje'); pulo('d-hoje');
         brinde((tipo === 'Gentileza' ? 'Gentileza registrada' : tipo + ' registrado') + ' ✨');
       });
     }
-    else if (a === 'recebi') {
-      if (!S.busy) explosao(b.querySelector('.emoji') || b, 'coracao');
+    else if (a === 'conf-sim' && S.conf === 'recebi') {
+      if (!S.busy) explosao(b, 'coracao');
       agir('gamificacao_anjo_recebi', {p_delta: 1}, 'Anotando…', null, function(){
         pulo('c-recebi');
         brinde('Que bom! Mimo recebido 💖');
@@ -735,6 +779,9 @@
     else if (a === 'sair' || a === 'outro-nome') { apagarNome(); S.nome = ''; S.e = null; S.flash = null; S.oculto = true; S.revelando = false; avisar('', ''); topo(); sondar(); }
     else if (a === 'verificar') { if (S.nome) entrar(S.nome, false); else sondar(); }
     else if (a === 'recarregar') location.reload();
+  });
+  document.addEventListener('keydown', function(ev){
+    if (S.conf && (ev.key === 'Escape' || ev.key === 'Esc')) { ev.preventDefault(); fecharConf(); }
   });
   document.addEventListener('submit', function(ev){
     if (ev.target.id !== 'f-entrar') return;

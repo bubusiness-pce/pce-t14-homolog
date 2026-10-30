@@ -101,8 +101,19 @@
   .btn.mini{min-height:34px;padding:6px 12px;font-size:12.5px;border-radius:9px}
   .link-btn{appearance:none;background:none;border:0;padding:6px 0;min-height:34px;color:var(--accent-soft);font:700 13.5px var(--fonte);cursor:pointer;text-decoration:none}
   .link-btn:hover{text-decoration:underline;text-underline-offset:3px}
-  .voltar{appearance:none;background:none;border:0;padding:6px 0;min-height:36px;color:var(--accent-soft);font:700 13.5px var(--fonte);cursor:pointer;margin-bottom:6px}
-  .voltar:hover{text-decoration:underline;text-underline-offset:3px}
+  .btn.voltar{margin-bottom:14px}
+  .btn.voltar .seta-v{font-size:18px;line-height:1;color:var(--accent-soft)}
+  .btn.encerrar{border-color:var(--accent);color:var(--accent-soft);background:transparent}
+  .btn.encerrar:hover{background:var(--accent-bg);border-color:var(--accent-soft);color:var(--accent-soft)}
+  .caixa-topo{margin:-4px 0 16px}
+  .pin-campo{max-width:260px}
+  .pin-err{color:var(--bad);font-size:14px;font-weight:700}
+  .aviso-fechar,.aviso-sorteio{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:1px solid rgba(216,160,56,.65);background:var(--accent-bg);margin-bottom:14px}
+  .aviso-fechar .txt,.aviso-sorteio .txt{flex:1;min-width:220px}
+  .aviso-fechar .txt b,.aviso-sorteio .txt b{display:block;font-size:16px}
+  .aviso-fechar .txt span,.aviso-sorteio .txt span{font-size:13.5px;color:var(--muted)}
+  .aviso-fechar>.confirma-caixa{flex:1 1 100%}
+  .cartao.historico{margin-top:14px}
 
   /* estrutura */
   .kicker-sm{font-family:var(--cond);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-size:13px}
@@ -116,6 +127,7 @@
   .cartao h3{font-size:17px;font-weight:800;margin-bottom:4px}
   .ajuda{color:var(--muted);font-size:13.5px}
   .grade-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:14px;align-items:start}
+  .parecido{display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0}
   .grade-sorteio{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
   @media (min-width:900px){.grade-sorteio{grid-template-columns:minmax(260px,1fr) minmax(0,2fr)}}
   .pilha{display:flex;flex-direction:column;gap:14px}
@@ -304,7 +316,7 @@
     .btn{white-space:normal}
     .rodape-passo .acoes{width:100%}
     .rodape-passo .btn.grande{width:100%}
-    .acao-telao .btn{flex:1 1 100%}
+    .acao-telao .btn,.aviso-fechar .btn,.aviso-sorteio .btn{flex:1 1 100%}
     .cartao{padding:14px}
   }
   @media (prefers-reduced-motion:reduce){
@@ -397,7 +409,9 @@
     vista: null,           // passo que está na tela (null = o passo da situação atual)
     busca: '',
     diaSel: null,
-    confirmar: null,       // {t, id, cod}
+    confirmar: null,       // {t, id, cod, onde}
+    pinConf: '', pinErro: '',   // PIN digitado na caixa de confirmação e o aviso de PIN errado
+    histTudo: false, confirmando: false,
     textoLista: '', problemas: [], resultadoLista: '',
     novoNome: '', incluirAberto: false, verRoda: false,
     editar: false,
@@ -439,7 +453,7 @@
     else cabecalho();
   }
   // faz a chamada com o PIN, mostra a espera e devolve {d} ou null (o erro já foi tratado)
-  async function exec(fn, args, txt){
+  async function exec(fn, args, txt, opc){
     // se uma atualização está em curso, espera a vez em vez de perder o clique
     for (var i = 0; S.busy && i < 100; i++) await new Promise(function(r){ setTimeout(r, 100); });
     if (S.busy) return null;
@@ -447,7 +461,11 @@
     var a = {p_pin: S.pin};
     for (var k in args) a[k] = args[k];
     try { return {d: await rpc(fn, a)}; }
-    catch (e) { falhou(e); return null; }
+    catch (e) {
+      if (opc && opc.pinCaixa && ehPin(e)) S.pinErro = 'PIN inválido';   // PIN digitado errado: avisa na própria caixa, sem deslogar
+      else falhou(e);
+      return null;
+    }
     finally { S.busy = false; esperar(false); }
   }
 
@@ -599,11 +617,23 @@
     return '<div class="confirma-caixa' + (perigo ? ' perigo' : '') + '" role="alertdialog" aria-label="Confirmação"><p>' + txt + '</p><div class="acoes">' +
       '<button type="button" class="btn ' + (perigo ? 'perigo' : 'pri') + '" data-acao="' + acao + '" data-foco-conf>' + esc(rotulo) + '</button><button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div>';
   }
-  function confirmaAtiva(t){ return S.confirmar && S.confirmar.t === t; }
+  // 'onde' separa a mesma confirmação em lugares diferentes da tela (topo, aviso, editar, passo5); vazio = rodapé do passo
+  function confirmaAtiva(t, onde){ return !!(S.confirmar && S.confirmar.t === t && (S.confirmar.onde || '') === (onde || '')); }
+  // confirmação que pede o PIN digitado (campo de senha); Enter confirma
+  function caixaPin(txt, fn, rotulo, perigo){
+    return '<div class="confirma-caixa' + (perigo ? ' perigo' : '') + '" role="alertdialog" aria-label="Confirmação"><p>' + txt + '</p>' +
+      '<div class="campo pin-campo"><label for="pin-conf">Digite o PIN para confirmar</label>' +
+      '<input id="pin-conf" type="password" inputmode="numeric" maxlength="12" autocomplete="off" data-fn="' + fn + '" value="' + esc(S.pinConf) + '" data-foco-conf></div>' +
+      (S.pinErro ? '<p class="pin-err" id="pin-err" role="alert">' + esc(S.pinErro) + '</p>' : '') +
+      '<div class="acoes"><button type="button" class="btn ' + (perigo ? 'perigo' : 'pri') + '" data-acao="confirmar-pin" data-fn="' + fn + '">' + esc(rotulo) + '</button>' +
+      '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div>';
+  }
+  function caixaExcluirPin(nome){ return caixaPin(textoExcluir(nome), 'excluir', 'Sim, excluir de vez', true); }
+  function caixaEncerrarPin(){ return caixaPin('Encerrar a dinâmica? Os alunos param de registrar mimos. Não dá para desfazer.', 'encerrar', 'Sim, encerrar a dinâmica', false); }
   function textoExcluir(nome){ return 'Excluir de vez <b>' + esc(nome) + '</b>? Some a lista, o sorteio, os mimos e o histórico. Não dá para desfazer.'; }
   // rodapé do passo: uma frase de ajuda e o botão principal; se há confirmação aberta para este botão, ela ocupa o lugar
   function rodape(ajuda, botoes, t, caixa){
-    if (t && confirmaAtiva(t) && caixa) return '<div class="rodape-passo">' + caixa + '</div>';
+    if (t && confirmaAtiva(t, '') && caixa) return '<div class="rodape-passo">' + caixa + '</div>';
     return '<div class="rodape-passo"><p class="ajuda">' + ajuda + '</p><div class="acoes">' + botoes + '</div></div>';
   }
   function botaoRemover(id, rotulo, perigo){
@@ -621,6 +651,8 @@
       '<button type="button" id="' + chave + '-mais" data-acao="dias" data-k="' + chave + '" data-d="1" aria-label="Um dia a mais"' + (v >= 30 ? ' disabled' : '') + '>+</button></div>';
   }
 
+  var BTN_VOLTAR = '<button type="button" class="btn voltar" data-acao="inicio"><span class="seta-v" aria-hidden="true">←</span> Minhas dinâmicas</button>';
+
   // ---------- Início: minhas dinâmicas ----------
   function cartaoDinamica(e){
     var pessoas = e.pessoas || 0, s = e.sortearam || 0, enc = e.status === 'encerrado';
@@ -633,9 +665,9 @@
     corpo += '</div>';
     var c = S.confirmar, pedindo = c && c.t === 'excluir-ini' && c.cod === e.codigo;
     var botoes = '<div class="acoes"><button class="btn' + (e.status === 'aberto' || e.status === 'fechado' ? ' pri' : '') + '" data-acao="abrir" data-cod="' + esc(e.codigo) + '">Abrir</button>' +
-      (enc ? '<button class="btn perigo" data-acao="pedir" data-t="excluir-ini" data-cod="' + esc(e.codigo) + '">Excluir</button>' : '') + '</div>';
+      '<button class="btn perigo" data-acao="pedir" data-t="excluir-ini" data-cod="' + esc(e.codigo) + '">Excluir</button></div>';
     return '<div class="din-card">' + corpo + botoes +
-      (pedindo ? '<div style="grid-column:1/-1">' + caixaConfirma(textoExcluir(e.nome), 'confirmar-excluir', 'Sim, excluir de vez', true) + '</div>' : '') + '</div>';
+      (pedindo ? '<div style="grid-column:1/-1">' + caixaExcluirPin(e.nome) + '</div>' : '') + '</div>';
   }
   function htmlInicio(){
     var ev = S.eventos;
@@ -660,7 +692,7 @@
     }).join('') + '</ol>';
   }
   function htmlCriar(){
-    return '<button class="voltar" data-acao="inicio">← Minhas dinâmicas</button>' +
+    return BTN_VOLTAR +
       '<div class="din-topo"><div><h2>Nova dinâmica</h2><p class="meta">Três informações. Dá para mudar depois em "Editar".</p></div></div>' +
       listaPassosEstatica() +
       '<form id="f-criar" novalidate><div class="cartao pilha" style="max-width:560px">' +
@@ -696,17 +728,14 @@
     return h + '</ol>';
   }
   function htmlEditar(){
-    var st = S.painel.evento.status;
     var h = '<form id="f-cfg" novalidate class="cartao pilha" style="max-width:560px;margin-bottom:18px"><h3>Editar a dinâmica</h3>' +
       '<div class="campo"><label for="c-nome">Nome da dinâmica</label><input id="c-nome" type="text" maxlength="80" autocomplete="off" value="' + esc(S.cfg.nome) + '"></div>' +
       '<div class="campo"><label for="c-inicio">Primeiro dia</label><input id="c-inicio" type="date" value="' + esc(S.cfg.inicio) + '"></div>' +
       '<div class="campo"><label>Quantos dias tem a imersão</label>' + contador('cfg') + '</div>' +
       '<div class="acoes"><button type="submit" class="btn pri">Salvar</button><button type="button" class="btn" data-acao="editar-fechar">Cancelar</button></div>';
-    if (st === 'lista') {
-      h += confirmaAtiva('excluir')
-        ? caixaConfirma(textoExcluir(S.painel.evento.nome), 'confirmar-excluir', 'Sim, excluir de vez', true)
-        : '<div><button type="button" class="link-btn" data-acao="pedir" data-t="excluir" style="color:var(--bad)">Excluir esta dinâmica</button></div>';
-    }
+    h += confirmaAtiva('excluir', 'editar')
+      ? caixaExcluirPin(S.painel.evento.nome)
+      : '<div><button type="button" class="link-btn" data-acao="pedir" data-t="excluir" data-onde="editar" style="color:var(--bad)">Excluir esta dinâmica</button></div>';
     return h + '</form>';
   }
   function topoEvento(){
@@ -715,9 +744,11 @@
     var meta = ev.status === 'encerrado'
       ? 'Encerrada' + (dataEncerramento() ? ' em ' + dataEncerramento() : '') + ' · ' + C.sortearam.length + ' ' + plural(C.sortearam.length, 'anjo', 'anjos') + ' · ' + C.totalMimos + ' ' + plural(C.totalMimos, 'mimo', 'mimos')
       : 'Começa ' + esc(fmtDM(ev.inicio)) + ' · ' + ev.dias + ' ' + plural(ev.dias, 'dia', 'dias') + (ev.dias > 1 && dh ? ' · hoje é o dia ' + dh : '') + ' · ' + n + ' ' + plural(n, 'pessoa', 'pessoas');
-    return '<button class="voltar" data-acao="inicio">← Minhas dinâmicas</button>' +
+    return BTN_VOLTAR +
       '<div class="din-topo"><div><h2>' + esc(ev.nome) + '</h2><p class="meta">' + meta +
-      '<button type="button" class="link-btn" data-acao="editar" aria-expanded="' + S.editar + '">Editar</button></p></div></div>' +
+      '<button type="button" class="link-btn" data-acao="editar" aria-expanded="' + S.editar + '">Editar</button></p></div>' +
+      (ev.status !== 'encerrado' ? '<div class="acoes"><button type="button" class="btn encerrar" data-acao="pedir" data-t="encerrar" data-onde="topo">Encerrar a dinâmica</button></div>' : '') + '</div>' +
+      (confirmaAtiva('encerrar', 'topo') ? '<div class="caixa-topo">' + caixaEncerrarPin() + '</div>' : '') +
       (S.editar ? htmlEditar() : '') + htmlPassos();
   }
   function dataEncerramento(){
@@ -763,7 +794,7 @@
     dir = '<div class="cartao pilha"><div><h3>' + (n ? n + ' ' + plural(n, 'pessoa', 'pessoas') + ' na lista' : 'Nenhuma pessoa na lista') + '</h3>' +
       '<p class="ajuda">' + (!n ? 'Cole os nomes ao lado e toque em "Conferir e salvar". Cada linha precisa de nome e sobrenome.' : aberta ? 'Toque no × para tirar alguém.' : 'Quem está no jogo agora.') + '</p></div>' +
       (S.resultadoLista && aberta ? '<p class="aviso-ok" role="status">' + esc(S.resultadoLista) + '</p>' : '') +
-      (aberta ? htmlProblemas() : '') +
+      (aberta ? htmlProblemas() : '') + htmlParecidos() +
       (n ? '<ul class="chips" data-rol="chips-lista">' + C.ativos.slice().sort(cmpNome).map(function(p){ return chipPessoa(p, aberta); }).join('') + '</ul>' : '') +
       (aberta ? listaForaHtml('lista-fora', 'Saíram da lista') : '') + '</div>';
     var rod;
@@ -810,6 +841,12 @@
     }
     h += '<div class="kpis"><div class="kpi"><span class="num">' + s + '<small> de ' + n + '</small></span><span class="rot">já sortearam</span>' + barra(s, n) + '</div>' +
       '<div class="kpi' + (C.pend.length ? '' : ' ok') + '"><span class="num">' + C.pend.length + '</span><span class="rot">ainda não sortearam</span></div></div>';
+    var caixaFech = caixaConfirma(esc('Fechar o sorteio? Quem ainda não sorteou sai do jogo' + (C.pend.length ? ' (' + (C.pend.length === 1 ? '1 pessoa' : C.pend.length + ' pessoas') + ')' : '') + ', e a roda fecha.'), 'confirmar-fechar', 'Sim, fechar o sorteio');
+    if (st === 'aberto' && !C.pend.length && s >= 3) {
+      h += '<div class="aviso-fechar" role="status"><div class="txt"><b>Todo mundo já sorteou.</b><span>Feche o sorteio para seguir para a imersão.</span></div>' +
+        (confirmaAtiva('fechar', 'aviso') ? caixaFech : '<button class="btn pri grande" data-acao="pedir" data-t="fechar" data-onde="aviso">Fechar o sorteio e ir para a imersão →</button>') + '</div>';
+    }
+    h += htmlParecidos();
     h += '<div class="' + (st === 'aberto' || st === 'fechado' ? 'grade-sorteio' : 'grade-2') + '">';
     if (st === 'aberto' || st === 'fechado') {
       h += '<div class="cartao"><h3>Ainda não sortearam</h3>';
@@ -827,7 +864,7 @@
       '<div class="rolagem" data-rol="tirou"><table class="tabela"><caption class="sr">Quem tirou quem, na ordem do sorteio</caption><thead><tr><th class="n">Nº</th><th>Anjo</th><th class="seta"></th><th>Protegido</th><th>Quando (Brasília)</th></tr></thead>' +
       '<tbody id="linhas-sorteio">' + linhasSorteio() + '</tbody></table></div></div></div>';
 
-    h += htmlTrocas();
+    h += htmlTrocas() + htmlHistorico();
     h += '<div class="discreto-bloco"><p class="secao-tit" style="margin-top:14px">Na urna (só o time vê)</p>' +
       '<p class="ajuda">Nomes que ninguém tirou ainda.</p>' +
       (C.urna.length ? '<ul class="chips discreto" data-rol="urna">' + C.urna.map(function(p){ return '<li class="chip">' + esc(p.nome) + '</li>'; }).join('') + '</ul>'
@@ -840,7 +877,7 @@
     if (st === 'aberto') {
       h += rodape('Fechar o sorteio: quem não sorteou sai do jogo, e a roda fecha com todo mundo que ficou.' + (s < 3 ? ' Para fechar, pelo menos 3 pessoas precisam ter sorteado.' : ''),
         '<button class="btn pri grande" data-acao="pedir" data-t="fechar"' + (s < 3 ? ' disabled' : '') + '>Fechar o sorteio →</button>',
-        'fechar', caixaConfirma(esc('Fechar o sorteio? Quem ainda não sorteou sai do jogo' + (C.pend.length ? ' (' + (C.pend.length === 1 ? '1 pessoa' : C.pend.length + ' pessoas') + ')' : '') + ', e a roda fecha.'), 'confirmar-fechar', 'Sim, fechar o sorteio'));
+        'fechar', caixaFech);
     } else if (st === 'fechado') {
       h += rodape('O sorteio está fechado e a roda fechou com quem ficou. Se precisar, dá para reabrir.',
         '<button class="btn" data-acao="status" data-st="aberto">Reabrir o sorteio</button><button class="btn pri grande" data-acao="passo" data-p="4">Ir para a imersão →</button>');
@@ -853,38 +890,38 @@
   // ---------- Passo 4: imersão ----------
   function situacao(a, d){
     var C = S.C, ev = S.painel.evento, b = a.protegido, dh = diaReal(ev);
-    var dados = C.mimosAnjo[a.id + ':' + d] || 0, conf = C.recebi[b + ':' + d] || 0;
+    var dados = C.mimosAnjo[a.id + ':' + d] || 0, rec = C.recebi[b + ':' + d] || 0;
     var hojeAinda = d === dh && horaBR() < HORA_CORTE;
     if (d > dh) return {peso: 4, cls: 'neutro', txt: 'O dia ainda não chegou'};
     if (!a.revelou) return {peso: 1, cls: 'alerta', txt: 'Ainda não viu o protegido'};
-    if (dados === 0 && !conf) {
+    if (dados === 0 && !rec) {
       if (hojeAinda) return {peso: 2, cls: 'neutro', txt: 'Dia em andamento'};
-      return {peso: 0, cls: 'risco', txt: 'Sem mimo no dia. Foi embora?'};
+      return {peso: 0, cls: 'risco', txt: (d === dh ? 'Sem mimo hoje' : 'Sem mimo neste dia') + '. Foi embora?'};
     }
-    if (dados === 0) return {peso: 2, cls: 'neutro', txt: 'Protegido recebeu, anjo não marcou'};
-    if (!conf) return {peso: 2, cls: 'neutro', txt: 'Mimou, falta o protegido confirmar'};
-    if (dados > conf) return {peso: 2, cls: 'alerta', txt: 'Anjo marcou ' + dados + ', chegaram ' + conf};
     return {peso: 3, cls: 'ok', txt: 'Em dia'};
   }
   function htmlRoda(){
-    var C = S.C, P = S.painel, seq = ordemDesenho(C);
+    var C = S.C, seq = ordemDesenho(C);
     var roda = rodaSVG(seq, C);
-    var h = '<div class="grade-2 roda-hist"><section class="cartao">';
+    var h = '<div class="roda-hist"><section class="cartao">';
     if (roda) {
       h += '<h3>' + (roda.fechada ? 'A roda está fechada' : 'A roda se formando') + '</h3>' +
         '<p class="ajuda">' + (roda.fechada ? 'Cada seta vai do anjo para o protegido. Todo mundo tem um anjo e um protegido.' : 'Cada seta vai do anjo para o protegido. Onde falta seta, alguém ainda não sorteou. Ponto vazio: ninguém tirou essa pessoa ainda.') + '</p>' + roda.svg;
     } else h += '<h3>Roda</h3><p class="ajuda">A roda aparece quando houver pelo menos duas pessoas no jogo.</p>';
-    h += '</section><section class="cartao"><h3>Histórico</h3><p class="ajuda">Tudo o que mudou na dinâmica, do mais novo para o mais antigo.</p>';
-    var log = P.log || [];
-    h += log.length ? '<ol class="hist" data-rol="hist">' + log.map(function(l){ return '<li><span class="quando">' + esc(fmtQuando(l.em)) + '</span><span>' + esc(l.txt) + '</span></li>'; }).join('') + '</ol>'
-      : '<p class="ajuda">Nada aconteceu ainda.</p>';
     return h + '</section></div>';
   }
   function htmlImersao(){
     var C = S.C, ev = S.painel.evento, st = ev.status, d = S.diaSel, anjos = C.sortearam, dh = diaHoje(ev);
     var botoes = '';
     for (var i = 1; i <= ev.dias; i++) botoes += '<button type="button" data-acao="dia" data-dia="' + i + '" aria-pressed="' + (i === d) + '">Dia ' + i + (i === dh ? ' · hoje' : '') + '</button>';
-    var h = '<div class="passo-cab"><h3>Mimos do dia</h3><div class="dias" role="group" aria-label="Dia da imersão">' + botoes + '</div></div>';
+    var h = '';
+    if (st === 'aberto') {
+      var np = C.pend.length;
+      h += '<div class="aviso-sorteio" role="status"><div class="txt"><b>O sorteio ainda está aberto: ' + (np ? np + ' ' + plural(np, 'pessoa não sorteou', 'pessoas não sortearam') : 'todo mundo já sorteou') + '.</b>' +
+        '<span>Os mimos já valem. Quando quiser, feche o sorteio no passo 3.</span></div>' +
+        '<button type="button" class="btn pri" data-acao="passo" data-p="3">Ir para o passo 3 →</button></div>';
+    }
+    h += '<div class="passo-cab"><h3>Mimos do dia</h3><div class="dias" role="group" aria-label="Dia da imersão">' + botoes + '</div></div>';
     var nomeDia = d === dh ? 'hoje' : 'no dia ' + d;
     if (!anjos.length) {
       h += '<section class="cartao"><p class="ajuda">Ninguém sorteou ainda. Os mimos aparecem aqui depois do primeiro sorteio.</p></section>';
@@ -910,20 +947,20 @@
         }).join('') + '</tbody></table></div></div>';
       h += htmlTrocas();
     }
+    h += htmlHistorico();
     // links secundários
     var links = '<button type="button" class="link-btn" data-acao="passo" data-p="3">Quem tirou quem</button>' +
-      '<button type="button" class="link-btn" data-acao="roda" aria-expanded="' + S.verRoda + '">' + (S.verRoda ? 'Esconder roda e histórico' : 'Roda e histórico') + '</button>';
+      '<button type="button" class="link-btn" data-acao="roda" aria-expanded="' + S.verRoda + '">' + (S.verRoda ? 'Esconder a roda' : 'Ver a roda') + '</button>';
     if (st === 'aberto' || st === 'fechado') links += '<button type="button" class="link-btn" data-acao="telao">QR do telão ↗</button>';
     links += '<button type="button" class="link-btn" data-acao="copiar-link">Copiar link para o grupo</button>';
     if (st !== 'encerrado') links += '<button type="button" class="link-btn" data-acao="incluir-abrir" aria-expanded="' + S.incluirAberto + '">Incluir pessoa</button>';
-    if (st === 'aberto') links += '<button type="button" class="link-btn" data-acao="pedir" data-t="encerrar">Encerrar a dinâmica</button>';
     h += '<div class="links-sec">' + links + '</div>' + htmlCopia() + (S.incluirAberto && st !== 'encerrado' ? htmlIncluir() : '') + (S.verRoda ? htmlRoda() : '');
 
-    var caixaEnc = caixaConfirma('Encerrar a dinâmica? Os alunos param de registrar mimos e de marcar que receberam. Não dá para desfazer por aqui.', 'confirmar-encerrar', 'Sim, encerrar a dinâmica');
+    var caixaEnc = caixaEncerrarPin();
     if (st === 'fechado') {
       h += rodape('Encerre no último dia: os alunos param de registrar mimos.', '<button class="btn pri grande" data-acao="pedir" data-t="encerrar">Encerrar a dinâmica →</button>', 'encerrar', caixaEnc);
     } else if (st === 'aberto') {
-      h += rodape('O sorteio ainda está aberto. Os mimos já valem desde o Dia 1; feche o sorteio quando todo mundo tiver sorteado.', '<button class="btn pri grande" data-acao="passo" data-p="3">← Voltar ao sorteio</button>', 'encerrar', caixaEnc);
+      h += rodape('Os mimos já valem desde o Dia 1. Feche o sorteio no passo 3 quando todo mundo tiver sorteado.', '<button class="btn pri grande" data-acao="passo" data-p="3">← Voltar ao sorteio</button>');
     } else {
       h += rodape('A dinâmica foi encerrada. Veja o resumo no último passo.', '<button class="btn pri grande" data-acao="passo" data-p="5">Ver o resumo →</button>');
     }
@@ -946,9 +983,9 @@
         : caixaConfirma('Liberar a revelação? Cada aluno passa a ver quem foi o seu anjo e quem cuidou dele.', 'confirmar-revelar', 'Sim, liberar a revelação')) + '</div>'
         : '<p class="ajuda mt">Revelação ' + (rev ? 'liberada para os alunos.' : 'escondida.') + '</p>') + '</div>' +
       '<div class="zona-perigo"><div class="chave"><div><h3>Excluir a dinâmica</h3><p class="ajuda">Apaga a lista, o sorteio, os mimos e o histórico. Não dá para desfazer.</p></div>' +
-      (confirmaAtiva('excluir') ? '' : '<button class="btn perigo" data-acao="pedir" data-t="excluir">Excluir</button>') + '</div>' +
-      (confirmaAtiva('excluir') ? caixaConfirma(textoExcluir(ev.nome), 'confirmar-excluir', 'Sim, excluir de vez', true) : '') + '</div></div></div>';
-    return h;
+      (confirmaAtiva('excluir', 'passo5') ? '' : '<button class="btn perigo" data-acao="pedir" data-t="excluir" data-onde="passo5">Excluir</button>') + '</div>' +
+      (confirmaAtiva('excluir', 'passo5') ? caixaExcluirPin(ev.nome) : '') + '</div></div></div>';
+    return h + htmlHistorico();
   }
 
   function htmlEvento(){
@@ -1029,6 +1066,7 @@
   }
   function limparDinamica(){
     S.codigo = ''; S.painel = null; S.C = null; S.confirmar = null; S.vista = null; S.busca = ''; S.diaSel = null;
+    S.pinConf = ''; S.pinErro = ''; S.histTudo = false;
     S.textoLista = ''; S.problemas = []; S.resultadoLista = ''; S.copia = ''; S.novoNome = '';
     S.incluirAberto = false; S.verRoda = false; S.editar = false;
   }
@@ -1073,7 +1111,7 @@
   // depois de uma ação, usa o JSON que a própria função devolveu
   function aplicarPainel(P){
     S.seq++;
-    definirPainel(P); S.atualizadoEm = new Date(); S.confirmar = null;
+    definirPainel(P); S.atualizadoEm = new Date(); S.confirmar = null; S.pinConf = ''; S.pinErro = '';
     render();
   }
   // o que acontece se esta pessoa sair, explicado com os nomes (mesma regra do banco)
@@ -1097,6 +1135,15 @@
     if (!trocas.length) return '';
     return '<div class="cartao trocas"><h3>Trocas feitas</h3><p class="ajuda">Quem saiu ou entrou depois do sorteio, e como a roda se ajustou.</p><ul class="lista-trocas">' +
       trocas.map(function(l){ return '<li><span class="quando">' + esc(fmtQuando(l.em)) + '</span><span>' + esc(l.txt) + '</span></li>'; }).join('') + '</ul></div>';
+  }
+  // histórico completo do banco (sorteio, trocas e o que os alunos fazem): 15 mais novas, com "Ver tudo"
+  function htmlHistorico(){
+    var log = (S.painel && S.painel.log) || [], tot = log.length, ver = S.histTudo ? log : log.slice(0, 15);
+    var h = '<section class="cartao historico"><h3>Histórico</h3><p class="ajuda">Sorteio, trocas e o que os alunos fazem (mimo dado e recebido). Do mais novo para o mais antigo, hora de Brasília.</p>';
+    h += tot ? '<ol class="hist" data-rol="hist">' + ver.map(function(l){ return '<li><span class="quando">' + esc(fmtQuando(l.em)) + '</span><span>' + esc(l.txt) + '</span></li>'; }).join('') + '</ol>'
+      : '<p class="ajuda mt">Nada aconteceu ainda.</p>';
+    if (tot > 15) h += '<div class="mt"><button type="button" class="btn mini" data-acao="hist-tudo" aria-expanded="' + S.histTudo + '">' + (S.histTudo ? 'Mostrar só as 15 mais recentes' : 'Ver tudo') + '</button></div>';
+    return h + '</section>';
   }
   function primeiroLog(){ var l = S.painel && S.painel.log && S.painel.log[0]; return l ? l.txt : ''; }
 
@@ -1127,17 +1174,48 @@
     S.editar = false;
     aplicarPainel(r.d); toast('Mudanças salvas.', 'ok');
   }
-  async function mudarStatus(args, ok, txt){
+  function focoPin(){ var f = $('pin-conf'); if (f) { try { f.focus(); f.select(); } catch (e) {} } }
+  async function mudarStatus(args, ok, txt, comPin){
     var a = {p_evento: S.codigo};
     for (var k in args) a[k] = args[k];
-    var r = await exec('gamificacao_anjo_t_status', a, txt);
-    if (!r) { S.confirmar = null; render(); return; }
+    var r = await exec('gamificacao_anjo_t_status', a, txt, comPin ? {pinCaixa:true} : null);
+    if (!r) {
+      if (comPin && S.pinErro) { render(); focoPin(); return; }     // PIN errado: a caixa continua aberta com o aviso
+      S.confirmar = null; render(); return;
+    }
     aplicarPainel(r.d); toast(ok, 'ok'); noTopo();
+  }
+  // grafia padronizada: iniciais maiúsculas, "da/de/do/das/dos/e" minúsculos (pedido do Carlos, 30/10)
+  var LIGACOES = ['da', 'de', 'do', 'das', 'dos', 'e', 'di', 'du', 'del'];
+  function fmtNome(n){
+    return String(n || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('pt-BR').split(' ').map(function(w, i){
+      if (i > 0 && LIGACOES.indexOf(w) >= 0) return w;
+      return w.split('-').map(function(x){ return x ? x.charAt(0).toLocaleUpperCase('pt-BR') + x.slice(1) : x; }).join('-');
+    }).join(' ');
   }
   function parseLista(txt){
     return String(txt || '').split(/\r?\n/).map(function(l){
-      return l.split('\t')[0].replace(/^["'\s]+|["'\s]+$/g, '').replace(/\s+/g, ' ').trim();
+      return fmtNome(l.split('\t')[0].replace(/^["'\s]+|["'\s]+$/g, ''));
     }).filter(Boolean);
+  }
+  // possíveis repetidos: mesmo primeiro nome e mesmo último sobrenome, com o nome completo diferente
+  function palavrasNome(n){
+    return String(n || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z\s]/g, ' ')
+      .split(/\s+/).filter(function(w){ return w && LIGACOES.indexOf(w) < 0; });
+  }
+  function htmlParecidos(){
+    var grupos = {}, lista = [];
+    (S.C ? S.C.ativos : []).forEach(function(p){
+      var w = palavrasNome(p.nome); if (w.length < 2) return;
+      var k = w[0] + '|' + w[w.length - 1];
+      (grupos[k] = grupos[k] || []).push(p);
+    });
+    Object.keys(grupos).forEach(function(k){ if (grupos[k].length > 1) lista.push(grupos[k]); });
+    if (!lista.length) return '';
+    return '<div class="problema" role="status"><b>Confira: pode ser a mesma pessoa.</b> Os nomes abaixo têm o mesmo primeiro nome e o mesmo sobrenome. Se for a mesma pessoa, tire um deles.<ul>' +
+      lista.map(function(g){
+        return '<li>' + g.map(function(p){ return '<span class="parecido">' + esc(p.nome) + ' ' + botaoRemover(p.id, 'Tirar') + '</span>'; }).join(' ') + '</li>';
+      }).join('') + '</ul></div>';
   }
   async function carregarLista(){
     var nomes = parseLista(S.textoLista);
@@ -1158,7 +1236,7 @@
     aplicarPainel(r.d); toast(primeiroLog() || 'Pessoa tirada do jogo.', 'ok');
   }
   async function incluirNome(){
-    var nome = S.novoNome.replace(/\s+/g, ' ').trim();
+    var nome = fmtNome(S.novoNome);
     if (!nome) { toast('Digite o nome completo.', 'err'); var n = $('novo-nome'); if (n) n.focus(); return; }
     var r = await exec('gamificacao_anjo_t_incluir', {p_evento: S.codigo, p_nome: nome}, 'Incluindo na lista…');
     if (!r) return;
@@ -1171,14 +1249,29 @@
     if (!r) return;
     aplicarPainel(r.d); toast(primeiroLog() || 'Pessoa colocada de volta.', 'ok');
   }
-  async function excluir(cod){
-    var r = await exec('gamificacao_anjo_t_excluir', {p_evento: cod}, 'Excluindo a dinâmica…');
-    if (!r) { S.confirmar = null; render(); return; }
+  // o PIN digitado na caixa é o que vai na chamada (não o guardado)
+  async function excluir(cod, pin){
+    var r = await exec('gamificacao_anjo_t_excluir', {p_evento: cod, p_pin: pin}, 'Excluindo a dinâmica…', {pinCaixa:true});
+    if (!r) {
+      if (S.pinErro) { render(); focoPin(); return; }
+      S.confirmar = null; render(); return;
+    }
     S.eventos = r.d || []; S.atualizadoEm = new Date();
     var estavaDentro = S.fase === 'evento';
     limparDinamica(); S.fase = 'inicio'; setUrl('');
     render(); if (estavaDentro) noTopo();
     toast('Dinâmica excluída.', 'ok');
+  }
+
+  function confirmarComPin(fn){
+    var c = S.confirmar; if (!c || S.confirmando) return;
+    var f = $('pin-conf'), pin = String((f ? f.value : S.pinConf) || '').trim(), job = null;
+    S.pinConf = pin;
+    if (!pin) { S.pinErro = 'Digite o PIN.'; render(); focoPin(); return; }
+    S.pinErro = '';
+    if (fn === 'excluir') job = excluir(c.cod || S.codigo, pin);
+    else if (fn === 'encerrar') job = mudarStatus({p_status: 'encerrado', p_pin: pin}, 'Dinâmica encerrada.', 'Encerrando a dinâmica…', true);
+    if (job) { S.confirmando = true; job.then(function(){ S.confirmando = false; }, function(){ S.confirmando = false; }); }
   }
 
   // ---------- QR no telão e link para o grupo ----------
@@ -1232,17 +1325,17 @@
       case 'roda': S.verRoda = !S.verRoda; render(); break;
       case 'incluir-abrir': S.incluirAberto = !S.incluirAberto; S.confirmar = null; renderComFoco(); break;
       case 'incluir-fechar': S.incluirAberto = false; render(); break;
-      case 'pedir': S.confirmar = {t: b.getAttribute('data-t'), cod: b.getAttribute('data-cod')}; renderComFoco(); break;
+      case 'pedir': S.confirmar = {t: b.getAttribute('data-t'), cod: b.getAttribute('data-cod') || '', onde: b.getAttribute('data-onde') || ''}; S.pinConf = ''; S.pinErro = ''; renderComFoco(); break;
+      case 'confirmar-pin': confirmarComPin(b.getAttribute('data-fn')); break;
+      case 'hist-tudo': S.histTudo = !S.histTudo; render(); break;
       case 'cancelar': S.confirmar = null; render(); break;
       case 'pedir-remover': S.confirmar = {t: 'remover', id: id}; renderComFoco(); break;
       case 'remover': remover(id); break;
       case 'voltar': voltar(id); break;
       case 'status': mudarStatus({p_status: b.getAttribute('data-st')}, b.getAttribute('data-st') === 'aberto' ? (S.painel.evento.status === 'lista' ? 'Sorteio aberto. O QR já pode ir para o telão.' : 'Sorteio reaberto.') : 'Situação atualizada.', 'Mudando a situação…'); break;
       case 'confirmar-fechar': mudarStatus({p_status: 'fechado'}, 'Sorteio fechado. Só quem sorteou continua no jogo.', 'Fechando o sorteio…'); break;
-      case 'confirmar-encerrar': mudarStatus({p_status: 'encerrado'}, 'Dinâmica encerrada.', 'Encerrando a dinâmica…'); break;
       case 'confirmar-revelar': mudarStatus({p_revelar: true}, 'Revelação dos anjos liberada para os alunos.', 'Liberando a revelação…'); break;
       case 'confirmar-esconder': mudarStatus({p_revelar: false}, 'Revelação dos anjos escondida de novo.', 'Escondendo a revelação…'); break;
-      case 'confirmar-excluir': excluir((S.confirmar && S.confirmar.cod) || S.codigo); break;
       case 'carregar-lista': carregarLista(); break;
       case 'telao': abrirTelao(); break;
       case 'copiar-link': copiarLink(); break;
@@ -1262,6 +1355,7 @@
   document.addEventListener('input', function(ev){
     var t = ev.target, id = t.id;
     if (id === 'busca') { S.busca = t.value; var tb = $('linhas-sorteio'); if (tb && S.C) tb.innerHTML = linhasSorteio(); }
+    else if (id === 'pin-conf') { S.pinConf = t.value; var pe = $('pin-err'); if (pe && pe.parentNode) pe.parentNode.removeChild(pe); S.pinErro = ''; }
     else if (id === 'texto-lista') S.textoLista = t.value;
     else if (id === 'novo-nome') S.novoNome = t.value;
     else if (id === 'n-nome') S.novo.nome = t.value;
@@ -1269,7 +1363,10 @@
     else if (id === 'c-nome') S.cfg.nome = t.value;
     else if (id === 'c-inicio') S.cfg.inicio = t.value;
   });
-  document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape' && S.confirmar) { S.confirmar = null; render(); } });
+  document.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter' && ev.target && ev.target.id === 'pin-conf') { ev.preventDefault(); confirmarComPin(ev.target.getAttribute('data-fn')); return; }
+    if (ev.key === 'Escape' && S.confirmar) { S.confirmar = null; render(); }
+  });
 
   // atualização automática: só com a aba visível
   setInterval(function(){ if (document.visibilityState === 'visible') atualizar(); }, AUTO_MS);
