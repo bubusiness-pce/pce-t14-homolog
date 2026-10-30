@@ -16,7 +16,7 @@ async function mpceFetchAllFromCloud(){
   if(sR.error)throw sR.error;if(cR.error)throw cR.error;
   _mpceSections=sR.data||[];var state={};
   (cR.data||[]).forEach(function(row){state[row.id]={tag:row.tag,title:row.title,desc:row.description||'',days:row.days_json||[],acaoCS:row.acao_cs_json||[],_coverUrl:row.cover_url||'',_sectionId:row.section_id||'',_displayOrder:row.display_order||0,_updatedAt:row.updated_at,_updatedByName:row.updated_by_name||'',externalUrl:row.external_url||'',anexos:Array.isArray(row.anexos)?row.anexos:[]};});
-  return state;
+  return homologCardAnjo(state);
 }
 async function mpceUpdateCardCloud(id,payload){
   if(!_supabaseReady)throw new Error('Sem conexao');if(!_currentUser)throw new Error('Nao logado');
