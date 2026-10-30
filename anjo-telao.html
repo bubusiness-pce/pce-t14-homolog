@@ -93,8 +93,8 @@
   var timer = null, status = '';
 
   function linkAluno(c){
-    try { return new URL('anjo.html?e=' + encodeURIComponent(c), location.href).href; }
-    catch (e) { return 'anjo.html?e=' + c; }
+    try { return new URL('anjo?e=' + encodeURIComponent(c), location.href).href; }
+    catch (e) { return 'anjo?e=' + c; }
   }
   function tamanhoQR(){ return Math.floor(Math.max(180, Math.min(window.innerWidth * 0.78, window.innerHeight * 0.46, 560))); }
   function desenharQR(){

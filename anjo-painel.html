@@ -351,7 +351,7 @@
   var SUPABASE_URL = 'https://pggcbvafkwyqyvlkiyti.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnZ2NidmFma3d5cXl2bGtpeXRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTY5NDMsImV4cCI6MjEwMTA5Mjk0M30.y2FaXpreVN_eeFMmlWDuQUXCN3C69qI8ooTcRl2k7ZI';
   var PIN_KEY = 'febracis_gam_pin_v1';   // o mesmo PIN dos placares: quem entrou em um já entra nos outros
-  var AUTO_MS = 30000;                   // atualização automática, só com a aba visível
+  var AUTO_MS = 60000;                   // atualização automática, só com a aba visível
   var HORA_CORTE = 17;                   // no dia de hoje, "sem mimo" só vira vermelho depois desta hora (Brasília)
 
   var STATUS_NOME = {lista:'Lista', aberto:'Sorteio aberto', fechado:'Sorteio fechado', encerrado:'Encerrada'};
@@ -520,8 +520,8 @@
 
   // ---------- endereços ----------
   function linkAluno(cod){
-    try { return new URL('anjo.html?e=' + encodeURIComponent(cod), location.href).href; }
-    catch (e) { return 'anjo.html?e=' + cod; }
+    try { return new URL('anjo?e=' + encodeURIComponent(cod), location.href).href; }
+    catch (e) { return 'anjo?e=' + cod; }
   }
   function setUrl(cod){
     try {
@@ -1293,8 +1293,8 @@
   // O telão é uma página à parte (anjo-telao.html), aberta numa aba própria: se alguém sair dela por engano,
   // o telão não mostra o painel com quem tirou quem.
   function linkTelao(cod){
-    try { return new URL('anjo-telao.html?e=' + encodeURIComponent(cod), location.href).href; }
-    catch (e) { return 'anjo-telao.html?e=' + cod; }
+    try { return new URL('anjo-telao?e=' + encodeURIComponent(cod), location.href).href; }
+    catch (e) { return 'anjo-telao?e=' + cod; }
   }
   function abrirTelao(){
     if (!S.painel) return;
