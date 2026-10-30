@@ -556,7 +556,7 @@
     var P = S.painel, ev = P.evento, C = S.C, st = ev.status, c = S.confirmar;
     var h = '<section class="cartao"><div class="ev-topo"><div><span class="kicker">Dinâmica</span><h2>' + esc(ev.nome) + '</h2>' +
       '<p class="meta">Começa em ' + esc(fmtDia(ev.inicio)) + ' · ' + ev.dias + ' ' + plural(ev.dias, 'dia', 'dias') + (ev.dias > 1 ? ' · hoje é o dia ' + ev.dia : '') + ' · ' + C.ativos.length + ' ' + plural(C.ativos.length, 'pessoa', 'pessoas') + ' no jogo</p></div>' +
-      '<div class="ev-botoes"><button class="btn primario" data-acao="telao"' + (st === 'lista' ? ' disabled title="Disponível depois de abrir o sorteio"' : '') + '>Mostrar QR no telão</button>' +
+      '<div class="ev-botoes"><button class="btn primario" data-acao="telao" title="Abre numa aba só do QR: leve essa aba para o telão">Abrir o QR do telão</button>' +
       '<button class="btn" data-acao="copiar-link"' + (st === 'lista' ? ' disabled title="Disponível depois de abrir o sorteio"' : '') + '>Copiar link para o grupo</button></div></div>';
     h += passos(st);
 
@@ -946,20 +946,18 @@
     alvo.style.cssText = 'line-height:1.3;max-width:' + tam + 'px;color:#000A2E;font-weight:700;word-break:break-all;line-height:1.4';
     alvo.textContent = link;
   }
+  // O telão é uma página à parte (anjo-telao.html), aberta numa aba própria: se alguém sair dela por engano,
+  // o telão não mostra o painel com quem tirou quem.
+  function linkTelao(cod){
+    try { return new URL('anjo-telao.html?e=' + encodeURIComponent(cod), location.href).href; }
+    catch (e) { return 'anjo-telao.html?e=' + cod; }
+  }
   function abrirTelao(){
-    if (!S.painel || S.painel.evento.status === 'lista') return;
-    var ev = S.painel.evento, t = $('telao');
-    t.innerHTML = '<div class="t-mk" aria-hidden="true"><div></div></div>' +
-      '<button class="btn fechar" data-acao="fechar-telao" data-foco>Fechar o telão</button>' +
-      '<img class="t-logo" alt="Febracis">' +
-      '<p class="kicker">Dinâmica do Anjo</p><h2>' + esc(ev.nome) + '</h2>' +
-      '<div class="qr" id="t-qr" role="img" aria-label="QR da dinâmica"></div>' +
-      '<div class="t-cont"><div class="barra"><i id="t-fill"></i></div><p><strong id="t-n">0</strong> de <span id="t-total">0</span> já sortearam</p></div>' +
-      '<p class="t-url">' + esc(linkAluno(ev.codigo)) + '</p>';
-    t.querySelector('.t-logo').src = $('logo').src;
-    t.hidden = false;
-    desenharQR(); atualizarTelao();
-    var f = t.querySelector('[data-foco]'); if (f) f.focus();
+    if (!S.painel) return;
+    var url = linkTelao(S.codigo), w = null;
+    try { w = window.open(url, '_blank'); } catch (e) { w = null; }
+    if (w) { try { w.opener = null; } catch (e) {} toast('O QR abriu numa aba nova. Leve essa aba para o telão.', 'ok'); }
+    else toast('O navegador bloqueou a aba nova. Libere pop-ups para este site ou abra: ' + url, 'err');
   }
   function atualizarTelao(){
     var t = $('telao'); if (t.hidden || !S.C) return;
