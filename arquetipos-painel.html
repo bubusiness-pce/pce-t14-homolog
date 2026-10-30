@@ -2,7 +2,8 @@
 <!--
   Teste de Arquétipos · painel do time (HOMOLOG, 30/10/2026)
   Gerado por montar_febracis.py a partir de modelo_painel_febracis.html. Não edite o arquivo gerado.
-  Leitura e exclusão só pelas funções gamificacao_arq_t_* (PIN dos placares). A devolutiva de cada aluno abre em arquetipos?ver=<id>.
+  Leitura, chave do plano de ação por turma, liberação em lote, novo teste e exclusão só pelas funções gamificacao_arq_t_* (PIN dos placares).
+  A devolutiva de cada aluno abre em arquetipos?ver=<id>; os PDFs em lote, em arquetipos?lote=<ids>&plano=1; o exemplo, em arquetipos?exemplo=1&plano=0|1.
   Visual, PIN e inicialização do Supabase seguem a página anjo-painel.html.
 -->
 <html lang="pt-BR">
@@ -99,6 +100,28 @@
   .copia textarea{width:100%;min-height:0;font:500 14px var(--fonte);background:rgba(0,10,46,.75);color:var(--cream);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;resize:vertical}
   .copia p{font-size:13.5px;color:var(--muted);margin-bottom:6px}
 
+  /* chave do plano de ação da turma */
+  .chave{display:flex;flex-direction:column;gap:6px}
+  .chave .rot{font-size:13px;font-weight:700;color:var(--muted)}
+  .chave .dias{align-self:flex-start}
+
+  /* seleção e ações em lote */
+  .chk{display:inline-flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;font-weight:700}
+  .chk input{width:22px;height:22px;accent-color:#D8A038;flex:none;cursor:pointer;margin:0}
+  .lista-topo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:2px 16px;margin-bottom:6px}
+  .tabela td.nm .chk{font-weight:700;min-height:36px}
+  .tabela tr.apagada td:not(.ac):not(.nm){opacity:.5}
+  .tabela tr.apagada td.nm .chk{opacity:.5}
+  .pill.novo{background:rgba(234,229,225,.1);color:var(--cream);margin-left:8px;font-weight:600}
+  #lote-barra{position:sticky;bottom:10px;z-index:15;margin-top:14px;background:rgba(0,12,72,.97);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+  #lote-barra .tit{font-weight:800}
+  .aviso-lote{font-size:13.5px;color:var(--accent-soft);font-weight:600}
+  .msg-liberado{margin-bottom:14px;padding:14px 16px;border-radius:14px;border:1px solid rgba(216,160,56,.5);background:var(--accent-bg);display:flex;flex-direction:column;gap:10px}
+  .msg-liberado q{display:block;quotes:none;font-weight:600;color:var(--cream)}
+  .msg-liberado textarea{width:100%;font:500 14px var(--fonte);background:rgba(0,10,46,.75);color:var(--cream);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;resize:vertical}
+  .tabela tr.conf-neutro td{background:var(--accent-bg);padding:12px 10px}
+  .confirma-caixa.neutra{border-color:rgba(216,160,56,.5);background:rgba(0,12,72,.6)}
+
   /* PIN */
   .gate{max-width:400px;margin:5vh auto;text-align:center;background:linear-gradient(180deg,rgba(0,36,132,.5),rgba(0,12,72,.78));border:1px solid var(--line);border-radius:20px;padding:32px 26px}
   .gate h2{font-size:22px;margin-bottom:6px}
@@ -125,12 +148,12 @@
 
   /* tabela de respostas */
   .rolagem{overflow-x:auto}
-  .tabela{width:100%;border-collapse:collapse;font-size:13.5px;min-width:820px}
+  .tabela{width:100%;border-collapse:collapse;font-size:13.5px;min-width:1040px}
   .tabela th{text-align:left;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   .tabela td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
   .tabela td.nm{font-weight:700}
   .tabela .quando{color:var(--muted);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
-  .tabela .ac{white-space:nowrap;text-align:right}
+  .tabela .ac{text-align:right;min-width:210px}
   .tabela .ac .btn{margin-left:6px}
   .tabela tr.conf td{background:var(--bad-bg);padding:12px 10px}
   .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
@@ -167,14 +190,17 @@
     .tabela td.ac{justify-content:flex-start;padding-top:8px;gap:8px}
     .tabela td.ac .btn{margin-left:0}
     .tabela tr.conf{padding:0}
-    .tabela tr.conf td{display:block;padding:12px}
+    .tabela tr.conf td,.tabela tr.conf-neutro td{display:block;padding:12px}
+    .tabela td.ac{flex-wrap:wrap}
   }
   @media (max-width:600px){
     header.top{padding:10px 16px;gap:6px 12px}
     header.top .logo{height:34px}
     .kicker{font-size:12px}
   }
-  @media (max-width:480px){.btn{white-space:normal}.cartao{padding:14px}.acoes .btn{flex:1 1 100%}}
+  @media (max-width:480px){.btn{white-space:normal}.cartao{padding:14px}.acoes .btn{flex:1 1 100%}
+    .chave .dias{align-self:stretch}.chave .dias button{flex:1 1 0;white-space:normal;padding:9px 8px;line-height:1.25}
+    #lote-barra{bottom:6px}}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}#espera i,.barra>i{width:100%;opacity:.5}}
 </style>
 </head>
@@ -221,10 +247,19 @@
       <div class="campo turma-campo"><label for="turma">Turma</label>
         <input id="turma" type="text" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="t2-mentor" aria-describedby="turma-dica">
         <span class="ajuda" id="turma-dica">Texto curto, sem acento e sem espaço. Deixe vazio para respostas sem turma.</span></div>
+      <div class="chave"><span class="rot" id="chave-rot">Plano de ação desta turma</span>
+        <div class="dias" id="chave" role="group" aria-labelledby="chave-rot">
+          <button type="button" data-chave="0" aria-pressed="true">Depois (o time libera)</button>
+          <button type="button" data-chave="1" aria-pressed="false">Junto com a devolutiva</button>
+        </div>
+        <span class="ajuda">Vale para quem terminar o teste daqui em diante. Quem já fez sem o plano recebe quando vocês liberarem.</span>
+        <span class="ajuda" id="chave-aviso" hidden>Não foi possível ler a chave das turmas agora. Atualize a página; se continuar, avise o suporte.</span></div>
       <div class="link-linha"><span class="rot">Link do teste</span><code id="link-txt"></code></div>
       <div class="acoes">
         <button type="button" class="btn pri" id="b-copiar">Copiar link para o grupo</button>
         <button type="button" class="btn" id="b-abrir">Abrir o teste ↗</button>
+        <button type="button" class="btn" id="b-telao">QR no telão ↗</button>
+        <button type="button" class="btn" id="b-exemplo">Ver como chega ao aluno ↗</button>
       </div>
       <div class="copia" id="copia" hidden><p>O navegador não deixou copiar sozinho. Selecione o texto abaixo e copie.</p><textarea id="copia-txt" rows="3" readonly></textarea></div>
     </div>
@@ -282,7 +317,11 @@
   var S = {
     fase: 'gate',        // gate | espera | painel
     pin: '', gateErro: '',
-    linhas: [], carregouUmaVez: false,
+    linhas: [], turmas: [], turmasOk: true, carregouUmaVez: false,
+    sel: {},                        // ids marcados na lista (texto -> true)
+    loteConf: null,                 // 'liberar' | 'tirar' | null: confirmação das ações em lote
+    confRefazer: null,              // {id, nome}: confirmação de "Liberar novo teste"
+    msgLiberada: false,             // mostra a frase pronta para o grupo depois de liberar o plano
     turma: '', filtro: '',          // filtro '' = todas as turmas
     confirmar: null,                // {id, nome}
     pinConf: '', pinErro: '',
@@ -350,18 +389,51 @@
   function linkVer(id){ return paginaIrma('arquetipos', '?ver=' + encodeURIComponent(id)); }
   function mensagemGrupo(){ return 'Teste de Arquétipos Febracis: responda por aqui e receba sua devolutiva: ' + linkTeste(); }
   function atualizarLink(){ $('link-txt').textContent = linkTeste(); }
+  var MSG_PLANO = 'Seu plano de ação está liberado: abra de novo o link do teste no mesmo celular em que você fez.';
 
-  async function copiarLink(){
-    var txt = mensagemGrupo();
+  // ---------- chave do plano de ação por turma ----------
+  function chaveDa(turma){
+    for (var i = 0; i < S.turmas.length; i++) if ((S.turmas[i].turma || '') === turma) return S.turmas[i].plano_junto === true;
+    return false;   // turma sem linha conta como "depois"
+  }
+  function nomeTurma(turma){ return turma ? 'turma ' + turma : 'respostas sem turma'; }
+  function desenharChave(){
+    var junto = chaveDa(S.turma);
+    var bs = $('chave').querySelectorAll('button');
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', String((bs[i].getAttribute('data-chave') === '1') === junto));
+    $('chave-aviso').hidden = S.turmasOk;
+  }
+  async function gravarChave(junto){
+    if (S.busy || chaveDa(S.turma) === junto) return;
+    var turma = S.turma;
+    S.busy = true; esperar(true, 'Gravando o plano de ação da turma…');
+    try {
+      await rpc('gamificacao_arq_t_turma', {p_pin: S.pin, p_turma: turma, p_plano_junto: junto});
+      var achou = false;
+      S.turmas.forEach(function(x){ if ((x.turma || '') === turma) { x.plano_junto = junto; achou = true; } });
+      if (!achou) S.turmas.push({turma: turma, plano_junto: junto});
+      S.turmasOk = true; desenharChave();
+      toast('Plano de ação, ' + nomeTurma(turma) + ': ' + (junto ? 'vai junto com a devolutiva.' : 'fica para depois, o time libera.'), 'ok');
+    } catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+
+  async function copiarTexto(txt, caixa, ta){
     try {
       await navigator.clipboard.writeText(txt);
-      $('copia').hidden = true; toast('Mensagem copiada. É só colar no grupo.', 'ok');
+      caixa.hidden = true; return true;
     } catch (e) {
-      $('copia').hidden = false; var ta = $('copia-txt'); ta.value = txt; ta.focus(); ta.select();
+      caixa.hidden = false; ta.value = txt; ta.focus(); ta.select();
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (x) {}
-      if (ok) { $('copia').hidden = true; toast('Mensagem copiada. É só colar no grupo.', 'ok'); }
+      if (ok) caixa.hidden = true;
+      return ok;
     }
+  }
+  async function copiarLink(){
+    if (await copiarTexto(mensagemGrupo(), $('copia'), $('copia-txt'))) toast('Mensagem copiada. É só colar no grupo.', 'ok');
   }
   function abrirAba(url, avisoOk){
     var w = null;
@@ -377,6 +449,19 @@
     S.linhas.forEach(function(r){ var t = r.turma || ''; if (t && !vistos[t]) { vistos[t] = 1; out.push(t); } });
     out.sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
     return out;
+  }
+  function comPlano(r){ return !!(r.plano_junto || r.plano_liberado_em); }
+  function fmtDia(iso){
+    var d = new Date(iso); if (!iso || isNaN(d.getTime())) return '';
+    var p = partes(d); return p.day + '/' + p.month;
+  }
+  function planoCelula(r){
+    if (r.plano_junto) return '<span class="pill ouro">junto</span>';
+    if (r.plano_liberado_em) return '<span class="pill ouro">liberado ' + esc(fmtDia(r.plano_liberado_em)) + '</span>';
+    return '<span class="pill neutro">não</span>';
+  }
+  function idsMarcados(){
+    return Object.keys(S.sel).sort(function(a, b){ return Number(a) - Number(b); });
   }
   function nomePrincipal(r){
     var x = r.resultado || {};
@@ -400,11 +485,13 @@
     var vis = visiveis(), turmas = turmasDaLista();
     if (S.filtro && S.filtro !== '__sem' && turmas.indexOf(S.filtro) < 0) { S.filtro = ''; vis = visiveis(); }
     var mc = maisComum(vis);
+    var nPlano = vis.filter(comPlano).length;
     var rotTurma = S.filtro === '__sem' ? 'Respostas sem turma' : S.filtro ? 'Respostas da turma ' + esc(S.filtro) : 'Respostas em todas as turmas';
     var mcTxt = !mc ? '–' : (mc.nomes.length > 2 ? 'Empate entre ' + mc.nomes.length + ' arquétipos' : mc.nomes.join(' e '));
     $('kpis').innerHTML =
       '<div class="kpi"><span class="num">' + S.linhas.length + '</span><span class="rot">Total de respostas</span></div>' +
       '<div class="kpi"><span class="num">' + vis.length + '</span><span class="rot">' + rotTurma + '</span></div>' +
+      '<div class="kpi"><span class="num">' + nPlano + ' <small>de ' + vis.length + '</small></span><span class="rot">Com o plano de ação (junto ou liberado)' + (S.filtro ? ' na turma' : '') + '</span></div>' +
       '<div class="kpi"><span class="num txt">' + esc(mcTxt) + (mc ? ' <small>(' + mc.n + ' de ' + vis.length + ')</small>' : '') + '</span><span class="rot">Arquétipo mais comum' + (S.filtro ? ' na turma' : '') + '</span></div>';
 
     var f = '<button type="button" data-f="" aria-pressed="' + (!S.filtro) + '">Todas</button>';
@@ -413,28 +500,72 @@
     if (temSemTurma) f += '<button type="button" data-f="__sem" aria-pressed="' + (S.filtro === '__sem') + '">Sem turma</button>';
     $('filtros').innerHTML = f;
 
+    desenharChave();
     desenharLista(vis);
+  }
+  function barraLote(){
+    var ids = idsMarcados(), n = ids.length;
+    if (!n) return '';
+    var junto = S.linhas.filter(function(r){ return S.sel[String(r.id)] && r.plano_junto; }).length;
+    var h = '<div id="lote-barra" role="region" aria-label="Ações para as respostas marcadas"><span class="tit">' + n + ' ' + plural(n, 'resposta marcada', 'respostas marcadas') + '</span>';
+    if (S.loteConf) {
+      var lib = S.loteConf === 'liberar';
+      h += '<div class="confirma-caixa neutra" role="alertdialog" aria-label="Confirmação"><p>' +
+        (lib ? 'Liberar o plano de ação para ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '? Quem abrir de novo o link do teste no mesmo celular passa a ver o plano.'
+             : 'Tirar o plano de ação de ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '? Ao abrir de novo o link, elas deixam de ver o plano.' +
+               (junto ? ' ' + junto + ' ' + plural(junto, 'recebeu', 'receberam') + ' o plano junto com a devolutiva e ' + plural(junto, 'continua', 'continuam') + ' com ele.' : '')) +
+        '</p><div class="acoes"><button type="button" class="btn pri" data-acao="lote-confirmar">' + (lib ? 'Sim, liberar o plano' : 'Sim, tirar o plano') + '</button>' +
+        '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div>';
+    } else {
+      h += '<div class="acoes">' +
+        '<button type="button" class="btn pri" data-acao="lote-liberar">Liberar o plano (' + n + ')</button>' +
+        '<button type="button" class="btn" data-acao="lote-tirar">Tirar o plano (' + n + ')</button>' +
+        '<button type="button" class="btn" data-acao="lote-pdf"' + (n > 300 ? ' disabled' : '') + '>Baixar PDFs com o plano (' + n + ') ↓</button>' +
+        '<button type="button" class="btn" data-acao="lote-limpar">Limpar a seleção</button></div>';
+      if (n > 300) h += '<p class="aviso-lote" role="status">Para baixar os PDFs, divida em grupos de até 300. Você marcou ' + n + '.</p>';
+    }
+    return h + '</div>';
   }
   function desenharLista(vis){
     var box = $('lista');
-    var pinAberto = document.activeElement && document.activeElement.id === 'pin-conf';
+    var foco = document.activeElement, focoSel = foco && foco.getAttribute ? foco.getAttribute('data-sel') : null;
+    var focoTodos = foco && foco.id === 'sel-todos';
+    var pinAberto = foco && foco.id === 'pin-conf';
     if (!vis.length) {
       box.innerHTML = '<div class="vazio"><h3>Ninguém respondeu ainda.</h3><p>Copie o link e mande para a turma.</p></div>';
       return;
     }
-    var h = '<div class="rolagem"><table class="tabela"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Turma</th><th>Arquétipo principal</th><th>Secundário</th><th>Quando</th><th></th></tr></thead><tbody>';
+    var marcadasVis = vis.filter(function(r){ return S.sel[String(r.id)]; }).length;
+    var h = '';
+    if (S.msgLiberada) {
+      h += '<div class="msg-liberado"><b>Plano liberado. Mande este aviso para o grupo:</b><q>' + esc(MSG_PLANO) + '</q>' +
+        '<div class="acoes"><button type="button" class="btn pri" data-acao="copiar-plano">Copiar mensagem</button><button type="button" class="btn" data-acao="fechar-plano">Fechar</button></div>' +
+        '<div id="copia-plano" hidden><p class="ajuda">O navegador não deixou copiar sozinho. Selecione o texto abaixo e copie.</p><textarea id="copia-plano-txt" rows="3" readonly></textarea></div></div>';
+    }
+    h += '<div class="lista-topo"><label class="chk"><input type="checkbox" id="sel-todos"' + (marcadasVis === vis.length ? ' checked' : '') + '> Selecionar todos (' + vis.length + ')</label>' +
+      '<span class="ajuda">' + (marcadasVis ? marcadasVis + ' ' + plural(marcadasVis, 'marcada', 'marcadas') + ' neste filtro' : 'Marque as respostas para liberar o plano ou baixar os PDFs.') + '</span></div>';
+    h += '<div class="rolagem"><table class="tabela"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Turma</th><th>Arquétipo principal</th><th>Secundário</th><th>Plano</th><th>Quando</th><th></th></tr></thead><tbody>';
     vis.forEach(function(r){
-      var x = r.resultado || {};
-      h += '<tr><td class="nm">' + esc(r.nome) + '</td>' +
+      var x = r.resultado || {}, id = String(r.id);
+      h += '<tr' + (r.refazer_liberado ? ' class="apagada"' : '') + '><td class="nm"><label class="chk"><input type="checkbox" data-sel="' + esc(id) + '"' + (S.sel[id] ? ' checked' : '') + '> ' + esc(r.nome) + '</label>' +
+        (r.refazer_liberado ? ' <span class="pill novo">novo teste liberado</span>' : '') + '</td>' +
         '<td data-l="WhatsApp">' + (r.contato ? esc(r.contato) : '–') + '</td>' +
         '<td data-l="Turma">' + (r.turma ? '<span class="pill neutro">' + esc(r.turma) + '</span>' : '–') + '</td>' +
         '<td data-l="Principal">' + (x.principalNome ? '<span class="pill ouro">' + esc(nomePrincipal(r)) + '</span>' : '–') + '</td>' +
         '<td data-l="Secundário">' + esc(x.secundarioNome || '–') + '</td>' +
+        '<td data-l="Plano">' + planoCelula(r) + '</td>' +
         '<td data-l="Quando" class="quando">' + esc(fmtQuando(r.criado_em)) + '</td>' +
-        '<td class="ac"><button type="button" class="btn mini" data-acao="ver" data-id="' + esc(r.id) + '">Ver devolutiva</button>' +
-        '<button type="button" class="btn mini perigo" data-acao="pedir-excluir" data-id="' + esc(r.id) + '">Excluir</button></td></tr>';
-      if (S.confirmar && String(S.confirmar.id) === String(r.id)) {
-        h += '<tr class="conf"><td colspan="7"><div class="confirma-caixa" role="alertdialog" aria-label="Confirmação">' +
+        '<td class="ac"><button type="button" class="btn mini" data-acao="ver" data-id="' + esc(id) + '">Ver devolutiva</button>' +
+        (r.refazer_liberado ? '' : '<button type="button" class="btn mini" data-acao="pedir-refazer" data-id="' + esc(id) + '">Liberar novo teste</button>') +
+        '<button type="button" class="btn mini perigo" data-acao="pedir-excluir" data-id="' + esc(id) + '">Excluir</button></td></tr>';
+      if (S.confRefazer && String(S.confRefazer.id) === id) {
+        h += '<tr class="conf-neutro"><td colspan="8"><div class="confirma-caixa neutra" role="alertdialog" aria-label="Confirmação">' +
+          '<p>A resposta fica guardada e este WhatsApp pode fazer o teste de novo.</p>' +
+          '<div class="acoes"><button type="button" class="btn pri" data-acao="confirmar-refazer">Sim, liberar novo teste</button>' +
+          '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div></td></tr>';
+      }
+      if (S.confirmar && String(S.confirmar.id) === id) {
+        h += '<tr class="conf"><td colspan="8"><div class="confirma-caixa" role="alertdialog" aria-label="Confirmação">' +
           '<p>Excluir de vez a resposta de <b>' + esc(r.nome) + '</b>? Some a devolutiva e o resultado. Não dá para desfazer.</p>' +
           '<div class="campo pin-campo"><label for="pin-conf">Digite o PIN para confirmar</label>' +
           '<input id="pin-conf" type="password" inputmode="numeric" maxlength="12" autocomplete="off" value="' + esc(S.pinConf) + '"></div>' +
@@ -443,20 +574,33 @@
           '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div></td></tr>';
       }
     });
-    box.innerHTML = h + '</tbody></table></div>';
+    box.innerHTML = h + '</tbody></table></div>' + barraLote();
+    var st = $('sel-todos'); if (st) st.indeterminate = marcadasVis > 0 && marcadasVis < vis.length;
     var pc = $('pin-conf'); if (pc && (pinAberto || S.focarPin)) { S.focarPin = false; pc.focus(); }
+    if (focoSel) { var cx = box.querySelector('input[data-sel="' + focoSel + '"]'); if (cx) cx.focus(); }
+    if (focoTodos && st) st.focus();
   }
 
   // ---------- fluxo ----------
   function irParaGate(msg){
-    esquecerPin(); S.pin = ''; S.gateErro = msg || ''; S.linhas = []; S.confirmar = null; S.atualizadoEm = null;
+    esquecerPin(); S.pin = ''; S.gateErro = msg || ''; S.linhas = []; S.turmas = []; S.sel = {}; S.loteConf = null; S.confRefazer = null; S.msgLiberada = false; S.confirmar = null; S.atualizadoEm = null;
     $('gate-err').textContent = S.gateErro; $('pin').value = '';
     mostrarFase('gate'); esperar(false);
     var p = $('pin'); if (p) p.focus();
   }
   async function carregar(){
-    var r = await rpc('gamificacao_arq_t_lista', {p_pin: S.pin, p_turma: null});
-    S.linhas = Array.isArray(r) ? r : [];
+    var res = await Promise.all([
+      rpc('gamificacao_arq_t_lista', {p_pin: S.pin, p_turma: null}),
+      rpc('gamificacao_arq_t_turmas', {p_pin: S.pin}).then(function(x){ return {v: x}; }, function(e){ return {e: e}; })
+    ]);
+    S.linhas = Array.isArray(res[0]) ? res[0] : [];
+    if (res[1].e) {
+      if (ehPin(res[1].e)) throw res[1].e;
+      S.turmasOk = false;   // a lista segue valendo; só a chave das turmas não carregou
+    } else { S.turmas = Array.isArray(res[1].v) ? res[1].v : []; S.turmasOk = true; }
+    var existe = {}; S.linhas.forEach(function(r){ existe[String(r.id)] = true; });
+    Object.keys(S.sel).forEach(function(k){ if (!existe[k]) delete S.sel[k]; });
+    if (!idsMarcados().length) S.loteConf = null;
     S.atualizadoEm = new Date();
   }
   async function entrarComPin(pin, auto){
@@ -504,6 +648,36 @@
     } finally { S.busy = false; S.confirmando = false; esperar(false); }
   }
 
+  async function loteAplicar(){
+    var liberar = S.loteConf === 'liberar', ids = idsMarcados().map(Number);
+    if (!ids.length || S.busy) return;
+    S.busy = true; esperar(true, liberar ? 'Liberando o plano de ação…' : 'Tirando o plano de ação…');
+    try {
+      var r = await rpc('gamificacao_arq_t_liberar', {p_pin: S.pin, p_ids: ids, p_liberar: liberar});
+      var n = r && r.alterados != null ? r.alterados : ids.length;
+      S.loteConf = null; S.sel = {}; S.msgLiberada = liberar;
+      await carregar(); desenhar();
+      toast(liberar ? 'Plano de ação liberado para ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '.' : 'Plano de ação tirado de ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '.', 'ok');
+    } catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+  async function refazer(){
+    var c = S.confRefazer; if (!c || S.busy) return;
+    S.busy = true; esperar(true, 'Liberando um novo teste…');
+    try {
+      await rpc('gamificacao_arq_t_refazer', {p_pin: S.pin, p_id: Number(c.id)});
+      S.confRefazer = null;
+      await carregar(); desenhar();
+      toast('Novo teste liberado para ' + c.nome + '. O WhatsApp dessa pessoa pode fazer o teste de novo.', 'ok');
+    } catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+  function limparConfirmacoes(){ S.confirmar = null; S.pinConf = ''; S.pinErro = ''; S.confRefazer = null; S.loteConf = null; }
+
   // ---------- eventos ----------
   $('f-pin').addEventListener('submit', function(ev){
     ev.preventDefault();
@@ -514,41 +688,75 @@
   $('b-atualizar').addEventListener('click', function(){ atualizar(false); });
   $('b-copiar').addEventListener('click', copiarLink);
   $('b-abrir').addEventListener('click', function(){ abrirAba(linkTeste(), 'O teste abriu numa aba nova.'); });
+  $('b-telao').addEventListener('click', function(){ abrirAba(paginaIrma('arquetipos-telao', S.turma ? '?t=' + encodeURIComponent(S.turma) : ''), 'O telão abriu numa aba nova.'); });
+  $('b-exemplo').addEventListener('click', function(){ abrirAba(paginaIrma('arquetipos', '?exemplo=1&plano=' + (chaveDa(S.turma) ? '1' : '0')), 'O exemplo abriu numa aba nova.'); });
+  $('chave').addEventListener('click', function(ev){
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (b && b.hasAttribute('data-chave')) gravarChave(b.getAttribute('data-chave') === '1');
+  });
   $('turma').value = S.turma;
   $('turma').addEventListener('input', function(){
     var v = limpaTurma(this.value);
     if (v !== this.value) this.value = v;
     S.turma = v; try { localStorage.setItem(TURMA_KEY, v); } catch (e) {}
-    atualizarLink(); $('copia').hidden = true;
+    atualizarLink(); desenharChave(); $('copia').hidden = true;
   });
   document.addEventListener('click', function(ev){
     var b = ev.target.closest ? ev.target.closest('button') : null;
     if (!b || b.disabled) return;
     if (b.hasAttribute('data-f') && b.parentNode.id === 'filtros') {
-      S.filtro = b.getAttribute('data-f'); S.confirmar = null; S.pinConf = ''; S.pinErro = ''; desenhar(); return;
+      S.filtro = b.getAttribute('data-f'); limparConfirmacoes(); S.sel = {}; desenhar(); return;
     }
     var a = b.getAttribute('data-acao'); if (!a) return;
     var id = b.getAttribute('data-id');
     if (a === 'ver') abrirAba(linkVer(id), '');
     else if (a === 'pedir-excluir') {
       var r = S.linhas.filter(function(x){ return String(x.id) === String(id); })[0];
-      S.confirmar = {id: id, nome: r ? r.nome : ''}; S.pinConf = ''; S.pinErro = ''; S.focarPin = true; desenhar();
+      limparConfirmacoes(); S.confirmar = {id: id, nome: r ? r.nome : ''}; S.focarPin = true; desenhar();
     }
+    else if (a === 'pedir-refazer') {
+      var q = S.linhas.filter(function(x){ return String(x.id) === String(id); })[0];
+      limparConfirmacoes(); S.confRefazer = {id: id, nome: q ? q.nome : ''}; desenhar();
+    }
+    else if (a === 'confirmar-refazer') refazer();
     else if (a === 'confirmar-excluir') excluir();
-    else if (a === 'cancelar') { S.confirmar = null; S.pinConf = ''; S.pinErro = ''; desenhar(); }
+    else if (a === 'lote-liberar') { limparConfirmacoes(); S.loteConf = 'liberar'; desenhar(); }
+    else if (a === 'lote-tirar') { limparConfirmacoes(); S.loteConf = 'tirar'; desenhar(); }
+    else if (a === 'lote-confirmar') loteAplicar();
+    else if (a === 'lote-limpar') { limparConfirmacoes(); S.sel = {}; desenhar(); }
+    else if (a === 'lote-pdf') {
+      var ids = idsMarcados();
+      if (ids.length > 300) { toast('Para baixar os PDFs, divida em grupos de até 300.', 'err'); return; }
+      abrirAba(paginaIrma('arquetipos', '?lote=' + ids.join(',') + '&plano=1'), 'Os PDFs estão sendo gerados numa aba nova.');
+    }
+    else if (a === 'copiar-plano') { copiarTexto(MSG_PLANO, $('copia-plano'), $('copia-plano-txt')).then(function(ok){ if (ok) toast('Mensagem copiada. É só colar no grupo.', 'ok'); }); }
+    else if (a === 'fechar-plano') { S.msgLiberada = false; desenhar(); }
+    else if (a === 'cancelar') { limparConfirmacoes(); desenhar(); }
+  });
+  document.addEventListener('change', function(ev){
+    var el = ev.target; if (!el || !el.id && !el.hasAttribute('data-sel')) return;
+    if (el.hasAttribute('data-sel')) {
+      var id = el.getAttribute('data-sel');
+      if (el.checked) S.sel[id] = true; else delete S.sel[id];
+      S.loteConf = null; desenhar();
+    } else if (el.id === 'sel-todos') {
+      visiveis().forEach(function(r){ if (el.checked) S.sel[String(r.id)] = true; else delete S.sel[String(r.id)]; });
+      S.loteConf = null; desenhar();
+    }
   });
   document.addEventListener('input', function(ev){
     if (ev.target.id === 'pin-conf') { S.pinConf = ev.target.value; var pe = $('pin-err'); if (pe && pe.parentNode) pe.parentNode.removeChild(pe); S.pinErro = ''; }
   });
   document.addEventListener('keydown', function(ev){
     if (ev.key === 'Enter' && ev.target && ev.target.id === 'pin-conf') { ev.preventDefault(); excluir(); return; }
-    if (ev.key === 'Escape' && S.confirmar) { S.confirmar = null; S.pinConf = ''; S.pinErro = ''; desenhar(); }
+    if (ev.key === 'Escape' && (S.confirmar || S.confRefazer || S.loteConf)) { limparConfirmacoes(); desenhar(); }
   });
 
   // atualização automática: só com a aba visível e sem confirmação aberta (para não apagar o PIN que está sendo digitado)
-  setInterval(function(){ if (document.visibilityState === 'visible' && !S.confirmar) atualizar(true); }, AUTO_MS);
+  function ocupado(){ return S.confirmar || S.confRefazer || S.loteConf; }
+  setInterval(function(){ if (document.visibilityState === 'visible' && !ocupado()) atualizar(true); }, AUTO_MS);
   document.addEventListener('visibilitychange', function(){
-    if (document.visibilityState === 'visible' && S.atualizadoEm && !S.confirmar && Date.now() - S.atualizadoEm.getTime() > AUTO_MS) atualizar(true);
+    if (document.visibilityState === 'visible' && S.atualizadoEm && !ocupado() && Date.now() - S.atualizadoEm.getTime() > AUTO_MS) atualizar(true);
   });
 
   // ---------- início ----------

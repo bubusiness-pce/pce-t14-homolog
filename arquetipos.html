@@ -156,6 +156,11 @@
   .tarefas-opcao label{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
   .tarefas-opcao input{width:18px;height:18px;accent-color:#D8A038;flex:none}
   .tarefas-opcao span{font-size:13px;opacity:.8}
+  .espera h2{overflow-wrap:anywhere}
+  .faixa-ex{background:var(--accent-bg);border:1px solid rgba(216,160,56,.5);border-radius:12px;padding:11px 14px;font-size:15px}
+  .faixa-ex a{color:var(--accent-soft);font-weight:700;white-space:nowrap}
+  .lista-falhas{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px;font-size:14.5px}
+  .lista-falhas li{overflow-wrap:anywhere}
   .envio .acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .envio .carreg{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:600;color:var(--accent-soft)}
   .recomecar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:14px;color:var(--muted)}
@@ -288,9 +293,9 @@
       <div class="campo"><label for="c-nome">Seu nome completo</label>
         <input id="c-nome" type="text" autocomplete="name" maxlength="120" placeholder="Nome e sobrenome" aria-describedby="c-nome-dica">
         <span class="dica" id="c-nome-dica">Aparece na capa do seu relatório.</span></div>
-      <div class="campo"><label for="c-zap">WhatsApp com DDD (opcional)</label>
-        <input id="c-zap" type="tel" inputmode="tel" autocomplete="tel" maxlength="40" placeholder="(11) 91234-5678" aria-describedby="c-zap-dica">
-        <span class="dica" id="c-zap-dica">Só para o time falar com você, se precisar.</span></div>
+      <div class="campo"><label for="c-zap">WhatsApp com DDD</label>
+        <input id="c-zap" type="tel" inputmode="tel" autocomplete="tel" maxlength="40" placeholder="(11) 91234-5678" required aria-required="true" aria-describedby="c-zap-dica">
+        <span class="dica" id="c-zap-dica">Cada WhatsApp faz o teste uma vez.</span></div>
       <div class="campo"><label for="c-genero">Gênero (opcional)</label>
         <select id="c-genero"><option value="">Prefiro não especificar</option><option value="F">Feminino</option><option value="M">Masculino</option></select>
         <span class="dica">Ajusta o nome do arquétipo, como Sábio ou Sábia.</span></div>
@@ -332,13 +337,14 @@
     <p class="etapa" id="esp-etapa"></p>
     <h2 id="esp-titulo" tabindex="-1"></h2>
     <div class="barra det" id="esp-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+    <p class="small" id="esp-nota" hidden></p>
   </div>
 </section>
 
 <section id="tela-gate" class="tela" hidden>
   <div class="gate">
     <h2 tabindex="-1">Visão do time</h2>
-    <p>Digite o PIN de operação para ver a devolutiva deste aluno.</p>
+    <p id="gate-txt">Digite o PIN de operação para ver a devolutiva deste aluno.</p>
     <form id="f-pin" novalidate>
       <label class="sr" for="pin">PIN de operação</label>
       <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="• • • •" autocomplete="off">
@@ -352,6 +358,7 @@
   <div class="cartao">
     <h2 class="tela-tit" id="aviso-tit" tabindex="-1"></h2>
     <p class="small" id="aviso-txt"></p>
+    <div id="aviso-extra"></div>
     <div class="linha" id="aviso-acoes"></div>
   </div>
 </section>
@@ -400,18 +407,23 @@ $("#logo-topo").src = LOGO;
 const PARAMS = new URLSearchParams(location.search);
 const TURMA = limpaTurma(PARAMS.get("t"));
 const VER = PARAMS.get("ver");   // modo time: id da resposta
+const LOTE = PARAMS.get("lote"); // modo time: ids separados por vírgula, para baixar os PDFs num .zip
+const EXEMPLO = PARAMS.get("exemplo") === "1";   // modo time: devolutiva de um aluno fictício, sem PIN e sem banco
+const PLANO_URL = PARAMS.get("plano") === "1";   // com o plano de ação (exemplo e lote)
+const LOTE_MAX = 300;
 
 let estado;
 function zerar(){
   estado = {nome:"", contato:"", genero:"", fatos:new Set(), respostas:new Array(D.statements.length).fill(null), atual:0, tela:"tela-capa",
-    somenteLeitura:false, verInfo:null, enviado:null, enviando:false, envio:null, envioMsg:"", comTarefas:false};
+    somenteLeitura:false, verInfo:null, enviado:null, enviando:false, envio:null, envioMsg:"", comTarefas:false,
+    alunoVePlano:false, exemplo:false, jaFez:false, novoLiberado:false};
 }
 zerar();
 
 function guardar(){
   if(estado.somenteLeitura) return;
   try{ localStorage.setItem(CHAVE, JSON.stringify({nome:estado.nome, contato:estado.contato, genero:estado.genero, fatos:[...estado.fatos], respostas:estado.respostas,
-    atual:estado.atual, tela:estado.tela, enviado:estado.enviado, turma:TURMA})); }catch(e){}
+    atual:estado.atual, tela:estado.tela, enviado:estado.enviado, turma:TURMA, comTarefas:estado.comTarefas, jaFez:estado.jaFez})); }catch(e){}
 }
 function recuperar(){
   try{
@@ -428,15 +440,16 @@ function mostrar(id){
   window.scrollTo(0, 0);
   const alvo = $("#" + id + " [tabindex='-1']"); if(alvo){ try{ alvo.focus({preventScroll:true}); }catch(e){} }
 }
-function espera(n, de, titulo, pct){
+function espera(n, de, titulo, pct, nota){
+  $("#esp-nota").textContent = nota || ""; $("#esp-nota").hidden = !nota;
   $("#esp-etapa").textContent = "Etapa " + n + " de " + de;
   $("#esp-titulo").textContent = titulo;
   const b = $("#esp-barra"); b.setAttribute("aria-valuenow", pct); b.setAttribute("aria-label", "Etapa " + n + " de " + de + ": " + titulo);
   b.firstElementChild.style.width = pct + "%";
   if($("#tela-espera").hidden) mostrar("tela-espera");
 }
-function telaAviso(titulo, texto, botoes){
-  $("#aviso-tit").textContent = titulo; $("#aviso-txt").textContent = texto; $("#aviso-acoes").innerHTML = botoes || "";
+function telaAviso(titulo, texto, botoes, extra){
+  $("#aviso-tit").textContent = titulo; $("#aviso-txt").textContent = texto; $("#aviso-acoes").innerHTML = botoes || ""; $("#aviso-extra").innerHTML = extra || "";
   mostrar("tela-aviso");
 }
 function nomeArq(id){
@@ -459,22 +472,46 @@ function fmtQuando(iso){
 // Identificação
 if(TURMA){ $("#pill-turma").hidden = false; $("#pill-turma").textContent = "Turma " + TURMA; }
 function nomeOk(n){ return n.split(" ").filter(p => (p.match(/\p{L}/gu) || []).length >= 2).length >= 2; }
-function zapOk(z){ const n = z.replace(/\D/g, "").length; return !z || (n >= 10 && n <= 13); }
+// mesma normalização do banco: só dígitos; com 12 ou mais e começando em 55, tira o 55; senão tira os zeros à esquerda; vale de 10 a 13 dígitos
+function zapNorm(z){ const d = String(z || "").replace(/\D/g, ""); return (d.length >= 12 && d.startsWith("55")) ? d.slice(2) : d.replace(/^0+/, ""); }
+function zapOk(z){ const n = zapNorm(z).length; return n >= 10 && n <= 13; }
+const DICA_ZAP = "Cada WhatsApp faz o teste uma vez.";
 function erroCampo(idCampo, idDica, msg, padrao){
   const c = $("#" + idCampo), d = $("#" + idDica);
   if(msg){ c.setAttribute("aria-invalid", "true"); d.textContent = msg; d.classList.add("erro-txt"); c.focus(); }
   else { c.removeAttribute("aria-invalid"); d.textContent = padrao; d.classList.remove("erro-txt"); }
 }
-$("#f-ident").addEventListener("submit", ev => {
+// antes de começar: confere se este WhatsApp já fez o teste. Se a conferência falhar por rede, segue (o banco barra no envio)
+async function zapJaFez(zap){
+  espera(1, 1, "Conferindo o seu WhatsApp", 45);
+  await quadro();
+  try{
+    if(!SB) return false;
+    const res = await Promise.race([SB.rpc("gamificacao_arq_checar", {p_contato:zap}), new Promise((_, no) => setTimeout(() => no(new Error("demorou")), 12000))]);
+    return !res.error && !!res.data && res.data.ja_fez === true;
+  }catch(e){ return false; }
+}
+function telaJaFez(){
+  telaAviso("Este WhatsApp já fez o teste", "Cada WhatsApp faz o teste uma vez. Se você ainda não recebeu a sua devolutiva ou precisa refazer o teste, fale com o time da Febracis.",
+    '<button type="button" class="btn mini" id="b-outro-zap">Usar outro WhatsApp</button>');
+  $("#b-outro-zap").onclick = () => { mostrar("tela-capa"); const c = $("#c-zap"); c.value = ""; c.focus(); };
+}
+let conferindo = false;
+$("#f-ident").addEventListener("submit", async ev => {
   ev.preventDefault();
+  if(conferindo) return;
   const nome = $("#c-nome").value.trim().replace(/\s+/g, " ");
   const zap = $("#c-zap").value.trim().replace(/\s+/g, " ");
-  erroCampo("c-zap", "c-zap-dica", null, "Só para o time falar com você, se precisar.");
+  erroCampo("c-zap", "c-zap-dica", null, DICA_ZAP);
   erroCampo("c-nome", "c-nome-dica", null, "Aparece na capa do seu relatório.");
   if(!nomeOk(nome)){ erroCampo("c-nome", "c-nome-dica", "Escreva o seu nome e o sobrenome, como vai aparecer na capa do relatório.", ""); return; }
-  if(!zapOk(zap)){ erroCampo("c-zap", "c-zap-dica", "Confira o número: DDD e número, por exemplo (11) 91234-5678.", ""); return; }
-  estado.nome = nome; estado.contato = zap; estado.genero = $("#c-genero").value;
-  mostrar("tela-fatos");
+  if(!zapOk(zap)){ erroCampo("c-zap", "c-zap-dica", "Digite o WhatsApp com DDD.", ""); return; }
+  conferindo = true; $("#b-comecar").disabled = true;
+  try{
+    if(await zapJaFez(zap)){ telaJaFez(); return; }
+    estado.nome = nome; estado.contato = zap; estado.genero = $("#c-genero").value;
+    mostrar("tela-fatos");
+  }finally{ conferindo = false; $("#b-comecar").disabled = false; }
 });
 
 // Fatos
@@ -628,44 +665,59 @@ function barraBaixar(){
 }
 function envioHTML(){
   const e = estado.envio;
-  if(estado.somenteLeitura || !e) return "";
-  if(e === "ok") return '<div class="aviso-ok" role="status">Resposta registrada. O time já pode ver o seu resultado.</div>';
-  if(e === "enviando") return '<div class="envio"><div class="aviso"><div class="carreg" aria-busy="true"><span>Etapa 1 de 1 · Registrando as suas respostas…</span><div class="barra indet" role="progressbar" aria-label="Registrando as suas respostas"><i></i></div></div></div></div>';
-  return '<div class="envio"><div class="erro" role="alert"><b>' + esc(MSG_FALHA) + '</b>' + (estado.envioMsg ? '<span>' + esc(estado.envioMsg) + '</span>' : '')
+  if(estado.somenteLeitura) return "";
+  let h = "";
+  if(estado.novoLiberado) h += '<div class="aviso"><b>O time liberou um novo teste para o seu WhatsApp.</b><div class="acoes" style="margin-top:10px"><button type="button" class="btn mini" id="b-refazer">Fazer o teste de novo</button><span class="small" id="refazer-aviso"></span></div></div>';
+  if(!e) return h;
+  if(e === "ok") return h + '<div class="aviso-ok" role="status">Resposta registrada. O time já pode ver o seu resultado.</div>';
+  if(e === "ja_fez") return h + '<div class="aviso" role="alert">Este WhatsApp já tinha feito o teste; esta resposta não foi registrada. Fale com o time.</div>';
+  if(e === "enviando") return h + '<div class="envio"><div class="aviso"><div class="carreg" aria-busy="true"><span>Etapa 1 de 1 · Registrando as suas respostas…</span><div class="barra indet" role="progressbar" aria-label="Registrando as suas respostas"><i></i></div></div></div></div>';
+  return h + '<div class="envio"><div class="erro" role="alert"><b>' + esc(MSG_FALHA) + '</b>' + (estado.envioMsg ? '<span>' + esc(estado.envioMsg) + '</span>' : '')
     + '</div><div class="acoes"><button type="button" class="btn mini" id="b-reenviar">Tentar de novo</button><span class="small">O seu relatório abaixo continua valendo e pode ser baixado.</span></div></div>';
 }
 function bannerVer(){
+  if(estado.exemplo) return '<div class="faixa-ex"><b>Exemplo.</b> É assim que a devolutiva chega ao aluno. Nada aqui é gravado. <a href="' + paginaIrma("arquetipos-painel") + '">Voltar ao painel</a></div>';
   const v = estado.verInfo; if(!v) return "";
   return '<div class="aviso"><b>Visão do time.</b> Resposta nº ' + esc(v.id) + ' de ' + esc(estado.nome) + (v.turma ? ' · turma ' + esc(v.turma) : '')
     + (estado.contato ? ' · WhatsApp ' + esc(estado.contato) : '') + (v.quando ? ' · enviada em ' + esc(v.quando) : '') + '. <a href="' + paginaIrma("arquetipos-painel") + '" style="color:var(--accent-soft);font-weight:700">Voltar ao painel</a></div>';
 }
+function opcaoPlano(){
+  const marcada = estado.comTarefas ? ' checked' : '';
+  if(estado.exemplo)
+    return '<div class="tarefas-opcao"><label for="c-tarefas"><input type="checkbox" id="c-tarefas"' + marcada + '> Mostrar com o plano de ação</label>'
+      + '<span>A caixa só muda esta tela e o PDF. No painel, a chave da turma decide se o aluno recebe o plano junto ou depois.</span></div>';
+  return '<div class="tarefas-opcao"><label for="c-tarefas"><input type="checkbox" id="c-tarefas"' + marcada + '> Incluir o plano de ação</label>'
+    + '<span>' + (estado.alunoVePlano ? 'O aluno está vendo a devolutiva com o plano de ação.' : 'O aluno está vendo a devolutiva sem o plano de ação. Marque para baixar a versão com o plano.') + '</span>'
+    + '<span>A caixa só muda esta tela e o PDF baixado.</span></div>';
+}
 function resultado(r){
   atual = r; pdfPronto = null;
   let h = bannerVer();
-  if(estado.somenteLeitura) h += '<div class="tarefas-opcao"><label for="c-tarefas"><input type="checkbox" id="c-tarefas"' + (estado.comTarefas ? ' checked' : '') + '> Incluir as tarefas de cada dimensão</label><span>Opcional. O aluno recebe a devolutiva sem as tarefas; marque para baixar a versão com tarefas e enviar a ele.</span></div>';
+  if(estado.somenteLeitura) h += opcaoPlano();
   h += '<div id="envio-slot">' + envioHTML() + '</div>';
   h += barraBaixar();
   h += '<section class="capa-tela" aria-label="Capa do relatório">' + capaHTML(r) + '</section>';
   secoes(r, "tela").forEach(s => { h += '<section class="cartao rel rel-secao">' + s.join("") + '</section>'; });
   h += barraBaixar();
-  if(!estado.somenteLeitura) h += '<div class="recomecar"><button type="button" class="btn-sec" id="b-novo">Começar um teste novo</button><span id="novo-aviso"></span></div>';
   $("#tela-resultado").innerHTML = h;
   document.querySelectorAll("[data-baixar]").forEach(b => b.onclick = () => baixar());
   const ct = $("#c-tarefas");
   if(ct) ct.onchange = () => { estado.comTarefas = ct.checked; resultado(atual); const c = $("#c-tarefas"); if(c) c.focus(); };
   ligarEnvio();
-  const novo = $("#b-novo");
-  if(novo) novo.onclick = () => {
-    if(novo.dataset.confirmar !== "1"){
-      novo.dataset.confirmar = "1"; novo.textContent = "Sim, apagar e recomeçar";
-      $("#novo-aviso").textContent = "O resultado atual sai desta tela. Baixe o PDF antes, se ainda não baixou.";
+  mostrar("tela-resultado");
+}
+function ligarEnvio(){
+  const b = $("#b-reenviar"); if(b) b.onclick = () => reenviar();
+  const n = $("#b-refazer");
+  if(n) n.onclick = () => {   // o time liberou um novo teste: a devolutiva atual sai deste aparelho, então pede uma confirmação
+    if(n.dataset.confirmar !== "1"){
+      n.dataset.confirmar = "1"; n.textContent = "Sim, começar o teste novo";
+      $("#refazer-aviso").textContent = "A devolutiva atual sai desta tela. Baixe o PDF antes, se ainda não baixou.";
       return;
     }
     reiniciar();
   };
-  mostrar("tela-resultado");
 }
-function ligarEnvio(){ const b = $("#b-reenviar"); if(b) b.onclick = () => reenviar(); }
 function reiniciar(){
   esquecer(); zerar(); atual = null; pdfPronto = null;
   $("#c-nome").value = ""; $("#c-zap").value = ""; $("#c-genero").value = ""; montarFatos();
@@ -689,14 +741,25 @@ async function enviarBanco(r){
   const res = await Promise.race([chamada, limite]);
   if(res.error) throw res.error;
   if(!res.data || res.data.ok !== true) throw Object.assign(new Error("recusado"), {codigo: res.data && res.data.erro});
-  return res.data.id;
+  return res.data;
 }
 function msgErroEnvio(e){
   if(e && e.codigo === "limite") return "Este nome já enviou respostas demais hoje.";
   if(e && e.codigo === "nome") return "O nome precisa ter nome e sobrenome.";
+  if(e && e.codigo === "whatsapp") return "WhatsApp inválido";
   const m = (e && e.message) || "";
   if(/fetch|network|failed to load|demorou/i.test(m)) return MSG_REDE;
   return "";
+}
+// grava no banco; o banco diz se o plano de ação vai junto (chave da turma) e barra o WhatsApp repetido
+async function registrar(r){
+  try{
+    const d = await enviarBanco(r);
+    estado.enviado = d.id; estado.comTarefas = d.plano === true; estado.jaFez = false; estado.envio = "ok"; estado.envioMsg = "";
+  }catch(e){
+    estado.enviado = null; estado.jaFez = !!(e && e.codigo === "ja_fez");
+    estado.envio = estado.jaFez ? "ja_fez" : "falha"; estado.envioMsg = estado.jaFez ? "" : msgErroEnvio(e); console.error(e);
+  }
 }
 async function finalizar(){
   if(estado.enviando) return;
@@ -707,8 +770,7 @@ async function finalizar(){
     const r = completar(calcular());
     espera(2, 3, "Registrando as suas respostas", 50);
     await quadro();
-    try{ estado.enviado = await enviarBanco(r); estado.envio = "ok"; estado.envioMsg = ""; }
-    catch(e){ estado.enviado = null; estado.envio = "falha"; estado.envioMsg = msgErroEnvio(e); console.error(e); }
+    await registrar(r);
     espera(3, 3, "Montando a sua devolutiva", 90);
     await quadro();
     estado.enviando = false;
@@ -723,9 +785,9 @@ async function reenviar(){
   if(estado.enviando || !atual) return;
   estado.enviando = true; estado.envio = "enviando"; $("#envio-slot").innerHTML = envioHTML();
   await quadro();
-  try{ estado.enviado = await enviarBanco(atual); estado.envio = "ok"; estado.envioMsg = ""; }
-  catch(e){ estado.enviado = null; estado.envio = "falha"; estado.envioMsg = msgErroEnvio(e); console.error(e); }
+  await registrar(atual);
   estado.enviando = false; guardar();
+  if(estado.comTarefas){ resultado(atual); return; }   // o plano veio junto: refaz a tela com ele
   $("#envio-slot").innerHTML = envioHTML(); ligarEnvio();
 }
 
@@ -844,6 +906,8 @@ async function abrirResposta(pin, auto){
   estado.nome = linha.nome || ""; estado.contato = linha.contato || ""; estado.genero = x.g === "F" || x.g === "M" ? x.g : "";
   estado.fatos = new Set(x.f); estado.respostas = x.a.slice();
   estado.verInfo = {id: linha.id, turma: linha.turma || "", quando: fmtQuando(linha.criado_em)};
+  estado.alunoVePlano = !!(linha.plano_junto || linha.plano_liberado_em);
+  estado.comTarefas = estado.alunoVePlano;
   $("#topo-sub").textContent = "Visão do time";
   resultado(completar(calcular()));
 }
@@ -851,8 +915,9 @@ $("#f-pin").addEventListener("submit", ev => {
   ev.preventDefault();
   const v = ($("#pin").value || "").trim();
   if(!v){ $("#gate-err").textContent = "Digite o PIN."; $("#pin").focus(); return; }
-  abrirResposta(v, false);
+  entrarTime(v, false);
 });
+const entrarTime = (pin, auto) => LOTE !== null ? gerarLote(pin, auto) : abrirResposta(pin, auto);
 function iniciarVer(){
   estado.somenteLeitura = true;   // modo time nunca mexe no progresso guardado do aluno neste navegador
   $("#topo-sub").textContent = "Visão do time";
@@ -864,17 +929,177 @@ function iniciarVer(){
   if(guardado) abrirResposta(guardado, true); else irParaGate("");
 }
 
-// Volta de onde a pessoa parou (fica só neste navegador)
+// Modo exemplo: ?exemplo=1&plano=0|1. Aluno fictício, sem PIN e sem nenhuma chamada ao banco
+function iniciarExemplo(){
+  estado.somenteLeitura = true; estado.exemplo = true;
+  estado.nome = "Aluno de Exemplo"; estado.contato = ""; estado.genero = "";
+  estado.fatos = new Set([0, 3]); estado.respostas = D.statements.map((_, i) => (i * 7) % 5 + 1);
+  estado.comTarefas = PLANO_URL;
+  $("#topo-sub").textContent = "Exemplo";
+  resultado(completar(calcular()));
+}
+
+// Modo lote: ?lote=<ids>&plano=0|1. Gera um PDF por resposta e junta tudo num .zip
+const LOTE_IDS = [];
+let zipPronto = null;
+const carregarJSZip = () => window.JSZip ? Promise.resolve() : new Promise((ok, no) => {
+  const s = document.createElement("script");
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+  s.onload = ok; s.onerror = () => no(new Error("As bibliotecas do arquivo .zip não carregaram. Confira a internet e tente de novo."));
+  document.head.appendChild(s);
+});
+const nomeSeguro = n => String(n || "").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80).replace(/[. ]+$/, "") || "Sem nome";
+function hojeBR(){
+  const o = {};
+  new Intl.DateTimeFormat("pt-BR", {timeZone:"America/Sao_Paulo", year:"numeric", month:"2-digit", day:"2-digit"}).formatToParts(new Date()).forEach(x => { o[x.type] = x.value; });
+  return o.year + "-" + o.month + "-" + o.day;
+}
+function baixarZip(){
+  if(!zipPronto) return;
+  const url = URL.createObjectURL(zipPronto.blob);
+  const a = document.createElement("a"); a.href = url; a.download = zipPronto.nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function telaLotePronto(ok, falhas, nomeZip){
+  const painel = '<a class="btn mini sec" href="' + paginaIrma("arquetipos-painel") + '">Voltar ao painel</a>';
+  const lista = falhas.length
+    ? '<p class="small"><b>' + (ok ? "Não foram gerados (" : "Falharam (") + falhas.length + '):</b></p><ul class="lista-falhas">'
+      + falhas.map(f => '<li><b>' + esc(f.nome) + '</b> · ' + esc(f.motivo) + '</li>').join("") + '</ul>'
+    : "";
+  if(!ok){
+    telaAviso("Nenhum PDF foi gerado", "Confira a lista abaixo, volte ao painel e tente de novo.", painel, lista);
+    return;
+  }
+  telaAviso("Pronto: " + ok + (ok === 1 ? " PDF" : " PDFs") + " no arquivo .zip",
+    "O arquivo " + nomeZip + " foi baixado, " + (PLANO_URL ? "com o plano de ação em cada devolutiva." : "sem o plano de ação em cada devolutiva."),
+    '<button type="button" class="btn mini" id="b-baixar-zip">Baixar de novo</button>' + painel, lista);
+  $("#b-baixar-zip").onclick = baixarZip;
+}
+async function gerarLote(pin, auto){
+  zipPronto = null;
+  const N0 = LOTE_IDS.length;
+  espera(1, 3, "Conferindo o PIN e buscando as respostas", 5);
+  await quadro();
+  let linhas;
+  try{
+    if(!SB) throw new Error("O sistema não carregou. Confira a internet e recarregue a página.");
+    const res = await SB.rpc("gamificacao_arq_t_ver_lote", {p_pin:pin, p_ids:LOTE_IDS.map(Number)});
+    if(res.error) throw res.error;
+    linhas = Array.isArray(res.data) ? res.data : [];
+  }catch(e){
+    const m = (e && e.message) || "";
+    if(/PIN\s*inv/i.test(m)){ irParaGate(auto ? "" : "PIN inválido."); return; }
+    telaAviso("Não foi possível buscar as respostas", /fetch|network|failed to load/i.test(m) ? MSG_REDE : (m || "Algo não deu certo. Tente de novo."), '<button type="button" class="btn mini" id="b-de-novo">Tentar de novo</button>');
+    $("#b-de-novo").onclick = () => gerarLote(pin, false);
+    return;
+  }
+  guardarPin(pin);
+  espera(1, 3, "Preparando o arquivo", 8);
+  try{ await carregarJSZip(); }
+  catch(e){
+    telaAviso("Não foi possível montar o arquivo .zip", e.message, '<button type="button" class="btn mini" id="b-de-novo">Tentar de novo</button>');
+    $("#b-de-novo").onclick = () => gerarLote(pin, false);
+    return;
+  }
+  await quadro();
+  const falhas = [], validas = [];
+  const achados = new Set(linhas.map(l => String(l.id)));
+  LOTE_IDS.forEach(id => { if(!achados.has(id)) falhas.push({nome:"Resposta nº " + id, motivo:"não encontrada (pode ter sido excluída)"}); });
+  linhas.forEach(l => {
+    if(respostasValidas(l.respostas)) validas.push(l);
+    else falhas.push({nome:l.nome || ("Resposta nº " + l.id), motivo:"as respostas estão num formato que esta página não lê"});
+  });
+  const zip = new window.JSZip(), usados = new Set(), N = validas.length;
+  let feitos = 0;
+  for(let i = 0; i < N; i++){
+    const l = validas[i], x = l.respostas, nm = l.nome || "Sem nome";
+    const dizer = (txt, pct) => espera(2, 3, "Gerando o PDF " + (i + 1) + " de " + N + " · " + nm,
+      Math.round(10 + ((i + (pct || 0) / 100) / N) * 80), String(txt || "").replace(/^Etapa \d de \d · /, "") + " Deixe esta aba aberta até terminar.");
+    zerar(); estado.somenteLeitura = true;
+    estado.nome = nm; estado.genero = x.g === "F" || x.g === "M" ? x.g : ""; estado.fatos = new Set(x.f); estado.respostas = x.a.slice(); estado.comTarefas = PLANO_URL;
+    dizer("Preparando as páginas…", 0);
+    await quadro();
+    try{
+      const blob = await gerarPDF(completar(calcular()), dizer);
+      const base = nomeSeguro(nm) + " - Teste de Arquétipos";
+      let arq = base + ".pdf", k = 2;
+      while(usados.has(arq.toLowerCase())) arq = base + " (" + (k++) + ").pdf";
+      usados.add(arq.toLowerCase());
+      zip.file(arq, blob, {binary:true});
+      feitos++;
+    }catch(e){
+      console.error(e); $("#folhas").innerHTML = "";
+      falhas.push({nome:nm, motivo:"não foi possível gerar o PDF"});
+    }
+  }
+  if(!feitos){ zerar(); estado.somenteLeitura = true; telaLotePronto(0, falhas, ""); return; }
+  try{
+    espera(3, 3, "Montando o arquivo .zip", 90);
+    await quadro();
+    const blob = await zip.generateAsync({type:"blob", compression:"STORE"}, m => espera(3, 3, "Montando o arquivo .zip", Math.round(90 + m.percent / 10)));
+    const turmas = new Set(validas.map(l => limpaTurma(l.turma)));
+    const rot = (turmas.size === 1 && [...turmas][0]) ? [...turmas][0] : "lote";
+    zipPronto = {blob, nome:"arquetipos-" + rot + "-" + hojeBR() + ".zip"};
+  }catch(e){
+    console.error(e);
+    telaAviso("Não foi possível montar o arquivo .zip", "Os PDFs foram gerados, mas o arquivo não fechou. Tente de novo.", '<button type="button" class="btn mini" id="b-de-novo">Tentar de novo</button>');
+    $("#b-de-novo").onclick = () => gerarLote(pin, false);
+    return;
+  }
+  zerar(); estado.somenteLeitura = true;
+  telaLotePronto(feitos, falhas, zipPronto.nome);
+  baixarZip();
+}
+function iniciarLote(){
+  estado.somenteLeitura = true;   // modo time nunca mexe no progresso guardado do aluno neste navegador
+  $("#topo-sub").textContent = "Baixar PDFs";
+  $("#gate-txt").textContent = "Digite o PIN de operação para gerar os PDFs.";
+  const itens = String(LOTE || "").split(",").map(s => s.trim()).filter(Boolean);
+  const painel = '<a class="btn mini" href="' + paginaIrma("arquetipos-painel") + '">Ir ao painel</a>';
+  if(!itens.length || itens.some(s => !/^\d{1,15}$/.test(s))){
+    telaAviso("Link inválido", "O endereço não traz os números das respostas. Marque as respostas no painel do time e baixe por lá.", painel);
+    return;
+  }
+  itens.forEach(s => { if(!LOTE_IDS.includes(s)) LOTE_IDS.push(s); });
+  if(LOTE_IDS.length > LOTE_MAX){
+    telaAviso("Lote grande demais", "O endereço traz " + LOTE_IDS.length + " respostas e o máximo é " + LOTE_MAX + " de cada vez. Nada foi gerado. Volte ao painel, marque menos linhas e baixe em mais de uma vez.", painel);
+    return;
+  }
+  const guardado = pinGuardado();
+  if(guardado) gerarLote(guardado, true); else irParaGate("");
+}
+
+// Ao reabrir o link depois de terminar: pergunta ao banco se o plano de ação já foi liberado e se o time liberou um novo teste.
+// Se as perguntas falharem (rede), vale o que ficou guardado neste aparelho.
+async function reabrir(){
+  espera(1, 1, "Abrindo a sua devolutiva", 40);
+  await quadro();
+  const limite = () => new Promise((_, no) => setTimeout(() => no(new Error("demorou")), 10000));
+  const perguntar = (fn, args) => !SB ? Promise.resolve(null) : Promise.race([SB.rpc(fn, args), limite()]).then(r => (r && !r.error) ? r.data : null, () => null);
+  const [pl, ck] = await Promise.all([
+    estado.enviado ? perguntar("gamificacao_arq_plano", {p_id:estado.enviado}) : null,
+    (estado.enviado || estado.jaFez) && estado.contato ? perguntar("gamificacao_arq_checar", {p_contato:estado.contato}) : null
+  ]);
+  if(pl && typeof pl.plano === "boolean") estado.comTarefas = pl.plano;
+  if(ck && ck.ja_fez === false) estado.novoLiberado = true;
+  espera(1, 1, "Abrindo a sua devolutiva", 90);
+  await quadro();
+  resultado(completar(calcular()));
+}
 (function iniciar(){
+  if(EXEMPLO){ iniciarExemplo(); return; }
+  if(LOTE !== null){ iniciarLote(); return; }
   if(VER !== null){ iniciarVer(); return; }
   const s = recuperar();
   if(!s || !s.nome) return;
   estado.nome = s.nome; estado.contato = s.contato || ""; estado.genero = s.genero || ""; estado.fatos = new Set(s.fatos || []); estado.respostas = s.respostas;
   estado.atual = Math.min(Math.max(0, s.atual || 0), D.statements.length - 1); estado.enviado = s.enviado || null;
+  estado.comTarefas = s.comTarefas === true; estado.jaFez = s.jaFez === true;
   $("#c-nome").value = estado.nome; $("#c-zap").value = estado.contato; $("#c-genero").value = estado.genero; montarFatos();
   if(s.tela === "tela-resultado" && estado.respostas.every(v => v)){
-    estado.envio = estado.enviado ? "ok" : "falha";
-    resultado(completar(calcular()));
+    estado.envio = estado.enviado ? "ok" : (estado.jaFez ? "ja_fez" : "falha");
+    reabrir();
   }
   else if(s.tela === "tela-quiz"){ mostrarPergunta(); mostrar("tela-quiz"); }
   else if(s.tela === "tela-fatos") mostrar("tela-fatos");
