@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Calculadora de preço do Mentor de Líderes · painel da equipe (HOMOLOG, 30/10/2026)
+  Precificação do Mentor de Líderes · painel da equipe (HOMOLOG, 30/10/2026)
   Padrão copiado do arquetipos-painel.html: login por PIN dos placares (guardado na sessão), link e mensagem por turma,
   lista por turma, exportação, exclusão confirmada na página.
   Tudo passa pelas funções preco_t_* (PIN em cada chamada): preco_t_turmas, preco_t_lista, preco_t_marcar, preco_t_excluir.
@@ -13,7 +13,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0B1426">
 <meta name="robots" content="noindex">
-<title>[HOMOLOG] Calculadora de preço · painel da equipe</title>
+<title>[HOMOLOG] Precificação · painel da equipe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -155,7 +155,7 @@ td input[type=text]{width:150px}
 <div class="faixa">Homologação</div>
 <header class="top">
   <div class="titles">
-    <span class="kicker">Calculadora de preço · Mentor de Líderes</span>
+    <span class="kicker">Precificação · Mentor de Líderes</span>
     <h1>Painel da equipe</h1>
   </div>
   <span class="spacer"></span>
@@ -245,7 +245,7 @@ td input[type=text]{width:150px}
   var COR_NIVEL = ['#6F7A92', '#A9915A', '#C9A45C', '#E8CB8B'];
   var PRODUTOS = {individual:'Mentoria individual', grupo:'Mentoria em grupo', premium:'Consultoria ou programa premium', imersao:'Imersão presencial'};
   var COMPRADORES = {pf:'Pessoa física', liberal:'Profissional liberal', pequena:'Pequena empresa', media:'Média ou grande empresa'};
-  // Os 10 fatos, na ordem e com os textos da calculadora (índice 0 = a melhor opção).
+  // Os 10 fatos, na ordem e com os textos da página do aluno (índice 0 = a melhor opção).
   var FATOS = [
     {id:'metodo', t:'Método próprio', ops:['Tenho','Em construção','Não']},
     {id:'mentoria', t:'Mentoria', ops:['Estruturada e já vendida','Já vendi, sem estrutura','Em construção','Ainda não']},
@@ -395,7 +395,7 @@ td input[type=text]{width:150px}
   function linkExemplo(){ return paginaIrma('?exemplo'); }
   function linkVer(id){ return paginaIrma('?ver=' + encodeURIComponent(id)); }
   function mensagemGrupo(){
-    return 'Líder, tem uma ferramenta nova para você: a Calculadora de Preço do Mentor de Líderes. '
+    return 'Líder, tem uma ferramenta nova para você: a Precificação do Mentor de Líderes. '
       + 'Leva uns 3 minutos, direto no celular. No final você vê a diferença entre o que cobra hoje e o que o seu trabalho vale. '
       + 'Responda por aqui: ' + linkTurma();
   }
@@ -489,7 +489,7 @@ td input[type=text]{width:150px}
             + '<span class="qt">' + o.dist[i] + (o.n ? ' · ' + Math.round(o.dist[i] / o.n * 100) + '%' : '') + '</span></div>';
         }).join('')
       + '</div><p class="dist-nota" id="k-sem"><b>' + (o.pctSem == null ? '–' : o.pctSem + '%') + '</b> ainda não vendeu ('
-      + o.semVenda + ' de ' + o.n + '). Para eles a calculadora mostra o preço para começar.</p>';
+      + o.semVenda + ' de ' + o.n + '). Para eles a ferramenta mostra o preço para começar.</p>';
   }
   function opcoes(lista, atual){
     var achou = false, h = lista.map(function(o){

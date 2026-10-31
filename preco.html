@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>[HOMOLOG] Calculadora de preço · Mentor de Líderes</title>
+<title>[HOMOLOG] Precificação · Mentor de Líderes</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -660,7 +660,7 @@ function htmlComo(){
       '<div class="lin"><span>Quanto cobra hoje</span><b>R$ 4.000</b></div>'+
       '<div class="lin"><span>O que vende e para quem: mentoria para produtores (pequena empresa)</span><b>régua R$ 3 a 63 mil</b></div></div>'+
     '<div class="seta" aria-hidden="true">→</div>'+
-    '<div class="passo"><div class="pn">2</div><div class="pt">A calculadora faz a conta</div>'+
+    '<div class="passo"><div class="pn">2</div><div class="pt">A ferramenta faz a conta</div>'+
       '<div class="lin"><span>10 pontos = valor visível, ponto da régua</span><b>R$ 21.700</b></div>'+
       '<div class="lin"><span>Sua hora pelo mercado, no seu nível</span><b>R$ 670</b></div>'+
       '<div class="lin"><span>Mínimo: 12 h × R$ 670 ÷ 0,77</span><b>R$ 10.500</b></div></div>'+
@@ -674,7 +674,7 @@ function htmlComo(){
 function telaCapa(){
   if(!TURMA){ telaSemTurma(); return; }
   app.innerHTML='<div class="tela">'+
-  '<p class="eyebrow">Mentor de Líderes · calculadora de preço</p>'+
+  '<p class="eyebrow">Mentor de Líderes · precificação</p>'+
   '<h1 class="titulo">Quanto vale o que você já construiu</h1>'+
   '<div class="serve">'+
     '<div class="sv"><span class="k">Objetivo</span><span class="v">Mostrar, com fatos, quanto vale o que você já construiu e transformar isso no preço da sua mentoria.</span></div>'+
@@ -688,7 +688,7 @@ function telaCapa(){
   '<label class="rot" for="f-nome">Seu nome completo</label><input class="campo" id="f-nome" autocomplete="name" placeholder="João da Silva" value="'+esc(ident.nome)+'"><p class="erro c" id="e-nome"></p>'+
   '<label class="rot" for="f-zap">Seu WhatsApp com DDD</label><input class="campo" id="f-zap" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" value="'+esc(ident.zap)+'"><p class="zap-dica" id="d-zap">Cada WhatsApp faz o teste uma vez nesta turma.</p><p class="erro c" id="e-zap"></p>'+
   '<label class="rot" for="f-prod">Nome da sua mentoria ou produto <span>(opcional)</span></label><input class="campo" id="f-prod" placeholder="Mentoria Produtor Lucrativo" value="'+esc(s.exemplo?'':s.prodNome)+'">'+
-  '<label class="consent" for="f-consent"><input type="checkbox" id="f-consent"><span>Concordo que a equipe do Mentor de Líderes guarde minhas respostas e meu WhatsApp para melhorar esta calculadora e acompanhar meu plano. Não guardamos CPF nem faturamento.</span></label><p class="erro c" id="e-consent"></p>'+
+  '<label class="consent" for="f-consent"><input type="checkbox" id="f-consent"><span>Concordo que a equipe do Mentor de Líderes guarde minhas respostas e meu WhatsApp para melhorar esta ferramenta e acompanhar meu plano. Não guardamos CPF nem faturamento.</span></label><p class="erro c" id="e-consent"></p>'+
   '<button class="btn lg" id="b-comecar">Começar</button><div id="cx-espera"></div>'+
   '<button class="exemplo" id="b-exemplo"><span class="k">Ver o exemplo do João completo</span><span class="t">Mentoria para produtores rurais</span><span class="d">Cobra R$ 4.000; o que construiu vale <b>R$ 21.900</b></span></button>'+
   '</div>';
@@ -741,16 +741,16 @@ function barra(msg,pct){ return '<div class="pdfp" role="status"><div class="st"
 
 function telaSemTurma(){
   vista='capa';
-  app.innerHTML='<div class="tela"><p class="eyebrow">Mentor de Líderes · calculadora de preço</p>'+
+  app.innerHTML='<div class="tela"><p class="eyebrow">Mentor de Líderes · precificação</p>'+
     '<h1 class="titulo">Este link precisa vir da equipe do Mentor de Líderes</h1>'+
-    '<p class="contexto">Peça à equipe o link da sua turma para fazer a calculadora.</p>'+
+    '<p class="contexto">Peça à equipe o link da sua turma para fazer a precificação.</p>'+
     '</div>';
 }
 function telaAviso(t,d,b){
   avisoAtual={t:t,d:d,b:b||''}; vista='aviso'; telaAvisoAtual();
 }
 function telaAvisoAtual(){
-  app.innerHTML='<div class="tela"><p class="eyebrow">'+(MODO_VER?'Visão da equipe':'Mentor de Líderes · calculadora de preço')+'</p>'+
+  app.innerHTML='<div class="tela"><p class="eyebrow">'+(MODO_VER?'Visão da equipe':'Mentor de Líderes · precificação')+'</p>'+
     '<h1 class="enunciado">'+esc(avisoAtual.t)+'</h1>'+(avisoAtual.d?'<p class="contexto">'+esc(avisoAtual.d)+'</p>':'')+
     (avisoAtual.b?'<div class="acoes" style="margin-top:22px">'+avisoAtual.b+'</div>':'')+'</div>';
   var b=document.getElementById('b-de-novo'); if(b&&avisoAtual.fn) b.onclick=avisoAtual.fn;
@@ -758,7 +758,7 @@ function telaAvisoAtual(){
 function telaJaFez(){
   var q=ident.jaFez?fmtData(ident.jaFez):'';
   vista='jafez';
-  app.innerHTML='<div class="tela"><p class="eyebrow">Mentor de Líderes · calculadora de preço</p>'+
+  app.innerHTML='<div class="tela"><p class="eyebrow">Mentor de Líderes · precificação</p>'+
     '<h1 class="enunciado">Você já fez este teste nesta turma'+(q?' em '+esc(q):'')+'.</h1>'+
     '<p class="contexto">Para refazer, fale com a equipe.</p>'+
     '<div class="acoes" style="margin-top:22px"><button class="btn ghost" id="b-voltar-capa">Voltar</button></div></div>';
@@ -853,7 +853,7 @@ async function abrirVer(pin,auto){
   guardarPin(pin);
   telaEspera('Montando a devolutiva',80); await pausa();
   var c=linha&&linha.carga;
-  if(!cargaValida(c)){ telaAviso('Esta resposta não pode ser aberta aqui','Ela foi gravada num formato que esta página não lê. Fale com quem cuida da calculadora.'); return; }
+  if(!cargaValida(c)){ telaAviso('Esta resposta não pode ser aberta aqui','Ela foi gravada num formato que esta página não lê. Fale com a equipe do Mentor de Líderes.'); return; }
   s=Object.assign(novo(),c); delete s.v; s.nome=c.nome||linha.nome||''; s.exemplo=false;
   verInfo={id:linha.id,turma:linha.turma||'',quando:fmtData(linha.criado_em)};
   vista='resultado'; desenhar(); window.scrollTo(0,0);
@@ -927,7 +927,7 @@ function telaVenda(){
 function telaTempo(){
   var enc=[1,2,3,4,6,8,12,24], dur=[1,1.5,2,3,4,8], ext=[0,1,2,5,10];
   var g=ehGrupo(), revisita=s.encontros&&s.duracao&&s.extra!=null;
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto tempo seu o cliente recebe?</h1><p class="contexto">'+(g?'Conte o tempo da turma inteira. A calculadora divide pelo número de pessoas.':'Escolha em ordem: a próxima linha abre depois de cada resposta.')+'</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto tempo seu o cliente recebe?</h1><p class="contexto">'+(g?'Conte o tempo da turma inteira. A conta divide pelo número de pessoas.':'Escolha em ordem: a próxima linha abre depois de cada resposta.')+'</p>'+
   '<div class="linha-t" id="l-enc"><span class="rot">Quantos encontros com você</span><div class="chips">'+enc.map(function(v){return '<button class="chip'+(s.encontros===v?' sel':'')+'" data-k="encontros" data-v="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.encontros&&enc.indexOf(s.encontros)<0?' sel':'')+'" data-k="encontros" data-v="outro">outro</button></div>'+
     caixaOutro('ou-enc',false,'15',s.encontros&&enc.indexOf(s.encontros)<0?s.encontros:'')+'</div>'+
   '<div class="linha-t" id="l-dur"'+(s.encontros?'':' hidden')+'><span class="rot">Quanto dura cada encontro</span><div class="chips">'+dur.map(function(v){return '<button class="chip'+(s.duracao===v?' sel':'')+'" data-k="duracao" data-v="'+v+'">'+durTxt(v)+'</button>';}).join('')+'</div></div>'+
@@ -1210,7 +1210,7 @@ function htmlPapel(){
   var c=calcular(), P=c.cobra>0?c.cobra:0, g=c.g, hoje=new Date().toLocaleDateString('pt-BR');
   var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g?' · turma de '+c.N:'')+'</p></div>';
   function sh(n,t){ return '<div class="ps2"><b>'+n+'</b><span>'+t+'</span></div>'; }
-  var rod=function(n){ return '<div class="rod"><span>Piloto · calculadora de preço do Mentor de Líderes</span><span>'+hoje+' · página '+n+' de 2</span></div>'; };
+  var rod=function(n){ return '<div class="rod"><span>Piloto · precificação do Mentor de Líderes</span><span>'+hoje+' · página '+n+' de 2</span></div>'; };
   var manch = htmlManchete(c).replace('class="manchete"','class="manch"').replace(/<div class="mk">/,'<div class="mk-p">').replace(/<div class="mt">/,'<div class="mt-p">');
   var fr=fraseAutoridade();
   var mapa='<div class="nvl"><b>'+c.nv.n+'</b><span>'+c.pts+' de '+MAXPTS+' pontos · '+esc(c.nv.d)+'</span></div><div class="mp">'+FATOS.map(function(f){ var o=f.ops[s.fatos[f.id]]; return '<div><span>'+esc(f.t)+': '+esc(o[0].toLowerCase())+'</span><span>'+o[1]+' de '+f.ops[0][1]+'</span></div>'; }).join('')+'</div>'+(fr?'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic">'+esc(fr)+'</p>':'');
