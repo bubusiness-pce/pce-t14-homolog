@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.27';
+const PCE_VERSION = '3.5.28';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -4139,7 +4139,19 @@ function manualLoadCache(){
 }
 // HOMOLOGAÇÃO (30/10/2026): card da Dinâmica do Anjo visível só aqui, até o "aprovado" do Carlos.
 // Na produção ele entra pelas tabelas manualpce_cards e manual_cards. NÃO copiar este trecho para o pce-t14.
+// HOMOLOGAÇÃO (30/10/2026, noite): capas novas dos cards de gamificação, verticais e no tema dourado, porque o card
+// (256x160) cortava as capas antigas de 1260x540. Só aqui até o "aprovado" do Carlos; na produção o cover_url muda no banco.
+var HOMOLOG_CAPAS_V2 = {
+  'gamefica--o---ao-vivo': 'assets/img/capas/v2/capa-melid-le.png',
+  'gamificacao-ao-vivo-pce': 'assets/img/capas/v2/capa-pce.png',
+  'gamificacao-ao-vivo-revolution': 'assets/img/capas/v2/capa-revolution.png',
+  'gamificacao-ao-vivo-febracis': 'assets/img/capas/v2/capa-febracis.png',
+  'gamificacao-ao-vivo-anjo': 'assets/img/capas/v2/capa-anjo.png',
+  'gamificacao-ao-vivo-arquetipos': 'assets/img/capas/v2/capa-arquetipos.png',
+  'gamificacao-ao-vivo-preco': 'assets/img/capas/v2/capa-precificacao.png'
+};
 function homologCardAnjo(state){
+  Object.keys(HOMOLOG_CAPAS_V2).forEach(function(k){ if (state[k]) state[k]._coverUrl = HOMOLOG_CAPAS_V2[k]; });
   // 30/10/2026: o Anjo já está na tabela de cards (produção); daqui só sai o Teste de Arquétipos, até o "aprovado" do Carlos
   if (state['gamificacao-ao-vivo-arquetipos']) return state;
   var ordem = 0;
