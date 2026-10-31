@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>[HOMOLOG] Calculadora de preço · Mentor de Líderes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Uma coluna, primeiro o celular. Visual de relatório de consultoria: navy, marfim e dourado (padrão premium de 27/10). */
+:root{
+  color-scheme:dark;
+  --bg:#0B1426; --s1:#111C33; --s2:#16223D; --ln:#24304A; --ln2:#2A3654;
+  --ivory:#F3EEE3; --tx:#DCD6CA; --mu:#B8BFCC; --mu2:#8E97A8;
+  --gold:#D9B872; --gold2:#C9A45C; --warn:#E6B566;
+  --display:'Cormorant Garamond','Cormorant',Georgia,'Times New Roman',serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --p-ink:#0B1426; --p-tx:#2B3445; --p-mu:#6B7280; --p-ln:#E4DED1; --p-soft:#F7F4ED; --p-gold:#8C6A2B;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--tx);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font:inherit}
+.faixa{background:#1A2440;color:var(--gold);text-align:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--ln)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 150px}
+.tela{animation:entra .32s ease-out}
+@keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:500}
+.titulo{font-family:var(--display);font-weight:500;font-size:clamp(36px,7.5vw,54px);line-height:1.06;color:var(--ivory);text-wrap:balance;margin:.35em 0 .3em}
+.enunciado{font-family:var(--display);font-weight:500;font-size:clamp(29px,5.8vw,40px);line-height:1.1;color:var(--ivory);text-wrap:balance;margin:.3em 0 .25em}
+.contexto{color:var(--mu);font-size:15px;max-width:62ch;margin:0}
+.topo{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px}
+.voltar{background:none;border:none;color:var(--mu);cursor:pointer;padding:8px 0;font-size:14px}
+.voltar:hover{color:var(--ivory)}
+.prog{height:3px;background:var(--ln);border-radius:2px;overflow:hidden;margin:8px 0 26px}
+.prog>i{display:block;height:100%;background:var(--gold);transition:width .45s ease}
+/* Como funciona (abertura) */
+.como{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr);gap:8px;align-items:stretch;margin:26px 0 8px}
+.como .seta{display:flex;align-items:center;justify-content:center;color:var(--gold2);font-size:20px}
+.passo{background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px;min-width:0}
+.passo .pn{font-family:var(--display);color:var(--gold);font-size:22px;line-height:1}
+.passo .pt{font-weight:600;color:var(--ivory);font-size:15px;margin:4px 0 10px}
+.passo .lin{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--tx);padding:5px 0;border-top:1px solid var(--ln)}
+.passo .lin b{color:var(--ivory);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.passo .lin.dest{color:var(--gold)}
+.passo .lin.dest b{color:var(--gold);font-family:var(--display);font-size:20px;font-weight:600}
+.legenda{font-size:13px;color:var(--mu2);margin:6px 0 0}
+.serve{margin-top:22px;background:var(--s1);border:1px solid var(--gold2);border-radius:14px;overflow:hidden}
+.serve .sv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:13px 16px;border-top:1px solid var(--ln)}
+.serve .sv:first-child{border-top:none}
+.serve .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:500;padding-top:2px}
+.serve .v{font-size:15px;color:var(--ivory);line-height:1.5}
+@media (max-width:560px){.serve .sv{grid-template-columns:1fr;gap:4px}}
+@media (max-width:640px){.como{grid-template-columns:1fr}.como .seta{transform:rotate(90deg);height:18px}}
+.opcoes{display:grid;gap:10px;margin-top:24px}
+.op,.serv,.exemplo{position:relative;overflow:hidden;width:100%;text-align:left;background:var(--s1);border:1px solid var(--ln2);border-radius:14px;color:var(--ivory);cursor:pointer;transition:transform .18s,border-color .18s,background .18s}
+.op{display:flex;gap:14px;align-items:flex-start;padding:16px;min-height:60px}
+.op .letra{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--gold2);color:var(--gold);display:grid;place-items:center;font-size:13px;font-weight:600;transition:background .2s,color .2s}
+.op .t{display:block;font-weight:500;font-size:16px;color:var(--ivory)}
+.op .d{display:block;font-size:14px;color:var(--mu);margin-top:2px}
+.op.sel,.serv.sel{border-color:var(--gold);background:var(--s2)}
+.op.sel .letra{background:var(--gold);color:var(--bg)}
+@media (min-width:640px){.opcoes.duas{grid-template-columns:1fr 1fr}}
+@media (hover:hover){
+  .op:hover,.serv:hover,.exemplo:hover{transform:translateY(-2px);border-color:var(--gold2)}
+  .op::before,.serv::before,.exemplo::before{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(217,184,114,.11),transparent 60%);opacity:0;transition:opacity .2s;pointer-events:none}
+  .op:hover::before,.serv:hover::before,.exemplo:hover::before{opacity:1}
+}
+.op:active,.serv:active{transform:scale(.98)}
+.ripple{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:rgba(217,184,114,.42);pointer-events:none;animation:rp .6s ease-out forwards}
+@keyframes rp{to{transform:scale(32);opacity:0}}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.rot{display:block;font-size:13px;color:var(--mu);margin:18px 0 6px}
+.rot span{color:var(--mu2)}
+.campo{background:var(--s1);border:1px solid var(--ln2);color:var(--ivory);border-radius:12px;padding:12px 14px;font:inherit;font-size:16px;width:100%;min-height:48px}
+.campo:focus{border-color:var(--gold);outline:none}
+.campo::placeholder{color:#5F6A80}
+.moeda{position:relative}
+.moeda>span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:16px;pointer-events:none}
+.moeda>.campo{padding-left:44px;font-variant-numeric:tabular-nums}
+.moeda.grande>.campo{font-family:var(--display);font-size:30px;min-height:64px;padding-left:56px}
+.moeda.grande>span{font-size:22px;left:18px}
+.outro-box{display:flex;gap:10px;align-items:center;margin-top:12px}
+.outro-box>.moeda,.outro-box>.campo{flex:1;min-width:0}
+.outro-box .btn{flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--s1);border:1px solid var(--ln2);color:var(--ivory);border-radius:999px;padding:10px 16px;min-height:44px;font-size:15px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--gold2)}
+.chip.sel{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.linha-t{margin-top:22px}
+.linha-t .rot{margin-top:0}
+.total-vivo{margin-top:22px;padding:14px 16px;border:1px solid var(--ln2);border-radius:12px;background:var(--s1);color:var(--tx);font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.total-vivo b{font-family:var(--display);font-size:26px;font-weight:500;color:var(--gold)}
+.erro{color:var(--warn);font-size:14px;margin:10px 0 0;min-height:1.2em}
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(11,20,38,.97);border-top:1px solid var(--ln);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.barra .in{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.barra .info{font-size:13px;color:var(--mu);flex:1;min-width:0}
+.btn{background:var(--gold);color:var(--bg);border:none;border-radius:12px;padding:14px 22px;min-height:50px;font-weight:600;font-size:16px;cursor:pointer}
+.btn:hover{background:#E4C788}
+.btn.lg{width:100%;margin-top:26px}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold2)}
+.btn.ghost:hover{background:rgba(217,184,114,.08)}
+.btn.sm{min-height:44px;padding:10px 16px;font-size:15px}
+.exemplo{display:block;padding:16px;margin-top:14px}
+.exemplo .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu2)}
+.exemplo .t{display:block;font-family:var(--display);font-size:24px;color:var(--ivory);margin-top:4px}
+.exemplo .d{display:block;font-size:14px;color:var(--mu)}
+.exemplo .d b{color:var(--gold);font-weight:500}
+.cat{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu2);margin:26px 0 10px}
+.lista-serv{display:grid;gap:8px}
+.serv{display:flex;gap:12px;align-items:flex-start;padding:13px 14px}
+.serv .cx{flex:none;width:22px;height:22px;border-radius:6px;border:1px solid var(--gold2);margin-top:2px;display:grid;place-items:center;color:var(--bg);font-size:14px;font-weight:700}
+.serv.sel .cx{background:var(--gold)}
+.serv .txt{flex:1;min-width:0}
+.serv .t{display:block;font-size:15px;font-weight:500;color:var(--ivory)}
+.serv .d{display:block;font-size:13px;color:var(--mu)}
+.serv .pr{flex:none;text-align:right;font-size:13px;color:var(--gold);white-space:nowrap;font-variant-numeric:tabular-nums}
+.serv .pr small{display:block;color:var(--mu2);font-size:11px}
+.qtd{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--tx)}
+.qtd button{width:34px;height:34px;border-radius:8px;border:1px solid var(--gold2);background:transparent;color:var(--gold);cursor:pointer;font-size:18px;line-height:1}
+.qtd b{min-width:22px;text-align:center;font-weight:600;color:var(--ivory)}
+.seu-mercado{background:var(--s1);border:1px dashed var(--gold2);border-radius:14px;padding:14px}
+.seu-mercado p{margin:0 0 4px;font-size:14px;color:var(--tx)}
+.seu-mercado p small{color:var(--mu2);font-size:13px}
+.outro{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:8px;align-items:center;margin-top:8px}
+.outro.g{grid-template-columns:minmax(0,1fr) 140px 130px auto}
+.outro select{background:var(--bg);border:1px solid var(--ln2);color:var(--ivory);border-radius:12px;min-height:48px;padding:0 10px;font:inherit;font-size:14px}
+.x{background:none;border:1px solid var(--ln2);color:var(--mu);border-radius:10px;width:44px;height:44px;cursor:pointer;font-size:18px}
+.mais{margin-top:10px;background:none;border:1px dashed var(--gold2);color:var(--gold);border-radius:12px;padding:12px 16px;min-height:46px;cursor:pointer;width:100%}
+details.extra{margin-top:22px;border-top:1px solid var(--ln);padding-top:12px}
+details.extra summary{cursor:pointer;color:var(--mu);font-size:14px;padding:6px 0}
+.so-eu{margin-top:18px}
+@media (max-width:560px){.outro,.outro.g{grid-template-columns:minmax(0,1fr) auto}.outro .campo.nome{grid-column:1/-1}.outro.g select{grid-column:1/2}}
+/* Bloco B: o que você já construiu */
+.fatos{display:grid;gap:10px;margin-top:22px}
+.fato{background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:12px 14px;transition:border-color .2s}
+.fato.ok{border-color:var(--gold2)}
+.fato .ft{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.fato .ft b{font-size:15px;font-weight:600;color:var(--ivory)}
+.fato .ft span{font-size:12px;color:var(--gold);white-space:nowrap}
+.fato .fd{font-size:13px;color:var(--mu);margin:2px 0 0}
+.fato .chips{margin-top:10px}
+.fato .chip{min-height:40px;padding:8px 14px;font-size:14px}
+.medidor{position:relative;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.medidor>i{position:absolute;left:0;top:0;bottom:0;background:var(--gold);border-radius:5px;transition:width .3s}
+.medidor>s{position:absolute;top:0;bottom:0;width:2px;background:var(--s2)}
+.niveis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;font-size:11px;color:var(--mu2);margin-top:6px}
+.niveis span.on{color:var(--gold);font-weight:600}
+.barra .info b{color:var(--gold);font-weight:600}
+/* Devolutiva */
+.manchete{background:var(--s2);border:1px solid var(--gold);border-radius:16px;padding:18px 20px}
+.manchete .mk{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:500}
+.manchete .mt{font-family:var(--display);font-size:clamp(24px,5vw,34px);line-height:1.22;color:var(--ivory);margin-top:8px;text-wrap:balance}
+.manchete .mt b{color:var(--gold);font-weight:600;white-space:nowrap}
+.frase{background:var(--s1);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:12px 16px;font-size:16px;line-height:1.5;color:var(--ivory);font-style:italic}
+.frase small{display:block;font-style:normal;color:var(--mu2);font-size:12px;margin-top:8px}
+details.conta{margin-top:44px;border-top:1px solid var(--ln);padding-top:6px}
+details.conta>summary{list-style:none;cursor:pointer;display:flex;gap:12px;align-items:baseline;padding:12px 0}
+details.conta>summary::-webkit-details-marker{display:none}
+details.conta>summary .sec-t{font-size:22px;color:var(--mu)}
+details.conta[open]>summary .sec-t{color:var(--ivory)}
+details.conta .sec{margin-top:28px}
+.sub-t{font-family:var(--display);color:var(--ivory);font-size:22px;font-weight:500;margin:0 0 10px}
+.nivel-card{background:var(--s2);border:1px solid var(--gold);border-radius:14px;padding:16px}
+.nivel-card .nk{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.nivel-card .nv{font-family:var(--display);font-size:clamp(30px,6vw,40px);color:var(--ivory);line-height:1.1;margin:4px 0 2px}
+.nivel-card .np{font-size:14px;color:var(--mu);margin-bottom:12px}
+.mapa{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-top:12px}
+.mi{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:baseline;background:var(--s1);border:1px solid var(--ln2);border-radius:10px;padding:9px 12px;font-size:14px}
+.mi .ic{font-size:15px;text-align:center}
+.mi.tem .ic{color:var(--gold)}
+.mi.meio .ic{color:var(--warn)}
+.mi.nao .ic{color:var(--mu2)}
+.mi .tx{color:var(--ivory)}
+.mi .tx small{display:block;color:var(--mu);font-size:12px}
+.mi .pt{color:var(--mu);font-size:12px;white-space:nowrap}
+.subir{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.subir li{display:flex;justify-content:space-between;gap:12px;background:var(--s1);border:1px solid var(--ln2);border-radius:10px;padding:10px 12px;font-size:15px;color:var(--tx)}
+.subir li b{color:var(--gold);white-space:nowrap;font-weight:600}
+.alvo{margin-top:12px;font-size:15px;color:var(--ivory)}
+.alvo b{color:var(--gold);font-family:var(--display);font-size:22px;font-weight:600}
+.cab .sub{color:var(--mu);font-size:15px;margin:0}
+.aviso-ex{margin-top:16px;font-size:14px;color:var(--tx);background:var(--s1);border:1px solid var(--ln2);border-radius:12px;padding:12px 14px}
+.sec{margin-top:40px}
+.sec-h{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--ln);padding-bottom:8px;margin-bottom:16px}
+.sec-n{font-family:var(--display);color:var(--gold);font-size:22px;font-variant-numeric:tabular-nums}
+.sec-t{font-family:var(--display);color:var(--ivory);font-size:26px;font-weight:500;line-height:1.15;margin:0}
+.sec-d{color:var(--mu);font-size:14px;margin:-6px 0 14px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px;min-width:0}
+.tile .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu2)}
+.tile .v{font-family:var(--display);font-size:clamp(26px,4.6vw,32px);color:var(--ivory);line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .s{font-size:13px;color:var(--mu);margin-top:4px}
+.tile.dest{border-color:var(--gold);background:var(--s2)}
+.tile.dest .k{color:var(--gold)}
+@media (max-width:520px){.tiles{grid-template-columns:1fr}.tile{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}.tile .k{grid-column:1}.tile .v{grid-column:2;grid-row:1/3;margin:0}.tile .s{grid-column:1;margin:0}}
+.regua{margin-top:14px;background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px 16px}
+.rr{margin:12px 0}
+.rr .lb{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--tx)}
+.rr .lb span:last-child{color:var(--mu);white-space:nowrap;font-variant-numeric:tabular-nums}
+.rr.dentro .lb span:first-child{color:var(--gold)}
+.trk{position:relative;height:10px;background:var(--bg);border-radius:5px;margin-top:6px}
+.seg{position:absolute;top:0;bottom:0;background:var(--ln2);border-radius:5px;min-width:6px}
+.rr.dentro .seg{background:var(--gold2)}
+.tick{position:absolute;top:-4px;width:2px;height:18px;background:var(--gold);margin-left:-1px;border-radius:1px}
+.rr.voce .trk{background:transparent;border-top:1px dashed var(--ln2);border-radius:0;height:14px;margin-top:10px}
+.dot{position:absolute;top:-7px;width:14px;height:14px;margin-left:-7px;border-radius:50%}
+.dot.sug{background:var(--gold)}
+.dot.min{border:2px solid var(--ivory);background:var(--bg)}
+.dot.ese{background:var(--mu2)}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--mu);margin-top:4px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.leitura{margin:14px 0 0;font-size:15px;color:var(--tx)}
+.leitura.at{color:var(--warn)}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.nums label{display:block;font-size:13px;color:var(--mu);margin-bottom:6px}
+.tab{display:grid;gap:0}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 215px 135px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ln)}
+.tr.h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu2);padding-top:0}
+.tr .n{font-size:15px;color:var(--ivory)}
+.tr .n small{display:block;font-size:12px;color:var(--mu2)}
+.tr .m{font-size:13px;color:var(--mu);font-variant-numeric:tabular-nums}
+.tr .tt{text-align:right;font-variant-numeric:tabular-nums;color:var(--ivory)}
+.tr .moeda>.campo{min-height:42px;padding-top:8px;padding-bottom:8px;font-size:15px}
+.tr.tot{border-bottom:none;font-weight:500}
+.tr.tot .tt{font-family:var(--display);font-size:24px;color:var(--gold)}
+.conf{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;border:1px solid var(--ln2);color:var(--mu);vertical-align:1px}
+.conf.alta{border-color:var(--gold2);color:var(--gold)}
+@media (max-width:560px){.tr{grid-template-columns:minmax(0,1fr) 120px}.tr .m{grid-column:1/-1;order:3;margin-top:-6px}.tr .tt{display:none}.tr.h .m,.tr.h .tt{display:none}.tr.tot .tt{display:block}}
+.passos{display:grid}
+.ps{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--ln)}
+.ps .i{font-family:var(--display);color:var(--gold);font-size:18px}
+.ps .l{color:var(--tx);font-size:15px}
+.ps .l small{display:block;color:var(--mu2);font-size:12px}
+.ps .v{font-variant-numeric:tabular-nums;color:var(--ivory);white-space:nowrap}
+.ps.fim{border-bottom:none}
+.ps.fim .v{font-family:var(--display);font-size:28px;color:var(--gold)}
+.nota{font-size:14px;color:var(--mu);margin:12px 0 0}
+.ese-box{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:560px){.ese-box{grid-template-columns:1fr}}
+.ese-out{font-size:16px;color:var(--tx)}
+.ese-out .big{display:block;font-family:var(--display);font-size:30px;color:var(--ivory);line-height:1.15}
+.ese-out.at .big{color:var(--warn)}
+.cuid{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.cuid li{position:relative;padding-left:22px;font-size:15px;color:var(--tx)}
+.cuid li::before{content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--gold2)}
+.cuid li small{color:var(--mu2);font-size:12px}
+details.fontes{margin-top:36px;border-top:1px solid var(--ln);padding-top:14px;font-size:14px;color:var(--mu)}
+details.fontes summary{cursor:pointer;color:var(--tx)}
+details.fontes p{margin:10px 0 0}
+.acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.acoes .btn{flex:1 1 200px}
+.pdfp{margin-top:16px;background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px 16px}
+.pdfp .pb{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:8px 0 10px}
+.pdfp .pb i{display:block;height:100%;background:var(--gold);width:0;transition:width .3s}
+.pdfp .st{font-size:14px;color:var(--ivory);display:flex;justify-content:space-between}
+.pdfp ol{list-style:none;margin:0;padding:0;font-size:13px;color:var(--mu2);display:grid;gap:4px}
+.pdfp li.ok{color:var(--mu)}
+.pdfp li.ok::before{content:"✓ ";color:var(--gold)}
+.pdfp li.agora{color:var(--ivory)}
+.pdfp li.agora::before{content:"› ";color:var(--gold)}
+.pdfp .msg{font-size:14px;color:var(--warn);margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Papel do PDF (A4 a 96 dpi), montado fora da tela */
+#papel{position:absolute;left:-12000px;top:0;width:794px}
+.pg{width:794px;min-height:1123px;background:#fff;color:var(--p-tx);font-family:var(--body);font-size:13px;line-height:1.5;padding:0 0 76px;position:relative}
+.pg .band{background:var(--p-ink);color:#F3EEE3;padding:30px 56px 26px}
+.pg .band .e{color:#D9B872;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.pg .band h1{font-family:var(--display);font-weight:500;font-size:36px;line-height:1.1;margin:8px 0 4px;color:#F3EEE3}
+.pg .band p{margin:0;color:#B8BFCC;font-size:13px}
+.pg .ct{padding:8px 56px 0}
+.pg .ps2{display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--p-ln);padding-bottom:6px;margin:26px 0 12px}
+.pg .ps2 b{font-family:var(--display);color:var(--p-gold);font-size:18px;font-weight:600}
+.pg .ps2 span{font-family:var(--display);color:var(--p-ink);font-size:22px;font-weight:600}
+.pg .tl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pg .tl>div{border:1px solid var(--p-ln);border-radius:10px;padding:12px;background:var(--p-soft)}
+.pg .tl>div.d{border-color:var(--p-gold);background:#fff}
+.pg .tl .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--p-mu)}
+.pg .tl .d .k{color:var(--p-gold)}
+.pg .tl .v{font-family:var(--display);font-size:26px;font-weight:600;color:var(--p-ink);margin-top:4px}
+.pg .tl .s{font-size:11px;color:var(--p-mu)}
+.pg .rg{margin-top:12px;border:1px solid var(--p-ln);border-radius:10px;padding:10px 14px}
+.pg .rg .rr .lb{color:var(--p-tx);font-size:12px}
+.pg .rg .rr .lb span:last-child{color:var(--p-mu)}
+.pg .rg .rr.dentro .lb span:first-child{color:var(--p-gold);font-weight:600}
+.pg .rg .trk{background:var(--p-soft)}
+.pg .rg .seg{background:#D6D0C2}
+.pg .rg .rr.dentro .seg{background:#C9A45C}
+.pg .rg .tick{background:var(--p-gold)}
+.pg .rg .rr.voce .trk{border-top-color:#D6D0C2}
+.pg .rg .dot.sug{background:var(--p-gold)}
+.pg .rg .dot.min{border-color:var(--p-ink);background:#fff}
+.pg .rg .dot.ese{background:#9AA1AD}
+.pg .rg .leg{color:var(--p-mu)}
+.pg .lt{margin:10px 0 0;color:var(--p-tx)}
+.pg table{width:100%;border-collapse:collapse;font-size:12px;color:var(--p-tx)}
+.pg th{text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--p-mu);font-weight:500;border-bottom:1px solid var(--p-ln);padding:6px 6px 6px 0}
+.pg td{color:var(--p-tx);border-bottom:1px solid var(--p-ln);padding:7px 6px 7px 0;vertical-align:top}
+.pg td.r,.pg th.r{text-align:right;padding-right:0;white-space:nowrap}
+.pg td small{display:block;color:var(--p-mu);font-size:10px}
+.pg tr.t td{border-bottom:none;font-weight:600;color:var(--p-ink)}
+.pg .pp{display:grid;grid-template-columns:24px 1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--p-ln)}
+.pg .pp .i{font-family:var(--display);color:var(--p-gold);font-weight:600}
+.pg .pp .v{white-space:nowrap;color:var(--p-ink)}
+.pg .pp.f .v{font-family:var(--display);font-size:20px;font-weight:600;color:var(--p-gold)}
+.pg ul{margin:0;padding-left:18px}
+.pg li{margin:0 0 6px}
+.pg .nvl{display:flex;justify-content:space-between;align-items:baseline;border:1px solid var(--p-gold);border-radius:10px;padding:10px 14px}
+.pg .nvl b{font-family:var(--display);font-size:24px;color:var(--p-ink);font-weight:600}
+.pg .nvl span{color:var(--p-mu);font-size:12px}
+.pg .mp{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;font-size:11.5px;margin-top:8px}
+.pg .mp div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--p-ln);padding:4px 0;color:var(--p-tx)}
+.pg .mp div span:last-child{color:var(--p-mu);white-space:nowrap}
+.pg .manch{border:1px solid var(--p-gold);border-radius:10px;padding:14px 16px;margin-top:18px;background:var(--p-soft)}
+.pg .mk-p{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--p-gold)}
+.pg .mt-p{font-family:var(--display);font-size:22px;line-height:1.25;color:var(--p-ink);margin-top:6px}
+.pg .mt-p b{color:var(--p-gold);font-weight:600}
+.pg .rod{position:absolute;left:56px;right:56px;bottom:22px;font-size:10px;color:var(--p-mu);border-top:1px solid var(--p-ln);padding-top:8px;display:flex;justify-content:space-between}
+.consent{display:flex;gap:12px;align-items:flex-start;margin-top:22px;font-size:14px;line-height:1.5;color:var(--tx);cursor:pointer}
+.consent input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--gold);cursor:pointer}
+.erro.c{margin-top:6px;min-height:0}
+.envio{font-size:13px;color:var(--mu2);margin:12px 0 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.envio:empty{display:none}
+.envio.mal{color:var(--warn)}
+.envio .btn{min-height:36px;padding:6px 14px;font-size:14px}
+.zap-dica{font-size:13px;color:var(--mu2);margin:6px 0 0}
+</style>
+</head>
+<body>
+
+<div class="faixa">Piloto · Mentor de Líderes</div>
+<main class="wrap" id="app" aria-live="polite"></main>
+<div id="papel" aria-hidden="true"></div>
+
+<script>
+(function(){
+'use strict';
+var K = 0.77, MARGEM = 0.8;
+var app = document.getElementById('app');
+var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Dados ---------- */
+var PRODUTOS = {
+  individual:{t:'Mentoria individual', d:'Você e um cliente por vez', g:false},
+  grupo:{t:'Mentoria em grupo', d:'Uma turma acompanhada por você', g:true},
+  premium:{t:'Consultoria ou programa premium', d:'Você conduz e reúne especialistas em volta do cliente', g:false},
+  imersao:{t:'Imersão presencial', d:'Um ou mais dias de evento com uma turma', g:true}
+};
+var MERCADOS = {
+  saude:{t:'Saúde', d:'Medicina, odontologia, nutrição, fisioterapia e outras', ex:'nutricionista convidado, fisioterapeuta convidado', fr:'saúde'},
+  varejo:{t:'Varejo e comércio', d:'', ex:'vitrinista, cliente oculto, consultor de vendas', fr:'varejo'},
+  industria:{t:'Indústria', d:'', ex:'visita técnica guiada, auditoria de processo, consultor de qualidade', fr:'indústria'},
+  agro:{t:'Agro', d:'', ex:'visita a propriedade modelo, agrônomo convidado, análise de solo', fr:'agro'},
+  servicos:{t:'Serviços e consultoria para empresas', d:'', ex:'consultor de processos, especialista em atendimento', fr:'serviços'},
+  financas:{t:'Finanças, jurídico e contábil', d:'', ex:'contador convidado, advogado tributarista', fr:'minha área'},
+  humano:{t:'Desenvolvimento humano', d:'Coaching, terapia, comportamento, liderança', ex:'psicólogo convidado, aplicação de teste de perfil', fr:'desenvolvimento humano'},
+  educacao:{t:'Educação', d:'', ex:'pedagogo convidado, plataforma de provas', fr:'educação'},
+  tecnologia:{t:'Tecnologia', d:'', ex:'desenvolvedor, licença de software', fr:'tecnologia'},
+  outro:{t:'Outro mercado', d:'', ex:'o serviço que o seu parceiro entrega', fr:'minha área'}
+};
+var COMPRADORES = {
+  pf:{t:'Pessoa física', d:'Quem paga do próprio bolso'},
+  liberal:{t:'Profissional liberal', d:'Médicos, advogados, consultores, autônomos'},
+  pequena:{t:'Pequena empresa', d:'Faturamento de até cerca de R$ 4,8 milhões por ano'},
+  media:{t:'Média ou grande empresa', d:'Faturamento acima disso'}
+};
+/* O que o aluno já construiu. Pontos e cortes: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos. */
+var FATOS = [
+  {id:'metodo', t:'Método próprio', d:'Com nome e etapas, que você já aplica com clientes', ops:[['Tenho',2],['Em construção',1],['Não',0]], sobe:'Estruturar o método próprio, com nome e etapas'},
+  {id:'mentoria', t:'Mentoria', d:'O produto que você vai precificar', ops:[['Estruturada e já vendida',2],['Já vendi, sem estrutura',1],['Em construção',1],['Ainda não',0]], sobe:'Estruturar a mentoria e vender as primeiras'},
+  {id:'palestra', t:'Palestra', d:'', ops:[['Faço com frequência',2],['Já palestrei',1],['Nunca',0]], sobe:'Palestrar com frequência'},
+  {id:'livro', t:'Livro', d:'', ops:[['Publicado',2],['Tema e estrutura prontos',1],['Não',0]], sobe:'Publicar o livro'},
+  {id:'anos', t:'Anos de mercado na sua área', d:'', ops:[['20 ou mais',2],['10 a 19',1],['Menos de 10',0]], sobe:null},
+  {id:'posic', t:'Posicionamento digital', d:'Na rede em que o seu cliente está', ops:[['Posto com frequência e tenho público',2],['Tenho perfil, mas parado',1],['Não tenho',0]], sobe:'Ativar o posicionamento digital'},
+  {id:'clientes', t:'Clientes com resultado comprovado', d:'Case com número ou depoimento', ops:[['20 ou mais',2],['1 a 19',1],['Nenhum ainda',0]], sobe:'Registrar cases com número e depoimentos'},
+  {id:'equipe', t:'Equipe ou sócio', d:'', ops:[['Sim',1],['Não',0]], sobe:'Montar equipe ou sociedade para entregar'},
+  {id:'credencial', t:'Prêmio, certificação ou registro profissional', d:'', ops:[['Sim',1],['Não',0]], sobe:'Conquistar certificação ou prêmio do seu setor'},
+  {id:'midia', t:'Mídia e convites', d:'Entrevista, evento, podcast', ops:[['Sim',1],['Não',0]], sobe:'Aceitar convites de mídia e eventos'}
+];
+var PRIORIDADE = ['livro','posic','metodo','mentoria','palestra','clientes','midia','credencial','equipe'];
+var MAXPTS = FATOS.reduce(function(a,f){ return a+f.ops[0][1]; },0);
+/* Nomes medem quanto do valor já está visível ao mercado, não quanto o aluno vale. Palavras finais: Carlos e Sofia. */
+var NIVEIS = [
+  {n:'Valor escondido', de:0, ate:5, f:0.15, d:'o mercado ainda não vê o que você tem'},
+  {n:'Valor aparecendo', de:6, ate:9, f:0.40, d:'parte do que você construiu já aparece'},
+  {n:'Valor visível', de:10, ate:13, f:0.65, d:'o mercado reconhece o que você construiu'},
+  {n:'Referência', de:14, ate:17, f:0.90, d:'você é referência no que faz'}
+];
+/* Hora pelo mercado: régua de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo nível. */
+var HORA_REGUA = [150, 1500];
+var FAIXAS_HORA = [
+  {t:'R$ 100 a R$ 300', v:200},{t:'R$ 300 a R$ 700', v:500},{t:'R$ 700 a R$ 1.500', v:1100},
+  {t:'R$ 1.500 a R$ 3.000', v:2250},{t:'R$ 3.000 a R$ 5.000', v:4000}
+];
+var CATS = [
+  ['pessoas','Pessoas que ajudam na entrega'],['conteudo','Aulas e material'],['evento','Evento presencial'],
+  ['ferramentas','Diagnóstico e ferramentas'],['negocio','Para o negócio do cliente']
+];
+var CATS_EXTRA = [['imagem','Imagem e estilo'],['comunicacao','Comunicação e presença'],['livro','Livro']];
+function sv(id,cat,nome,det,un,min,max,med,fonte,conf,esc){return {id:id,cat:cat,nome:nome,det:det,un:un,min:min,max:max,med:med,fonte:fonte,conf:conf,esc:esc||'pessoa'};}
+var SERV = [
+  sv('G49','pessoas','Especialista ou consultor convidado','encontro com você ou com a turma','hora',200,600,400,'FreelaSemCrise, hora de mentor de negócios','média','turma'),
+  sv('G15','pessoas','Palestrante convidado','palestrante em início de carreira','palestra',6000,15000,10500,'GetNinjas','média','turma'),
+  sv('L27','conteudo','Workbook ou e-book diagramado','material de apoio da turma','projeto',800,6000,3400,'FreelaSemCrise','baixa','turma'),
+  sv('L26','conteudo','Apresentação em slides','','projeto',500,5000,2750,'FreelaSemCrise','baixa','turma'),
+  sv('L12','conteudo','Gravação de mini-curso','5 aulas, 4 a 6 h de conteúdo','pacote',3000,7000,5000,'FreelaSemCrise','baixa','turma'),
+  sv('L13','conteudo','Gravação de curso completo','20 aulas, 15 a 20 h','pacote',8000,20000,14000,'FreelaSemCrise','baixa','turma'),
+  sv('L10','conteudo','Estúdio de videoaula com edição','','hora',450,450,450,'Unieducar','baixa','turma'),
+  sv('L07','conteudo','Videomaker','','hora',47,176,111.5,'FreelaSemCrise, São Paulo','baixa','turma'),
+  sv('L01','conteudo','Plataforma de área de membros','MemberKit, até 1.000 membros','mês',197,197,197,'blog bit4learn','baixa','turma'),
+  sv('G44','conteudo','Apostila impressa e encadernada','até 200 páginas, uma por participante','exemplar',34.24,34.24,34.24,'anúncio de loja online','baixa'),
+  sv('G34','evento','Sala de treinamento para 20 pessoas','diária, São Paulo','diária',1535,1535,1535,'Regus, via Workin','média','turma'),
+  sv('G33','evento','Sala de reunião para 4 a 10 pessoas','diária, São Paulo','diária',698,978,838,'Regus, via Workin','média','turma'),
+  sv('L17','evento','Coffee break','cardápio de buffet','coffee',46.2,113.54,79.87,'ata pública da Unicamp, 2026','média'),
+  sv('G26','evento','Almoço buffet executivo','','refeição',80,160,120,'FreelaSemCrise','média'),
+  sv('G32','evento','Hospedagem','diária média dos hotéis no Brasil','noite',469.17,469.17,469.17,'FOHB, via Mercado & Eventos','baixa'),
+  sv('L20','evento','Fotografia do evento','evento corporativo de 4 h','evento',1000,2500,1750,'FreelaSemCrise','baixa','turma'),
+  sv('G38','ferramentas','Teste de perfil comportamental (DISC)','relatório completo','pessoa',251,1005,628,'Jobcannon','baixa'),
+  sv('G39','ferramentas','Software de CRM','licença por pessoa','mês',70,347,208.5,'Pipedrive, página de preços','alta'),
+  sv('L24','negocio','Identidade visual básica','logo, paleta e fontes','projeto',1500,3500,2500,'FreelaSemCrise','baixa'),
+  sv('L28','negocio','Página de vendas pronta','design e montagem','projeto',800,8000,4400,'FreelaSemCrise','baixa'),
+  sv('L30','negocio','Texto de página de vendas','copywriting completo','projeto',2500,6000,4250,'Monitor do Mercado','baixa'),
+  sv('L29','negocio','Site institucional','pequena empresa','projeto',2500,8000,5250,'FreelaSemCrise','baixa'),
+  sv('L31','negocio','Gestão de redes sociais','uma rede, cerca de 12 posts','mês',1200,2500,1850,'FreelaSemCrise','baixa'),
+  sv('E54','negocio','Vídeos para redes sociais','8 vídeos','mês',2000,2000,2000,'Workana','baixa'),
+  sv('E49','negocio','Ensaio de fotos de marca pessoal','','pacote',500,5000,2750,'Catraca Livre','média'),
+  sv('E02','imagem','Consultoria de imagem completa','coloração, estilo, guarda-roupa e compras','pacote',1500,6000,3750,'GetNinjas, Cronoshare e Catraca Livre','alta'),
+  sv('E01','imagem','Consultoria de imagem básica','análise de estilo e uma sessão de guarda-roupa','pacote',600,1200,900,'Catraca Livre','média'),
+  sv('E11','imagem','Personal stylist: guarda-roupa e compras','cerca de 6 horas','pacote',1200,2400,1800,'Cronoshare, R$ 200 a 400 por hora em SP','média'),
+  sv('E19','imagem','Corte em salão de grife','','visita',390,890,640,'salão nos Jardins, SP','baixa'),
+  sv('E35','imagem','Maquiagem para ensaio','2 sessões','pacote',240,1200,720,'maquiadores de grandes centros','média'),
+  sv('E37','comunicacao','Fonoaudiologia de voz','4 sessões','pacote',1000,1000,1000,'clínica em Perdizes, SP','média'),
+  sv('E42','comunicacao','Etiqueta e postura','2 a 4 sessões','pacote',1000,2400,1700,'estimativa da pesquisa de 21/10','baixa'),
+  sv('E38','comunicacao','Media training individual','2 a 4 sessões','pacote',2000,6000,4000,'estimativa da pesquisa de 21/10','baixa'),
+  sv('L42','livro','Revisão de texto do livro','cerca de 70 mil palavras','projeto',2800,8400,5600,'FreelaSemCrise','baixa')
+];
+var SERV_ID = {}; SERV.forEach(function(x){SERV_ID[x.id]=x;});
+var COM_QTD = {'visita':1,'sessão':1,'consulta':1,'mês':1,'hora':1,'evento':1,'coffee':1,'diária':1,'noite':1,'encontro':1,'refeição':1,'palestra':1};
+var UN_PLURAL = {'visita':'visitas','sessão':'sessões','consulta':'consultas','mês':'meses','hora':'horas','evento':'eventos','coffee':'coffees','diária':'diárias','noite':'noites','encontro':'encontros','refeição':'refeições','palestra':'palestras'};
+function unTxt(u){ return u==='pacote'?'o pacote':u==='projeto'?'o projeto':(u==='coffee'||u==='pessoa'||u==='refeição')?'por pessoa':'por '+u; }
+
+function T(n,d,min,max,f){return {n:n,d:d,min:min,max:max,f:f};}
+var PREMIUM = T('Programas premium','presencial e acesso direto ao mentor',30000,63000,'páginas com preço público, pesquisa de 21/10');
+var EXEC = T('Educação executiva','2 dias a 7 semanas',11851,14668,'3 escolas com preço público');
+var ULTRA = T('Ultraexclusivo','poucas vagas, acesso total',125000,150000,'pesquisa de 21/10');
+var DIAG = T('Diagnóstico de gestão','empresa de até 10 pessoas',3000,7000,'FreelaSemCrise, 30/10');
+var REEST = T('Reestruturação de processos','3 meses, diagnóstico e implantação',8000,18000,'FreelaSemCrise, 30/10');
+var PROJ = T('Projeto de consultoria de 1 mês','média complexidade',20000,50000,'Cronoshare, 30/10');
+var MNEG = T('Mentoria de negócios, 8 sessões','sessões individuais',2500,6000,'FreelaSemCrise, 30/10');
+var REGUA = {
+  individual:{
+    saude:[T('Mentoria curta de consultório','até 3 meses, 3 a 4 encontros',3490,5000,'4 mentorias para médicos e dentistas'),T('Mentoria de 12 meses para médicos','3 a 5 individuais e encontros em grupo',18000,20050,'3 mentorias com preço público'),PREMIUM],
+    pessoa:[MNEG,T('Coaching executivo, 12 sessões','processo individual',6000,18000,'FreelaSemCrise, 30/10'),PREMIUM],
+    liberal:[MNEG,T('Mentoria para advogados e escritórios','encontros individuais e coletivos',10000,14400,'2 programas com preço público'),PREMIUM],
+    pequena:[DIAG,T('Mentoria individual de entrada','4 a 16 encontros',4990,12997,'AB Pricing, preço público'),REEST,PREMIUM],
+    media:[T('Mentoria executiva, ciclo de 3 meses','coaching ou mentoria de executivo',3000,30000,'FreelaSemCrise, 30/10'),PROJ,PREMIUM,ULTRA]
+  },
+  grupo:{todos:[T('Mentoria em grupo, 6 semanas','grupo de 10, por participante',500,1500,'FreelaSemCrise, 30/10'),T('Curso com mentoria em grupo','aulas gravadas e encontros, programas da saúde',3490,7997,'5 programas com preço público'),T('Mastermind anual','6 a 12 pessoas, encontros presenciais',10000,100000,'HeroSpark, referência de blog')]},
+  premium:{pessoa:[EXEC,PREMIUM,ULTRA], pequena:[DIAG,REEST,PREMIUM], media:[PROJ,PREMIUM,ULTRA]},
+  imersao:{todos:[EXEC,T('Imersão presencial de 1 a 3 dias','por participante',15000,50000,'4 imersões com preço público')]}
+};
+
+var CUIDADOS_MERCADO = {
+  saude:[
+    'Procedimento de saúde não entra no preço, nem como bônus. Se a avaliação indicar, vira consulta à parte, com prontuário e nota próprios.<small> Código de Ética Médica</small>',
+    'Parceiro não paga comissão a você por cliente indicado. CFM e CFO vedam vantagem por encaminhamento.<small> Código de Ética Médica; Res. CFO 271/2025</small>',
+    'Mentoria vendida com o seu registro de conselho pode ser lida como publicidade da profissão. Para médicos: nome, CRM e RQE nas peças, e nenhuma promessa de resultado.<small> Res. CFM 2.336/2023</small>'
+  ],
+  financas:['OAB e CRC têm regras próprias de publicidade. A pesquisa ainda não leu essas regras aplicadas a mentoria: confira antes de divulgar.'],
+  humano:['Se você tem registro em conselho (CRP, por exemplo), confira as regras de publicidade dele antes de divulgar.']
+};
+var CUIDADOS_CONSUMIDOR = [
+  'Tudo o que você promete no anúncio, no vídeo ou na conversa de venda passa a fazer parte do contrato.<small> Código de Defesa do Consumidor, arts. 30 e 35</small>',
+  'Venda feita pela internet ou fora do seu espaço tem 7 dias de arrependimento, com devolução integral. Pague os parceiros depois desse prazo.<small> CDC, art. 49</small>'
+];
+var CUIDADOS_EMPRESA = ['Vendendo para empresa, escreva no contrato o escopo, o prazo, a forma de pagamento e o que cada parceiro entrega.'];
+var CUIDADO_NOTA = 'Uma nota só, com repasse aos parceiros, paga imposto também sobre o repasse. Pergunte ao seu contador se cada parceiro pode emitir a nota direto ao cliente.';
+var ANTES = [
+  'Teste o valor em 3 a 5 conversas de venda. O preço sugerido ainda não é um preço validado.',
+  'Leve a sua frase de autoridade e os fatos do seu mapa para a conversa. É com eles que o cliente entende o preço.',
+  'A conta supõe pagamento no Pix. Parcelado no cartão custa mais: em 12x a operadora leva de 12% a 21%. Plataformas como Hotmart e Kiwify cobram cerca de 9% a 10% por venda.',
+  'O custo para vender (tráfego, página de vendas própria, closer) não entra nesta conta. A comissão de 7% cobre só quem vende.'
+];
+
+/* ---------- Estado ---------- */
+function novo(){ return {nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
+var s = novo();
+var vista = 'capa';
+
+/* ---------- Piloto: turma, modo da página e conexão com o banco ---------- */
+/* Projeto "ACOMPANHAMENTO - TIME CS" (pggcbvafkwyqyvlkiyti), o mesmo do Teste de Arquétipos e dos placares de gamificação. */
+var SUPABASE_URL = 'https://pggcbvafkwyqyvlkiyti.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnZ2NidmFma3d5cXl2bGtpeXRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTY5NDMsImV4cCI6MjEwMTA5Mjk0M30.y2FaXpreVN_eeFMmlWDuQUXCN3C69qI8ooTcRl2k7ZI';
+var PIN_KEY = 'febracis_gam_pin_v1';   /* o mesmo PIN dos placares */
+var PARAMS = new URLSearchParams(location.search);
+function limpaTurma(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9_-]/g,'').slice(0,40); }
+var TURMA = limpaTurma(PARAMS.get('t'));
+var VER = PARAMS.get('ver');          /* modo equipe: id da resposta */
+var MODO_VER = VER !== null;
+var EXEMPLO = PARAMS.has('exemplo');  /* devolutiva do João, sem gravar */
+var ident = {nome:'', zap:'', ok:false, jaFez:null};   /* quem está respondendo; ok = passou pela capa e pela conferência */
+var verInfo = null;
+var avisoAtual = {t:'', d:'', b:''};
+var envio = {estado:'nada', payload:null};   /* nada | enviando | ok | jafez | erro; o envio acontece uma vez só */
+
+/* ---------- Contas ---------- */
+function horasTotal(){ if(s.horasManual!=null) return s.horasManual; return (s.encontros||0)*(s.duracao||0)+(s.extra||0); }
+function ehGrupo(){ return !!(s.produto && PRODUTOS[s.produto].g); }
+function pontos(){ return FATOS.reduce(function(a,f){ var i=s.fatos[f.id]; return a+(i!=null?f.ops[i][1]:0); },0); }
+function nivelDe(p){ for(var i=0;i<NIVEIS.length;i++){ if(p>=NIVEIS[i].de&&p<=NIVEIS[i].ate) return NIVEIS[i]; } return NIVEIS[NIVEIS.length-1]; }
+function horaMercado(){ var nv=nivelDe(pontos()); return Math.round(HORA_REGUA[0]*Math.pow(HORA_REGUA[1]/HORA_REGUA[0],nv.f)/10)*10; }
+function horaUsada(){ var m=horaMercado(); return s.horaInformada>0?Math.max(s.horaInformada,m):m; }
+function parceirosLista(){
+  var L=[];
+  SERV.forEach(function(d){ var x=s.sel[d.id]; if(x) L.push({id:d.id,nome:d.nome,det:d.det,un:d.un,qtd:x.qtd,valor:x.valor,esc:d.esc,ref:d}); });
+  s.outros.forEach(function(o,i){ if((o.nome||'').trim()||o.valor>0) L.push({id:'o'+i,nome:(o.nome||'').trim()||'Outro parceiro',det:'',un:'pacote',qtd:1,valor:o.valor||0,esc:o.esc||'pessoa',ref:null,outro:i}); });
+  return L;
+}
+function arred(x){
+  if(!(x>0)) return 0;
+  var st = x>=10000?1000:(x>=1000?100:10);
+  var a = Math.floor(x/st)*st - st/10, b = Math.ceil(x/st)*st - st/10;
+  if(a<=0) return b;
+  return Math.abs(a-x)<=Math.abs(b-x)?a:b;
+}
+function tiers(){
+  var m=REGUA[s.produto]; if(!m) return [];
+  if(m.todos) return m.todos;
+  var c=s.comprador;
+  if(c==='media') return m.media;
+  if(c==='pequena') return m.pequena;
+  if(c==='liberal'&&s.mercado==='saude'&&m.saude) return m.saude;
+  if(c==='liberal'&&m.liberal) return m.liberal;
+  return m.pessoa;
+}
+function faixaRegua(){ var ts=tiers(); return [Math.min.apply(null,ts.map(function(t){return t.min;})), Math.max.apply(null,ts.map(function(t){return t.max;}))]; }
+function precoNivel(nv){ var r=faixaRegua(); return r[0]*Math.pow(r[1]/r[0], nv.f); }
+function calcular(){
+  var g=ehGrupo(), N=g?Math.max(1,s.pessoas||1):1, H=horasTotal(), hora=horaUsada(), Tw=H*hora/N;
+  var itens=parceirosLista().map(function(p){ var tot=p.qtd*p.valor; p.tot=tot; p.pp=(g&&p.esc==='turma')?tot/N:tot; return p; });
+  var Cp=itens.reduce(function(a,p){return a+p.pp;},0);
+  var pts=pontos(), nv=nivelDe(pts), pNivel=precoNivel(nv);
+  var piso=(Cp+Tw)/K, custoLucro=(Cp*(1+MARGEM)+Tw)/K, base=Math.max(pNivel,custoLucro);
+  var stp = piso>=1000?100:10, vit=arred(base);
+  if(vit<piso){ var st=base>=10000?1000:(base>=1000?100:10); vit=Math.ceil((base+st/10)/st)*st-st/10; }
+  var pisoR=Math.min(Math.ceil(piso/stp)*stp,vit);
+  return {g:g,N:N,H:H,hora:hora,horaM:horaMercado(),T:Tw,itens:itens,Cp:Cp,pts:pts,nv:nv,pNivel:pNivel,piso:piso,custoLucro:custoLucro,sug:base,origem:(pNivel>=custoLucro?'nivel':'custo'),vit:vit,pisoR:pisoR,regua:faixaRegua(),cobra:s.cobra,gap:(s.cobra>0?vit-s.cobra:null)};
+}
+function seCobrar(c,P){
+  var rec=P*c.N, liq=rec*K, parc=c.Cp*c.N, sobra=liq-parc, ph=c.H>0?sobra/c.H:0;
+  return {rec:rec,liq:liq,parc:parc,sobra:sobra,ph:ph,pct:(c.hora>0?ph/c.hora:0),lucro:sobra-c.H*c.hora};
+}
+function proximoNivel(c){
+  var i=NIVEIS.indexOf(c.nv); if(i>=NIVEIS.length-1) return null;
+  var alvo=NIVEIS[i+1], falta=alvo.de-c.pts, passos=[];
+  var cand=FATOS.filter(function(f){ return f.sobe && s.fatos[f.id]!=null && f.ops[s.fatos[f.id]][1]<f.ops[0][1]; })
+    .map(function(f){ return {f:f, ganho:f.ops[0][1]-f.ops[s.fatos[f.id]][1]}; })
+    .sort(function(a,b){ return (b.ganho-a.ganho)||(PRIORIDADE.indexOf(a.f.id)-PRIORIDADE.indexOf(b.f.id)); });
+  var soma=0; for(var k=0;k<cand.length&&soma<falta;k++){ passos.push(cand[k]); soma+=cand[k].ganho; }
+  return {alvo:alvo, falta:falta, passos:passos, alcanca:soma>=falta, preco:precoNivel(alvo)};
+}
+/* Frase de autoridade: só com os fatos marcados como "tenho". */
+function fraseAutoridade(){
+  var f=s.fatos, m=(MERCADOS[s.mercado]||MERCADOS.outro).fr, partes=[];
+  var anos = f.anos===0?'Com mais de 20 anos': f.anos===1?'Com mais de 10 anos': null;
+  var abre = anos? anos+(s.mercado&&s.mercado!=='outro'&&s.mercado!=='financas'?' em '+m:' de mercado'):'Na '+m;
+  if(f.clientes===0) partes.push('já levei resultado comprovado a mais de 20 clientes');
+  else if(f.clientes===1) partes.push('tenho clientes com resultado comprovado');
+  if(f.metodo===0) partes.push('aplico um método próprio');
+  if(f.livro===0) partes.push('sou autor(a) de livro sobre o tema');
+  if(f.palestra===0) partes.push('palestro com frequência sobre isso');
+  if(f.mentoria===0) partes.push('já formei mentorados');
+  if(f.midia===0&&partes.length<3) partes.push('sou chamado(a) pela mídia e por eventos');
+  if(!partes.length) return null;
+  partes=partes.slice(0,3);
+  var corpo = partes.length===1?partes[0]:partes.slice(0,-1).join(', ')+' e '+partes[partes.length-1];
+  return abre+', '+corpo+'.';
+}
+
+/* ---------- Formato ---------- */
+function brl(v){ return 'R$ '+Math.round(v).toLocaleString('pt-BR'); }
+function milNum(v){ var m=v/1000; return (m>=10?Math.round(m):Math.round(m*10)/10).toLocaleString('pt-BR'); }
+function faixaTxt(a,b){ if(a===b) return a>=1000?'R$ '+milNum(a)+' mil':brl(a); if(a>=1000&&b>=1000) return 'R$ '+milNum(a)+' a '+milNum(b)+' mil'; return brl(a)+' a '+brl(b); }
+function hTxt(h){ var r=Math.round(h*10)/10; return r.toLocaleString('pt-BR')+(r===1?' hora':' horas'); }
+function durTxt(d){ return d===1.5?'1h30':d===8?'dia inteiro (8 h)':(d+' h'); }
+function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function num(v){ var n=parseFloat(String(v).replace(/\./g,'').replace(',','.')); return isFinite(n)?n:0; }
+function prodNome(){ return s.prodNome.trim() || (s.produto?PRODUTOS[s.produto].t:'Sua mentoria'); }
+function ptsTxt(p){ return p===1?'1 ponto':p+' pontos'; }
+
+/* ---------- Interação ---------- */
+function ripple(e,el){
+  if(reduz||!e||e.clientX==null) return;
+  var r=el.getBoundingClientRect(), sp=document.createElement('span');
+  sp.className='ripple'; sp.style.left=(e.clientX-r.left)+'px'; sp.style.top=(e.clientY-r.top)+'px';
+  el.appendChild(sp); setTimeout(function(){sp.remove();},650);
+}
+app.addEventListener('pointermove',function(e){
+  var el=e.target.closest&&e.target.closest('.op,.serv,.exemplo'); if(!el) return;
+  var r=el.getBoundingClientRect(); el.style.setProperty('--mx',(e.clientX-r.left)+'px'); el.style.setProperty('--my',(e.clientY-r.top)+'px');
+});
+var ocupado=false;
+function avancarDepois(fn,ms){ if(ocupado) return; ocupado=true; setTimeout(function(){ ocupado=false; fn(); }, reduz?0:(ms||350)); }
+
+function passos(){
+  var p=['construido','cobra','venda','tempo','hora','temparc']; if(s.temParceiros) p.push('parceiros'); p.push('mercado');
+  return p;
+}
+var NOME_ETAPA = {construido:'O que você já construiu',cobra:'Quanto cobra hoje',venda:'O que vende e para quem',tempo:'Seu tempo',hora:'Sua hora',temparc:'Parceiros',parceiros:'Parceiros',mercado:'Seu mercado'};
+function ir(v){ vista=v; desenhar(); window.scrollTo(0,0); }
+function proximo(){ var p=passos(), i=p.indexOf(vista); ir(i<p.length-1?p[i+1]:'resultado'); }
+function anterior(){ var p=passos(), i=p.indexOf(vista); ir(i>0?p[i-1]:'capa'); }
+function cabecalho(){
+  var p=passos(), i=p.indexOf(vista);
+  return '<div class="topo"><button class="voltar" id="b-voltar">← Voltar</button><span class="eyebrow">'+NOME_ETAPA[vista]+' · '+(i+1)+' de '+p.length+'</span></div>'+
+    '<div class="prog" aria-hidden="true"><i style="width:'+(i/p.length*100)+'%"></i></div>';
+}
+function cartoes(lista,atual,classe,grupo){
+  var L='ABCDEFGHIJ';
+  return '<div class="opcoes'+(classe?' '+classe:'')+'" role="radiogroup"'+(grupo?' data-g="'+grupo+'"':'')+'>'+lista.map(function(o,i){
+    return '<button class="op'+(o.v===atual?' sel':'')+'" role="radio" aria-checked="'+(o.v===atual)+'" data-v="'+esc(o.v)+'"'+(grupo?' data-g="'+grupo+'"':'')+'><span class="letra">'+(o.letra||L[i])+'</span><span><span class="t">'+esc(o.t)+'</span>'+(o.d?'<span class="d">'+esc(o.d)+'</span>':'')+'</span></button>';
+  }).join('')+'</div>';
+}
+/* fn devolve false quando a escolha não deve avançar (ex.: "Outro", que abre o campo) */
+function ligarCartoes(fn,grupo){
+  var sel = grupo?'.op[data-g="'+grupo+'"]':'.op[data-v]';
+  app.querySelectorAll(sel).forEach(function(b){
+    b.addEventListener('click',function(e){
+      if(ocupado) return;
+      app.querySelectorAll(sel).forEach(function(x){x.classList.remove('sel');x.setAttribute('aria-checked','false');});
+      b.classList.add('sel'); b.setAttribute('aria-checked','true'); ripple(e,b);
+      if(fn(b.getAttribute('data-v'))!==false) avancarDepois(proximo);
+    });
+  });
+}
+function caixaOutro(id,moeda,ph,valor,rotulo){
+  return '<div class="outro-box" id="'+id+'" hidden>'+(moeda?'<div class="moeda"><span>R$</span><input class="campo" id="'+id+'-in" inputmode="numeric" placeholder="'+ph+'" value="'+(valor||'')+'"></div>':'<input class="campo" id="'+id+'-in" inputmode="numeric" placeholder="'+ph+'" value="'+(valor||'')+'">')+
+    '<button class="btn sm" id="'+id+'-ok">'+(rotulo||'Confirmar')+'</button></div><p class="erro" id="'+id+'-e"></p>';
+}
+function abrirOutro(id){ document.getElementById(id).hidden=false; var i=document.getElementById(id+'-in'); setTimeout(function(){i.focus();},30); }
+function ligarOutro(id,valida,depois){
+  var inp=document.getElementById(id+'-in'), ok=document.getElementById(id+'-ok'), er=document.getElementById(id+'-e');
+  function confirma(){ var msg=valida(num(inp.value)); if(msg){ er.textContent=msg; return; } er.textContent=''; (depois||proximo)(); }
+  ok.onclick=confirma; inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confirma(); } });
+  inp.addEventListener('input',function(){ er.textContent=''; });
+}
+function htmlMedidor(p,semNomes){
+  var nv=nivelDe(p), w=(p/MAXPTS*100).toFixed(1);
+  var cortes=NIVEIS.slice(1).map(function(n){ return '<s style="left:'+((n.de-0.5)/MAXPTS*100).toFixed(1)+'%"></s>'; }).join('');
+  return '<div class="medidor" aria-hidden="true"><i style="width:'+w+'%"></i>'+cortes+'</div>'+(semNomes?'':'<div class="niveis">'+NIVEIS.map(function(n){ return '<span'+(n===nv?' class="on"':'')+'>'+n.n+'</span>'; }).join('')+'</div>');
+}
+
+/* ---------- Telas ---------- */
+function htmlComo(){
+  return '<div class="como" aria-label="Como funciona, com o exemplo do João">'+
+    '<div class="passo"><div class="pn">1</div><div class="pt">Você conta</div>'+
+      '<div class="lin"><span>O que já construiu: método, 40 clientes com resultado, palestra, 15 anos</span><b>10 de 17 pontos</b></div>'+
+      '<div class="lin"><span>Quanto cobra hoje</span><b>R$ 4.000</b></div>'+
+      '<div class="lin"><span>O que vende e para quem: mentoria para produtores (pequena empresa)</span><b>régua R$ 3 a 63 mil</b></div></div>'+
+    '<div class="seta" aria-hidden="true">→</div>'+
+    '<div class="passo"><div class="pn">2</div><div class="pt">A calculadora faz a conta</div>'+
+      '<div class="lin"><span>10 pontos = valor visível, ponto da régua</span><b>R$ 21.700</b></div>'+
+      '<div class="lin"><span>Sua hora pelo mercado, no seu nível</span><b>R$ 670</b></div>'+
+      '<div class="lin"><span>Mínimo: 12 h × R$ 670 ÷ 0,77</span><b>R$ 10.500</b></div></div>'+
+    '<div class="seta" aria-hidden="true">→</div>'+
+    '<div class="passo"><div class="pn">3</div><div class="pt">Você recebe</div>'+
+      '<div class="lin dest"><span>Você cobra R$ 4.000. Vale R$ 21.900. Ficam na mesa</span><b>R$ 17.900</b></div>'+
+      '<div class="lin"><span>Seu nível e o mapa do que já tem</span><b>valor visível</b></div>'+
+      '<div class="lin"><span>Sua frase de autoridade e o que falta para subir</span><b>pronta</b></div></div>'+
+  '</div><p class="legenda">Exemplo: João, produtor rural há 15 anos, mentora outros produtores e cobra R$ 4 mil.</p>';
+}
+function telaCapa(){
+  if(!TURMA){ telaSemTurma(); return; }
+  app.innerHTML='<div class="tela">'+
+  '<p class="eyebrow">Mentor de Líderes · calculadora de preço</p>'+
+  '<h1 class="titulo">Quanto vale o que você já construiu</h1>'+
+  '<div class="serve">'+
+    '<div class="sv"><span class="k">Objetivo</span><span class="v">Mostrar, com fatos, quanto vale o que você já construiu e transformar isso no preço da sua mentoria.</span></div>'+
+    '<div class="sv"><span class="k">O problema</span><span class="v">Muito aluno já tem método, palestra, anos de mercado e clientes com resultado, e mesmo assim cobra pouco ou não sabe quanto cobrar.</span></div>'+
+    '<div class="sv"><span class="k">Como</span><span class="v">Você marca fatos (tem, está construindo ou não tem). Nada de dar nota a si mesmo. Os fatos dão o seu nível, e o nível posiciona o seu preço no mercado de quem compra de você.</span></div>'+
+    '<div class="sv"><span class="k">O que você recebe</span><span class="v">A diferença entre o que você cobra e o que o seu trabalho vale, o mapa do que já tem, a sua frase de autoridade e o que falta para subir de nível. Uns três minutos.</span></div>'+
+    '<div class="sv"><span class="k">Para quem</span><span class="v">Aluno do Mentor de Líderes de qualquer mercado: saúde, direito, agro, indústria, varejo, serviços, desenvolvimento humano.</span></div>'+
+  '</div>'+
+  '<p class="cat" style="margin-top:30px">Como ela chega no preço: o exemplo do João</p>'+
+  htmlComo()+
+  '<label class="rot" for="f-nome">Seu nome completo</label><input class="campo" id="f-nome" autocomplete="name" placeholder="João da Silva" value="'+esc(ident.nome)+'"><p class="erro c" id="e-nome"></p>'+
+  '<label class="rot" for="f-zap">Seu WhatsApp com DDD</label><input class="campo" id="f-zap" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" value="'+esc(ident.zap)+'"><p class="zap-dica" id="d-zap">Cada WhatsApp faz o teste uma vez nesta turma.</p><p class="erro c" id="e-zap"></p>'+
+  '<label class="rot" for="f-prod">Nome da sua mentoria ou produto <span>(opcional)</span></label><input class="campo" id="f-prod" placeholder="Mentoria Produtor Lucrativo" value="'+esc(s.exemplo?'':s.prodNome)+'">'+
+  '<label class="consent" for="f-consent"><input type="checkbox" id="f-consent"><span>Concordo que a equipe do Mentor de Líderes guarde minhas respostas e meu WhatsApp para melhorar esta calculadora e acompanhar meu plano. Não guardamos CPF nem faturamento.</span></label><p class="erro c" id="e-consent"></p>'+
+  '<button class="btn lg" id="b-comecar">Começar</button><div id="cx-espera"></div>'+
+  '<button class="exemplo" id="b-exemplo"><span class="k">Ver o exemplo do João completo</span><span class="t">Mentoria para produtores rurais</span><span class="d">Cobra R$ 4.000; o que construiu vale <b>R$ 21.900</b></span></button>'+
+  '</div>';
+  document.getElementById('b-comecar').onclick=comecar;
+  var fz=document.getElementById('f-zap'); fz.addEventListener('input',function(){ fz.value=mascaraZap(fz.value); });
+  document.getElementById('b-exemplo').onclick=function(){ carregarExemplo(); };
+}
+
+/* ---------- Identificação, conexão e telas do piloto ---------- */
+function nomeOk(n){ return n.split(' ').filter(function(p){ return (p.match(/\p{L}/gu)||[]).length>=2; }).length>=2; }
+/* mesma normalização do banco: só dígitos; com 12 ou mais e começando em 55, tira o 55; senão tira os zeros à esquerda; vale de 10 a 13 dígitos */
+function zapNorm(z){ var d=String(z||'').replace(/\D/g,''); return (d.length>=12&&d.indexOf('55')===0)?d.slice(2):d.replace(/^0+/,''); }
+function zapOk(z){ var n=zapNorm(z).length; return n>=10&&n<=13; }
+function mascaraZap(v){
+  var d=String(v||'').replace(/\D/g,'').slice(0,13);
+  if(d.length>=12) return '+'+d.slice(0,2)+' ('+d.slice(2,4)+') '+d.slice(4,d.length-4)+'-'+d.slice(-4);
+  if(d.length>10) return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+  if(d.length>6) return '('+d.slice(0,2)+') '+d.slice(2,d.length-4)+'-'+d.slice(-4);
+  if(d.length>2) return '('+d.slice(0,2)+') '+d.slice(2);
+  return d;
+}
+function fmtData(iso){ var d=new Date(iso); return isNaN(d)?'':d.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'}); }
+
+/* chamada às funções do banco (as mesmas chaves e cabeçalhos do Teste de Arquétipos) */
+async function rpc(fn,args,ms){
+  var ctl=new AbortController(), t=setTimeout(function(){ ctl.abort(); },ms||15000);
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:SUPABASE_ANON,Authorization:'Bearer '+SUPABASE_ANON,'Content-Type':'application/json'},body:JSON.stringify(args),signal:ctl.signal});
+    var txt=await r.text(), j=null; try{ j=txt?JSON.parse(txt):null; }catch(x){}
+    if(!r.ok){ var er=new Error((j&&j.message)||('HTTP '+r.status)); er.status=r.status; throw er; }
+    return j;
+  }catch(e){
+    if(e&&(e.name==='AbortError'||e instanceof TypeError)){ var re=new Error('rede'); re.rede=true; throw re; }
+    throw e;
+  }finally{ clearTimeout(t); }
+}
+function traduzErro(e){
+  var m=(e&&e.message)||'';
+  if(e&&e.rede) return 'Não consegui falar com o servidor. Confira a internet e tente de novo.';
+  if(/Consentimento/i.test(m)) return 'É preciso concordar com a guarda das respostas para continuar.';
+  if(/PIN\s*inv/i.test(m)) return 'PIN inválido.';
+  if(/Limite di/i.test(m)) return 'O sistema recebeu respostas demais hoje. Avise a equipe do Mentor de Líderes.';
+  if(/WhatsApp inv/i.test(m)) return 'Confira o número do WhatsApp com DDD.';
+  if(/Nome inv/i.test(m)) return 'Confira o nome completo.';
+  if(/Turma inv/i.test(m)) return 'O link da turma não está certo. Peça um novo à equipe.';
+  return 'Algo não deu certo. Tente de novo.';
+}
+function pausa(){ return new Promise(function(ok){ setTimeout(ok,40); }); }
+function barra(msg,pct){ return '<div class="pdfp" role="status"><div class="st"><span>'+esc(msg)+'</span><span>'+pct+'%</span></div><div class="pb"><i style="width:'+pct+'%"></i></div></div>'; }
+
+function telaSemTurma(){
+  vista='capa';
+  app.innerHTML='<div class="tela"><p class="eyebrow">Mentor de Líderes · calculadora de preço</p>'+
+    '<h1 class="titulo">Este link precisa vir da equipe do Mentor de Líderes</h1>'+
+    '<p class="contexto">Peça à equipe o link da sua turma para fazer a calculadora.</p>'+
+    '</div>';
+}
+function telaAviso(t,d,b){
+  avisoAtual={t:t,d:d,b:b||''}; vista='aviso'; telaAvisoAtual();
+}
+function telaAvisoAtual(){
+  app.innerHTML='<div class="tela"><p class="eyebrow">'+(MODO_VER?'Visão da equipe':'Mentor de Líderes · calculadora de preço')+'</p>'+
+    '<h1 class="enunciado">'+esc(avisoAtual.t)+'</h1>'+(avisoAtual.d?'<p class="contexto">'+esc(avisoAtual.d)+'</p>':'')+
+    (avisoAtual.b?'<div class="acoes" style="margin-top:22px">'+avisoAtual.b+'</div>':'')+'</div>';
+  var b=document.getElementById('b-de-novo'); if(b&&avisoAtual.fn) b.onclick=avisoAtual.fn;
+}
+function telaJaFez(){
+  var q=ident.jaFez?fmtData(ident.jaFez):'';
+  vista='jafez';
+  app.innerHTML='<div class="tela"><p class="eyebrow">Mentor de Líderes · calculadora de preço</p>'+
+    '<h1 class="enunciado">Você já fez este teste nesta turma'+(q?' em '+esc(q):'')+'.</h1>'+
+    '<p class="contexto">Para refazer, fale com a equipe.</p>'+
+    '<div class="acoes" style="margin-top:22px"><button class="btn ghost" id="b-voltar-capa">Voltar</button></div></div>';
+  document.getElementById('b-voltar-capa').onclick=function(){ ir('capa'); };
+}
+
+var checando=false;
+async function comecar(){
+  if(checando) return;
+  var v=function(id){ return document.getElementById(id).value; };
+  var nome=v('f-nome').replace(/\s+/g,' ').trim(), zap=v('f-zap').trim(), prod=v('f-prod').trim(), cons=document.getElementById('f-consent').checked;
+  ident.nome=nome; ident.zap=zap;
+  var campos={'e-nome':'','e-zap':'','e-consent':''}, foco=null;
+  if(!nomeOk(nome)){ campos['e-nome']='Escreva seu nome completo, com sobrenome.'; foco='f-nome'; }
+  if(!zapOk(zap)){ campos['e-zap']='Escreva o WhatsApp com DDD, por exemplo (11) 99999-9999.'; foco=foco||'f-zap'; }
+  if(!cons){ campos['e-consent']='Marque a caixa para continuar.'; foco=foco||'f-consent'; }
+  Object.keys(campos).forEach(function(k){ document.getElementById(k).textContent=campos[k]; });
+  if(foco){ document.getElementById(foco).focus(); return; }
+  if(s.exemplo){ s=novo(); }
+  s.prodNome=prod;
+  if(ident.ok && ident.zapOk===zapNorm(zap)){ s.nome=nome; ir('construido'); return; }   /* já conferido nesta visita (voltou à capa) */
+  checando=true; var bt=document.getElementById('b-comecar'); bt.disabled=true;
+  var cx=document.getElementById('cx-espera'); cx.innerHTML=barra('Conferindo o seu WhatsApp',40);
+  await pausa();
+  var jaFez=null;
+  try{
+    var r=await rpc('preco_checar',{p_turma:TURMA,p_contato:zap},12000);
+    if(r&&r.ja_fez===true) jaFez=r;
+  }catch(e){ /* se a conferência falhar, segue: o banco barra de novo no envio */ }
+  checando=false;
+  if(jaFez){ ident.ok=false; ident.jaFez=jaFez.criado_em||null; telaJaFez(); return; }
+  ident.ok=true; ident.zapOk=zapNorm(zap); s.nome=nome;
+  ir('construido');
+}
+
+/* envio das respostas: acontece uma vez, quando a devolutiva é montada pela primeira vez */
+function montarEnvio(c){
+  var carga=JSON.parse(JSON.stringify({v:'v5',nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
+  var resultado={pts:c.pts,nivel:c.nv.n,nivel_idx:NIVEIS.indexOf(c.nv),horaM:c.horaM,hora:c.hora,H:c.H,N:c.N,Cp:c.Cp,pisoR:c.pisoR,vit:c.vit,pNivel:c.pNivel,custoLucro:c.custoLucro,regua:c.regua,gap:c.gap,origem:c.origem};
+  return {p_turma:TURMA,p_nome:ident.nome,p_contato:ident.zap,p_consentiu:true,p_carga:carga,p_resultado:resultado};
+}
+async function enviarResposta(){
+  if(envio.estado==='enviando'||envio.estado==='ok'||envio.estado==='jafez') return;
+  envio.estado='enviando'; pintarEnvio();
+  try{
+    var r=await rpc('preco_enviar',envio.payload,20000);
+    envio.estado=(r&&r.ja_fez===true)?'jafez':'ok';
+  }catch(e){ envio.estado='erro'; }
+  pintarEnvio();
+}
+function pintarEnvio(){
+  var el=document.getElementById('r-envio'); if(!el) return;
+  var e=envio.estado; el.classList.toggle('mal',e==='erro');
+  if(e==='enviando') el.textContent='Guardando as respostas…';
+  else if(e==='ok') el.textContent='Respostas guardadas';
+  else if(e==='jafez') el.textContent='Este WhatsApp já tinha um teste nesta turma; estas respostas não foram guardadas de novo. A devolutiva continua valendo.';
+  else if(e==='erro'){ el.innerHTML='<span>Não consegui guardar as respostas; a devolutiva continua valendo</span><button class="btn sm ghost" id="b-reenviar">Tentar de novo</button>'; document.getElementById('b-reenviar').onclick=enviarResposta; }
+  else el.textContent='';
+}
+
+/* modo equipe: ?ver=<id> pede o PIN e remonta a devolutiva a partir das respostas guardadas */
+function pinGuardado(){ try{ return sessionStorage.getItem(PIN_KEY)||''; }catch(e){ return ''; } }
+function guardarPin(p){ try{ sessionStorage.setItem(PIN_KEY,p); }catch(e){} }
+function esquecerPin(){ try{ sessionStorage.removeItem(PIN_KEY); }catch(e){} }
+function telaPin(msg){
+  esquecerPin(); vista='pin';
+  app.innerHTML='<div class="tela"><p class="eyebrow">Visão da equipe</p><h1 class="enunciado">Digite o PIN da equipe</h1>'+
+    '<p class="contexto">É o mesmo PIN dos painéis de gamificação.</p>'+
+    '<label class="rot" for="pin">PIN</label><input class="campo" id="pin" type="password" autocomplete="off" inputmode="numeric" style="max-width:260px">'+
+    '<p class="erro" id="e-pin">'+esc(msg||'')+'</p><button class="btn" id="b-pin">Abrir a resposta</button></div>';
+  var inp=document.getElementById('pin'), ir2=function(){ var p=inp.value.trim(); if(!p){ document.getElementById('e-pin').textContent='Digite o PIN.'; inp.focus(); return; } abrirVer(p,false); };
+  document.getElementById('b-pin').onclick=ir2; inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); ir2(); } }); inp.focus();
+}
+function telaEspera(msg,pct){
+  vista='aviso';
+  app.innerHTML='<div class="tela"><p class="eyebrow">Visão da equipe</p><h1 class="enunciado">Abrindo a resposta</h1>'+barra(msg,pct)+'</div>';
+}
+function cargaValida(c){
+  return !!c && typeof c==='object' && c.fatos && typeof c.fatos==='object' && PRODUTOS[c.produto] && MERCADOS[c.mercado] && COMPRADORES[c.comprador];
+}
+async function abrirVer(pin,auto){
+  telaEspera('Conferindo o PIN e buscando a resposta',35); await pausa();
+  var linha=null;
+  try{ linha=await rpc('preco_ver',{p_id:Number(VER),p_pin:pin},15000); }
+  catch(e){
+    var m=(e&&e.message)||'';
+    if(/PIN\s*inv/i.test(m)){ telaPin(auto?'':'PIN inválido.'); return; }
+    if(/n[ãa]o encontrada/i.test(m)){ telaAviso('Não achamos essa resposta','Ela pode ter sido excluída. Confira a lista da turma no painel da equipe.'); return; }
+    telaAviso('Não foi possível abrir',traduzErro(e),'<button class="btn sm" id="b-de-novo">Tentar de novo</button>'); avisoAtual.fn=function(){ abrirVer(pin,false); }; document.getElementById('b-de-novo').onclick=avisoAtual.fn;
+    return;
+  }
+  guardarPin(pin);
+  telaEspera('Montando a devolutiva',80); await pausa();
+  var c=linha&&linha.carga;
+  if(!cargaValida(c)){ telaAviso('Esta resposta não pode ser aberta aqui','Ela foi gravada num formato que esta página não lê. Fale com quem cuida da calculadora.'); return; }
+  s=Object.assign(novo(),c); delete s.v; s.nome=c.nome||linha.nome||''; s.exemplo=false;
+  verInfo={id:linha.id,turma:linha.turma||'',quando:fmtData(linha.criado_em)};
+  vista='resultado'; desenhar(); window.scrollTo(0,0);
+}
+function iniciarVer(){
+  if(!/^\d{1,18}$/.test(VER)){ telaAviso('Link inválido','O endereço não traz o número de uma resposta. Abra a devolutiva pelo painel da equipe.'); return; }
+  var g=pinGuardado(); if(g) abrirVer(g,true); else telaPin('');
+}
+function telaConstruido(){
+  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você já construiu?</h1><p class="contexto">Marque o que é fato hoje. Cada item vale pontos, e os pontos mostram quanto do seu valor já está visível para o mercado. Veja o nível mudar embaixo enquanto responde.</p><div class="fatos">';
+  FATOS.forEach(function(f){
+    var sel=s.fatos[f.id];
+    html+='<div class="fato'+(sel!=null?' ok':'')+'" id="fa-'+f.id+'"><div class="ft"><b>'+esc(f.t)+'</b><span id="fp-'+f.id+'">'+(sel!=null?ptsTxt(f.ops[sel][1]):'')+'</span></div>'+(f.d?'<p class="fd">'+esc(f.d)+'</p>':'')+
+      '<div class="chips" role="radiogroup" aria-label="'+esc(f.t)+'">'+f.ops.map(function(o,i){ return '<button class="chip'+(sel===i?' sel':'')+'" role="radio" aria-checked="'+(sel===i)+'" data-f="'+f.id+'" data-i="'+i+'">'+esc(o[0])+'</button>'; }).join('')+'</div></div>';
+  });
+  html+='</div><p class="erro" id="e-fatos"></p></div>'+
+    '<div class="barra"><div class="in"><div class="info" id="b-info" style="display:block"></div><button class="btn" id="b-seguir">Continuar</button></div></div>';
+  app.innerHTML=html;
+  document.getElementById('b-voltar').onclick=anterior;
+  function info(){
+    var resp=FATOS.filter(function(f){return s.fatos[f.id]!=null;}).length, p=pontos();
+    document.getElementById('b-info').innerHTML= resp? '<b>'+p+' de '+MAXPTS+' pontos</b> · '+nivelDe(p).n.toLowerCase()+(resp<FATOS.length?' · faltam '+(FATOS.length-resp):'')+'<div style="margin-top:6px">'+htmlMedidor(p,true)+'</div>' : 'Marque os '+FATOS.length+' itens';
+  }
+  app.querySelectorAll('.chip[data-f]').forEach(function(c){
+    c.onclick=function(){
+      var id=c.getAttribute('data-f'), i=parseInt(c.getAttribute('data-i'),10); s.fatos[id]=i;
+      app.querySelectorAll('.chip[data-f="'+id+'"]').forEach(function(x){ var on=x===c; x.classList.toggle('sel',on); x.setAttribute('aria-checked',on); });
+      var f=FATOS.filter(function(x){return x.id===id;})[0];
+      document.getElementById('fa-'+id).classList.add('ok'); document.getElementById('fp-'+id).textContent=ptsTxt(f.ops[i][1]);
+      document.getElementById('e-fatos').textContent=''; info();
+    };
+  });
+  document.getElementById('b-seguir').onclick=function(){
+    var falta=FATOS.filter(function(f){return s.fatos[f.id]==null;});
+    if(falta.length){ document.getElementById('e-fatos').textContent='Falta marcar: '+falta.map(function(f){return f.t.toLowerCase();}).join(', ')+'.'; var el=document.getElementById('fa-'+falta[0].id); if(el) el.scrollIntoView({behavior:reduz?'auto':'smooth',block:'center'}); return; }
+    proximo();
+  };
+  info();
+}
+function telaCobra(){
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto você cobra hoje pela sua mentoria?</h1><p class="contexto">O valor que um cliente paga pelo programa inteiro. É esse número que a devolutiva compara com o que o seu trabalho vale.</p>'+
+  '<div class="moeda grande" style="margin-top:24px"><span>R$</span><input class="campo" id="f-cobra" inputmode="numeric" aria-label="Quanto você cobra hoje, em reais" placeholder="4.000" value="'+(s.cobra>0?Math.round(s.cobra).toLocaleString('pt-BR'):'')+'"></div>'+
+  '<button class="btn lg" id="b-cobra" style="margin-top:12px">Confirmar</button><p class="erro" id="e-cobra"></p>'+
+  '<div class="opcoes"><button class="op'+(s.cobra===0?' sel':'')+'" id="b-nunca"><span class="letra">?</span><span><span class="t">Ainda não vendi</span><span class="d">A devolutiva mostra o preço para começar.</span></span></button></div></div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  var inp=document.getElementById('f-cobra'), er=document.getElementById('e-cobra');
+  function confirma(){ var n=num(inp.value); if(!(n>=50&&n<=5000000)){ er.textContent='Digite o valor que um cliente paga, a partir de R$ 50.'; return; } s.cobra=n; proximo(); }
+  document.getElementById('b-cobra').onclick=confirma;
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confirma(); } });
+  inp.addEventListener('input',function(){ er.textContent=''; document.getElementById('b-nunca').classList.remove('sel'); });
+  document.getElementById('b-nunca').onclick=function(e){ if(ocupado) return; ripple(e,this); this.classList.add('sel'); s.cobra=0; avancarDepois(proximo); };
+}
+function telaVenda(){
+  var prodOps=Object.keys(PRODUTOS).map(function(k){return {v:k,t:PRODUTOS[k].t,d:PRODUTOS[k].d};});
+  var compOps=Object.keys(COMPRADORES).map(function(k){return {v:k,t:COMPRADORES[k].t,d:COMPRADORES[k].d};});
+  var turmaOps=[5,10,20,40];
+  var g=ehGrupo();
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você vende, e para quem?</h1><p class="contexto">Quem paga pesa mais no preço do que o nicho. As duas respostas definem a régua do mercado.</p>'+
+  '<span class="rot" style="margin-top:22px">Formato</span>'+cartoes(prodOps,s.produto,'',	'prod')+
+  '<div id="l-turma"'+(g?'':' hidden')+'><span class="rot">Pessoas por turma</span><div class="chips">'+turmaOps.map(function(v){return '<button class="chip'+(s.pessoas===v?' sel':'')+'" data-p="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.pessoas&&turmaOps.indexOf(s.pessoas)<0?' sel':'')+'" data-p="outro">outro</button></div>'+caixaOutro('ou-pessoas',false,'15',s.pessoas&&turmaOps.indexOf(s.pessoas)<0?s.pessoas:'')+'</div>'+
+  '<div id="l-comp"'+(s.produto&&(!g||s.pessoas)?'':' hidden')+'><span class="rot">Quem compra de você</span>'+cartoes(compOps,s.comprador,'','comp')+'</div></div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  if(s.pessoas&&turmaOps.indexOf(s.pessoas)<0) document.getElementById('ou-pessoas').hidden=false;
+  function abre(){ var gg=ehGrupo(); document.getElementById('l-turma').hidden=!gg; document.getElementById('l-comp').hidden=!(s.produto&&(!gg||s.pessoas)); }
+  function rola(id){ var el=document.getElementById(id); if(el&&!el.hidden) el.scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'}); }
+  ligarCartoes(function(v){ s.produto=v; if(!PRODUTOS[v].g) s.pessoas=null; abre(); rola(ehGrupo()?'l-turma':'l-comp'); return false; },'prod');
+  app.querySelectorAll('.chip[data-p]').forEach(function(c){ c.onclick=function(){ var v=c.getAttribute('data-p'); if(v==='outro'){ abrirOutro('ou-pessoas'); return; } document.getElementById('ou-pessoas').hidden=true; s.pessoas=parseInt(v,10); app.querySelectorAll('.chip[data-p]').forEach(function(x){x.classList.toggle('sel',x===c);}); abre(); rola('l-comp'); }; });
+  ligarOutro('ou-pessoas',function(n){ n=Math.round(n); if(!(n>=2&&n<=2000)) return 'Digite quantas pessoas, de 2 a 2.000.'; s.pessoas=n; return ''; },function(){ app.querySelectorAll('.chip[data-p]').forEach(function(x){x.classList.toggle('sel',x.getAttribute('data-p')==='outro');}); abre(); rola('l-comp'); });
+  ligarCartoes(function(v){ s.comprador=v; },'comp');
+}
+function telaTempo(){
+  var enc=[1,2,3,4,6,8,12,24], dur=[1,1.5,2,3,4,8], ext=[0,1,2,5,10];
+  var g=ehGrupo(), revisita=s.encontros&&s.duracao&&s.extra!=null;
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto tempo seu o cliente recebe?</h1><p class="contexto">'+(g?'Conte o tempo da turma inteira. A calculadora divide pelo número de pessoas.':'Escolha em ordem: a próxima linha abre depois de cada resposta.')+'</p>'+
+  '<div class="linha-t" id="l-enc"><span class="rot">Quantos encontros com você</span><div class="chips">'+enc.map(function(v){return '<button class="chip'+(s.encontros===v?' sel':'')+'" data-k="encontros" data-v="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.encontros&&enc.indexOf(s.encontros)<0?' sel':'')+'" data-k="encontros" data-v="outro">outro</button></div>'+
+    caixaOutro('ou-enc',false,'15',s.encontros&&enc.indexOf(s.encontros)<0?s.encontros:'')+'</div>'+
+  '<div class="linha-t" id="l-dur"'+(s.encontros?'':' hidden')+'><span class="rot">Quanto dura cada encontro</span><div class="chips">'+dur.map(function(v){return '<button class="chip'+(s.duracao===v?' sel':'')+'" data-k="duracao" data-v="'+v+'">'+durTxt(v)+'</button>';}).join('')+'</div></div>'+
+  '<div class="linha-t" id="l-ext"'+(s.duracao&&s.encontros?'':' hidden')+'><span class="rot">Fora dos encontros (preparo, acompanhamento, mensagens), quanto tempo no total</span><div class="chips">'+ext.map(function(v){return '<button class="chip'+(s.extra===v?' sel':'')+'" data-k="extra" data-v="'+v+'">'+(v===0?'nenhum':v+' h')+'</button>';}).join('')+'</div></div>'+
+  '<div class="total-vivo" id="t-vivo"'+(revisita?'':' hidden')+'></div></div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  if(s.encontros&&enc.indexOf(s.encontros)<0) document.getElementById('ou-enc').hidden=false;
+  function marca(){
+    app.querySelectorAll('.chip[data-k]').forEach(function(c){ var k=c.getAttribute('data-k'), v=c.getAttribute('data-v');
+      c.classList.toggle('sel', v==='outro' ? (k==='encontros'&&s.encontros&&enc.indexOf(s.encontros)<0) : parseFloat(v)===s[k]); });
+    var tv=document.getElementById('t-vivo');
+    if(s.encontros&&s.duracao&&s.extra!=null){ tv.hidden=false; tv.innerHTML='<span>Total: <b>'+hTxt(horasTotal())+'</b> suas</span>'+(revisita?'<button class="btn ghost sm" id="b-seguir">Seguir com este total</button>':''); var bs=document.getElementById('b-seguir'); if(bs) bs.onclick=proximo; }
+  }
+  function abre(){ document.getElementById('l-dur').hidden=!s.encontros; document.getElementById('l-ext').hidden=!(s.encontros&&s.duracao); }
+  app.querySelectorAll('.chip[data-k]').forEach(function(c){
+    c.onclick=function(){
+      if(ocupado) return;
+      var k=c.getAttribute('data-k'), v=c.getAttribute('data-v');
+      s.horasManual=null;
+      if(v==='outro'){ abrirOutro('ou-enc'); return; }
+      if(k==='encontros') document.getElementById('ou-enc').hidden=true;
+      s[k]=parseFloat(v); abre(); marca();
+      if(k==='extra'&&s.encontros&&s.duracao) avancarDepois(proximo,700);
+      else if(k==='encontros') document.getElementById('l-dur').scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'});
+      else if(k==='duracao') document.getElementById('l-ext').scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'});
+    };
+  });
+  var inp=document.getElementById('ou-enc-in'), er=document.getElementById('ou-enc-e');
+  function confEnc(){ var n=Math.round(num(inp.value)); if(!(n>=1&&n<=500)){ er.textContent='Digite quantos encontros, de 1 a 500.'; return; } er.textContent=''; s.encontros=n; s.horasManual=null; abre(); marca(); }
+  document.getElementById('ou-enc-ok').onclick=confEnc;
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confEnc(); } });
+  marca();
+}
+function telaHora(){
+  var hm=horaMercado(), nv=nivelDe(pontos());
+  var ops=[{v:'mercado',t:'Usar a hora do mercado: '+brl(hm),d:'Hora de mentor no seu nível ('+nv.n.toLowerCase()+'). Recomendado.',letra:'★'}];
+  FAIXAS_HORA.forEach(function(f){ ops.push({v:String(f.v),t:f.t,d:'Eu cobro nessa faixa hoje'}); });
+  ops.push({v:'outro',t:'Outro valor',d:'Você digita e confirma'});
+  var atual = s.horaTipo==='faixa'?String(s.horaInformada):s.horaTipo;
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto vale uma hora sua?</h1><p class="contexto">Pelo que você já construiu, o mercado paga cerca de <b style="color:var(--gold);font-weight:600">'+brl(hm)+'</b> por hora de mentor no seu nível. Se você cobra mais do que isso por hora hoje, informe: a conta usa o maior. Se cobra menos, a conta usa o mercado, e a devolutiva mostra a diferença.</p>'+
+  cartoes(ops,atual)+caixaOutro('ou-hora',true,'1.000',s.horaTipo==='outro'?Math.round(s.horaInformada).toLocaleString('pt-BR'):'')+'</div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  if(s.horaTipo==='outro') document.getElementById('ou-hora').hidden=false;
+  ligarCartoes(function(v){
+    if(v==='outro'){ abrirOutro('ou-hora'); return false; }
+    document.getElementById('ou-hora').hidden=true;
+    if(v==='mercado'){ s.horaInformada=null; s.horaTipo='mercado'; } else { s.horaInformada=parseInt(v,10); s.horaTipo='faixa'; }
+  });
+  ligarOutro('ou-hora',function(n){ if(!(n>=10&&n<=100000)) return 'Digite o valor da sua hora, a partir de R$ 10.'; s.horaInformada=n; s.horaTipo='outro'; return ''; });
+}
+function telaTemParc(){
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Alguém além de você entrega parte do pacote?</h1><p class="contexto">Um especialista convidado, uma sala de evento, uma apostila feita por terceiros. Se tudo é você, o preço sai das suas horas e do seu nível.</p>'+
+  cartoes([{v:'nao',t:'Não, tudo é entregue por mim'},{v:'sim',t:'Sim, tem parceiros',d:'Você marca quem são na próxima tela'}], s.temParceiros===true?'sim':s.temParceiros===false?'nao':null)+'</div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  ligarCartoes(function(v){ s.temParceiros=(v==='sim'); if(!s.temParceiros){ s.sel={}; s.outros=[]; } });
+}
+function telaMercado(){
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Em que mercado você atua?</h1><p class="contexto">Última pergunta. O mercado entra na sua frase de autoridade e nos cuidados da devolutiva.</p>'+
+  cartoes(Object.keys(MERCADOS).map(function(k){return {v:k,t:MERCADOS[k].t,d:MERCADOS[k].d};}),s.mercado,'duas')+'</div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  ligarCartoes(function(v){ s.mercado=v; });
+}
+function telaParceiros(){
+  var g=ehGrupo(), m=MERCADOS[s.mercado]||MERCADOS.outro;
+  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quem são os parceiros?</h1><p class="contexto">Marque o que não é você quem entrega. Ao lado está a média de mercado. Na devolutiva você troca pelo preço que o seu parceiro passou.</p>';
+  CATS.forEach(function(c){
+    var itens=SERV.filter(function(x){return x.cat===c[0];}); if(!itens.length) return;
+    html+='<p class="cat">'+c[1]+'</p><div class="lista-serv">'+itens.map(cartaoServ).join('')+'</div>';
+  });
+  html+='<p class="cat">Outro parceiro</p><div class="seu-mercado"><p>Serviço que não está na lista? Escreva o nome e o valor que o parceiro cobra.<br><small>Exemplos: '+esc(m.ex)+'.</small></p><div id="outros"></div><button class="mais" id="b-mais">+ Adicionar parceiro</button></div>';
+  html+='<details class="extra"'+(CATS_EXTRA.some(function(c){return SERV.some(function(x){return x.cat===c[0]&&s.sel[x.id];});})?' open':'')+'><summary>Mais serviços com média de mercado (imagem, comunicação, livro)</summary>';
+  CATS_EXTRA.forEach(function(c){
+    var itens=SERV.filter(function(x){return x.cat===c[0];}); if(!itens.length) return;
+    html+='<p class="cat">'+c[1]+'</p><div class="lista-serv">'+itens.map(cartaoServ).join('')+'</div>';
+  });
+  html+='</details></div><div class="barra"><div class="in"><span class="info" id="b-info"></span><button class="btn" id="b-seguir">Continuar</button></div></div>';
+  app.innerHTML=html;
+  document.getElementById('b-voltar').onclick=anterior;
+  function cartaoServ(d){
+    var x=s.sel[d.id];
+    return '<div class="serv'+(x?' sel':'')+'" role="checkbox" tabindex="0" aria-checked="'+(!!x)+'" data-id="'+d.id+'"><span class="cx" aria-hidden="true">'+(x?'✓':'')+'</span><span class="txt"><span class="t">'+esc(d.nome)+'</span>'+(d.det?'<span class="d">'+esc(d.det)+'</span>':'')+
+      (x&&COM_QTD[d.un]?'<span class="qtd"><button data-q="-1" aria-label="Menos">−</button><b>'+x.qtd+'</b><span>'+(x.qtd===1?(d.un==='coffee'?'coffee por pessoa':d.un):UN_PLURAL[d.un]+(d.un==='coffee'?' por pessoa':''))+'</span><button data-q="1" aria-label="Mais">+</button></span>':'')+
+      '</span><span class="pr">média '+brl(d.med)+'<small>'+unTxt(d.un)+(g&&d.esc==='turma'?', da turma':'')+'</small></span></div>';
+  }
+  function religar(){
+    app.querySelectorAll('.serv').forEach(function(el){
+      function alterna(e){
+        if(e.target.closest('.qtd')) return;
+        var id=el.getAttribute('data-id');
+        if(s.sel[id]) delete s.sel[id]; else s.sel[id]={qtd:1,valor:SERV_ID[id].med};
+        ripple(e,el); el.outerHTML=cartaoServ(SERV_ID[id]); religar(); info();
+      }
+      el.onclick=alterna;
+      el.onkeydown=function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); alterna(e); } };
+      el.querySelectorAll('.qtd button').forEach(function(b){ b.onclick=function(e){ e.stopPropagation(); var id=el.getAttribute('data-id'); var x=s.sel[id]; x.qtd=Math.max(1,Math.min(99,x.qtd+parseInt(b.getAttribute('data-q'),10))); el.outerHTML=cartaoServ(SERV_ID[id]); religar(); info(); }; });
+    });
+  }
+  function desenharOutros(){
+    var box=document.getElementById('outros');
+    box.innerHTML=s.outros.map(function(o,i){
+      return '<div class="outro'+(g?' g':'')+'"><input class="campo nome" data-i="'+i+'" data-k="nome" placeholder="Ex.: '+esc(m.ex.split(',')[0])+'" aria-label="Nome do serviço do parceiro" value="'+esc(o.nome)+'">'+
+        '<div class="moeda"><span>R$</span><input class="campo" data-i="'+i+'" data-k="valor" inputmode="numeric" placeholder="1.500" aria-label="Valor do parceiro" value="'+(o.valor?Math.round(o.valor).toLocaleString('pt-BR'):'')+'"></div>'+
+        (g?'<select data-i="'+i+'" data-k="esc" aria-label="Como o custo se divide"><option value="pessoa"'+(o.esc!=='turma'?' selected':'')+'>por pessoa</option><option value="turma"'+(o.esc==='turma'?' selected':'')+'>pela turma</option></select>':'')+
+        '<button class="x" data-del="'+i+'" aria-label="Tirar este parceiro">×</button></div>';
+    }).join('');
+    box.querySelectorAll('input,select').forEach(function(inp){ inp.addEventListener('input',function(){ var o=s.outros[+inp.getAttribute('data-i')], k=inp.getAttribute('data-k'); o[k]= k==='valor'?num(inp.value):inp.value; info(); }); });
+    box.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ s.outros.splice(+b.getAttribute('data-del'),1); desenharOutros(); info(); }; });
+  }
+  function info(){
+    var n=Object.keys(s.sel).length+s.outros.filter(function(o){return (o.nome||'').trim()||o.valor>0;}).length;
+    var tot=parceirosLista().reduce(function(a,p){return a+p.qtd*p.valor;},0);
+    document.getElementById('b-info').textContent = n? (n===1?'1 parceiro':n+' parceiros')+' · '+brl(tot) : 'Nenhum parceiro marcado';
+  }
+  document.getElementById('b-mais').onclick=function(){ s.outros.push({nome:'',valor:0,esc:'pessoa'}); desenharOutros(); var ins=app.querySelectorAll('#outros .campo.nome'); if(ins.length) ins[ins.length-1].focus(); };
+  document.getElementById('b-seguir').onclick=proximo;
+  religar(); desenharOutros(); info();
+}
+
+/* ---------- Devolutiva ---------- */
+function htmlManchete(c){
+  var pp=c.g?' por participante':'', comp=COMPRADORES[s.comprador].t.toLowerCase();
+  if(!(c.cobra>0)) return '<div class="manchete"><div class="mk">O preço para começar</div><div class="mt">O que você construiu vale <b>'+brl(c.vit)+'</b>'+pp+' para '+esc(comp)+'. Comece por aí, e nunca abaixo de '+brl(c.pisoR)+'.</div></div>';
+  if(c.gap>0) return '<div class="manchete"><div class="mk">A diferença</div><div class="mt">Você cobra <b>'+brl(c.cobra)+'</b>. O que você construiu vale <b>'+brl(c.vit)+'</b> no seu mercado. São <b>'+brl(c.gap)+'</b>'+(c.g?' por participante':' por cliente')+' que ficam na mesa.'+(c.cobra<c.pisoR?' Abaixo de '+brl(c.pisoR)+', você paga para trabalhar.':'')+'</div></div>';
+  return '<div class="manchete"><div class="mk">Você já cobra o que vale</div><div class="mt">Você cobra <b>'+brl(c.cobra)+'</b>'+pp+', e o que você construiu vale cerca de <b>'+brl(c.vit)+'</b> no seu mercado. O caminho agora é subir de nível para subir o preço.</div></div>';
+}
+function htmlMapa(){
+  return FATOS.map(function(f){
+    var i=s.fatos[f.id], o=f.ops[i], max=f.ops[0][1], cls=o[1]===max?'tem':(o[1]>0?'meio':'nao'), ic=cls==='tem'?'✓':cls==='meio'?'◐':'✗';
+    return '<div class="mi '+cls+'"><span class="ic" aria-hidden="true">'+ic+'</span><span class="tx">'+esc(f.t)+'<small>'+esc(o[0])+'</small></span><span class="pt">'+o[1]+' de '+max+'</span></div>';
+  }).join('');
+}
+function htmlFrase(){
+  var fr=fraseAutoridade();
+  if(!fr) return '<p class="nota">Quando você marcar fatos como "tenho", a sua frase de autoridade aparece aqui, pronta para a conversa de venda.</p>';
+  return '<div class="frase" id="r-frase">'+esc(fr)+'<small>Sua frase de autoridade, só com fatos. Leve para a conversa de venda.</small></div><button class="btn ghost sm" id="b-copiar" style="margin-top:10px">Copiar a frase</button>';
+}
+function htmlTiles(c){
+  var pp=c.g?' por participante':'';
+  return '<div class="tile"><div class="k">Mínimo</div><div class="v">'+brl(c.pisoR)+'</div><div class="s">paga tudo, sem lucro'+pp+'</div></div>'+
+    '<div class="tile dest"><div class="k">Sugerido</div><div class="v">'+brl(c.vit)+'</div><div class="s">'+(c.origem==='nivel'?'pelo seu nível: '+c.nv.n.toLowerCase():'pelo custo de entregar, com lucro')+pp+'</div></div>'+
+    '<div class="tile"><div class="k">Mercado</div><div class="v">'+faixaTxt(c.regua[0],c.regua[1])+'</div><div class="s">'+esc(PRODUTOS[s.produto].t.toLowerCase())+' para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+'</div></div>';
+}
+function htmlRegua(c,P){
+  var ts=tiers(); var vals=[c.pisoR,c.vit]; if(P>0) vals.push(P);
+  var lo=Math.min.apply(null,ts.map(function(t){return t.min;}).concat(vals))*0.85;
+  var hi=Math.max.apply(null,ts.map(function(t){return t.max;}).concat(vals))*1.12;
+  var L0=Math.log(lo), L1=Math.log(hi);
+  function x(v){ return ((Math.log(v)-L0)/(L1-L0)*100).toFixed(2)+'%'; }
+  function w(a,b){ return ((Math.log(b)-Math.log(a))/(L1-L0)*100).toFixed(2)+'%'; }
+  var h='<div class="rr voce"><div class="lb"><span>O seu preço'+(c.g?' por participante':'')+'</span><span>'+brl(c.vit)+'</span></div><div class="trk">'+
+    '<i class="dot min" style="left:'+x(c.pisoR)+'" title="Mínimo"></i>'+
+    (P>0&&Math.abs(P-c.vit)>1?'<i class="dot ese" style="left:'+x(P)+'" title="O que você cobra hoje"></i>':'')+
+    '<i class="dot sug" style="left:'+x(c.vit)+'" title="Sugerido"></i></div></div>';
+  ts.forEach(function(t){
+    var dentro=c.vit>=t.min&&c.vit<=t.max;
+    h+='<div class="rr'+(dentro?' dentro':'')+'"><div class="lb"><span>'+esc(t.n)+'</span><span>'+faixaTxt(t.min,t.max)+'</span></div><div class="trk"><i class="seg" style="left:'+x(t.min)+';width:'+w(t.min,t.max)+'"></i><i class="tick" style="left:'+x(c.vit)+'"></i></div></div>';
+  });
+  h+='<div class="leg"><span><i style="background:#D9B872"></i>sugerido</span><span><i style="border:2px solid currentColor;width:10px;height:10px"></i>mínimo</span>'+(P>0&&Math.abs(P-c.vit)>1?'<span><i style="background:#8E97A8"></i>o que você cobra hoje</span>':'')+'</div>';
+  return h;
+}
+function textoLeitura(c){
+  var t='Quem está no seu nível ('+c.nv.n.toLowerCase()+', '+ptsTxt(c.pts)+') cobra por volta de '+brl(c.pNivel)+' por '+PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase()+(c.g?', por participante':'')+'.';
+  if(c.origem==='custo') t+=' Pelo custo de entregar, com lucro, o preço sobe para '+brl(c.custoLucro)+', e é esse que vale.';
+  if(s.produto==='grupo') t+=' Os comparáveis de grupo ainda são poucos.';
+  return t;
+}
+function htmlSubir(c){
+  var pn=proximoNivel(c);
+  if(!pn) return '<p class="nota" style="margin:0">Você está no nível mais alto da régua. Para manter o preço, mantenha a prova em dia: cases com número, presença e convites.</p>';
+  if(!pn.passos.length) return '<p class="nota" style="margin:0">Faltam '+ptsTxt(pn.falta)+' para '+pn.alvo.n.toLowerCase()+'. Os itens que faltam dependem de tempo de mercado.</p>';
+  return '<ul class="subir">'+pn.passos.map(function(p){ return '<li><span>'+esc(p.f.sobe)+'</span><b>+'+ptsTxt(p.ganho)+'</b></li>'; }).join('')+'</ul>'+
+    '<p class="alvo">'+(pn.alcanca?'Com isso você chega a '+pn.alvo.n.toLowerCase()+': quem está lá cobra por volta de <b>'+brl(pn.preco)+'</b>'+(c.g?' por participante':'')+'.':'Faltam '+ptsTxt(pn.falta)+' para '+pn.alvo.n.toLowerCase()+'.')+'</p>';
+}
+function htmlPassos(c){
+  var g=c.g, i=1, p=[];
+  p.push(['Régua de quem compra igual a você', PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase(), faixaTxt(c.regua[0],c.regua[1])]);
+  p.push(['Seu nível: '+c.nv.n.toLowerCase(), ptsTxt(c.pts)+' de '+MAXPTS+'; quem está nesse nível cobra por volta de', brl(c.pNivel)]);
+  p.push(['Custo de entregar', (c.Cp>0?'parceiros '+brl(c.Cp)+' + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)')+(g?' ÷ '+c.N+' pessoas':''), brl(c.Cp+c.T)]);
+  p.push(['Com lucro e impostos', (c.Cp>0?'80% sobre os parceiros, ':'')+'dividido por 0,77 (imposto 15%, comissão 7%, cobrança 1%)', brl(c.custoLucro)]);
+  p.push(['O maior dos dois', c.origem==='nivel'?'vale o seu nível':'vale o custo com lucro', brl(c.sug)]);
+  return p.map(function(r){ return '<div class="ps"><span class="i">'+(i++)+'</span><span class="l">'+r[0]+(r[1]?'<small>'+r[1]+'</small>':'')+'</span><span class="v">'+r[2]+'</span></div>'; }).join('')+
+    '<div class="ps fim"><span class="i">'+i+'</span><span class="l">Arredondado para vender'+(g?'<small>por participante</small>':'')+'</span><span class="v">'+brl(c.vit)+'</span></div>';
+}
+function htmlEse(c,P){
+  if(!(P>0)) return {t:'<span class="big">Digite um valor</span>Mostramos quanto sobra para você depois dos parceiros e dos 23% de imposto, comissão e cobrança.',at:false};
+  var r=seCobrar(c,P), g=c.g;
+  if(r.sobra<=0) return {at:true,t:'<span class="big">Faltam '+brl(-r.sobra)+'</span>Nesse valor, o que entra não paga os parceiros e os 23% de imposto, comissão e cobrança'+(g?', somando a turma de '+c.N:'')+'.'};
+  var pct=Math.round(r.pct*100);
+  var resto = r.pct>=1 ? 'É '+pct+'% da sua hora ('+brl(c.hora)+'): ela está paga'+(r.lucro>1?' e ainda ficam '+brl(r.lucro)+' de lucro':'')+'.' : 'É '+pct+'% da sua hora ('+brl(c.hora)+').';
+  return {at:r.pct<1,t:'<span class="big">'+brl(r.ph)+' por hora sua</span>Sobram '+brl(r.sobra)+' para você'+(g?' na turma de '+c.N:'')+', em '+hTxt(c.H)+' de trabalho. '+resto};
+}
+function listaCuidados(){
+  var L=(CUIDADOS_MERCADO[s.mercado]||[]).slice();
+  var emp=s.comprador==='pequena'||s.comprador==='media';
+  L=L.concat(emp?CUIDADOS_EMPRESA:CUIDADOS_CONSUMIDOR);
+  if(s.temParceiros) L.push(CUIDADO_NOTA);
+  return L;
+}
+function telaResultado(){
+  var g=ehGrupo(), c0=calcular(), n=0;
+  /* grava as respostas uma única vez, só para quem fez o teste de verdade (não no exemplo e não na visão da equipe) */
+  if(ident.ok && !s.exemplo && !MODO_VER && envio.estado==='nada'){ envio.payload=montarEnvio(c0); enviarResposta(); }
+  function sec(t,d){ n++; return '<section class="sec"><div class="sec-h"><span class="sec-n">'+(n<10?'0':'')+n+'</span><h2 class="sec-t">'+t+'</h2></div>'+(d?'<p class="sec-d">'+d+'</p>':''); }
+  var sub=(s.nome?esc(s.nome)+', ':'')+esc(PRODUTOS[s.produto].t.toLowerCase())+' · '+esc(MERCADOS[s.mercado].t.toLowerCase())+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase());
+  var html='<div class="tela cab">'+
+  '<p class="eyebrow">Devolutiva de preço</p><h1 class="titulo">'+esc(prodNome())+'</h1><p class="sub">'+sub+'</p>'+
+  (MODO_VER&&verInfo?'<p class="aviso-ex"><b>Visão da equipe.</b> Resposta nº '+esc(verInfo.id)+(verInfo.turma?' da turma '+esc(verInfo.turma):'')+(verInfo.quando?', enviada em '+esc(verInfo.quando):'')+'. Abrir esta página não grava nada de novo.</p>':'')+
+  (s.exemplo?'<p class="aviso-ex">Exemplo: João, produtor rural há 15 anos, mentora outros produtores e cobra R$ 4 mil. Para fazer a sua, use Refazer as perguntas no fim da página.</p>':'')+
+  '<p class="envio" id="r-envio" aria-live="polite"></p><div id="r-manchete" style="margin-top:22px"></div>'+
+  sec('O que você já construiu','São os fatos que você marcou. Cada ponto vem de um deles.')+
+    '<div class="nivel-card"><div class="nk">Quanto do seu valor já está visível</div><div class="nv">'+c0.nv.n+'</div><div class="np">'+c0.pts+' de '+MAXPTS+' pontos · '+esc(c0.nv.d)+'</div>'+htmlMedidor(c0.pts)+'</div><div class="mapa">'+htmlMapa()+'</div><div style="margin-top:16px" id="r-frase-box">'+htmlFrase()+'</div></section>'+
+  sec('Sua faixa de preço','O sugerido é o que quem está no seu nível cobra, e nunca fica abaixo do custo de entregar com lucro. O mínimo paga tudo, mas sem lucro.')+
+    '<div class="tiles" id="r-tiles"></div><div class="regua" id="r-regua"></div><p class="leitura" id="r-leitura"></p></section>'+
+  sec('Para subir de nível','O que falta, em ordem do que mais soma pontos.')+'<div id="r-subir"></div></section>'+
+  '<details class="conta"><summary><span class="sec-n">+</span><span class="sec-t">Ver a conta e ajustar os números</span></summary>'+
+    '<section class="sec"><h3 class="sub-t">Seus números</h3><p class="sec-d">Mude aqui e o preço muda na hora.</p>'+
+    '<div class="nums"><div><label for="r-hora">Sua hora (pelo mercado: '+brl(c0.horaM)+')</label><div class="moeda"><span>R$</span><input class="campo" id="r-hora" inputmode="numeric" value="'+Math.round(c0.hora).toLocaleString('pt-BR')+'"></div></div>'+
+    '<div><label for="r-horas">Horas suas no total</label><input class="campo" id="r-horas" inputmode="decimal" value="'+(Math.round(horasTotal()*10)/10).toLocaleString('pt-BR')+'"></div>'+
+    (g?'<div><label for="r-pessoas">Pessoas por turma</label><input class="campo" id="r-pessoas" inputmode="numeric" value="'+s.pessoas+'"></div>':'')+
+    '<div><label for="r-cobra">Quanto você cobra hoje</label><div class="moeda"><span>R$</span><input class="campo" id="r-cobra" inputmode="numeric" placeholder="ainda não vendi" value="'+(s.cobra>0?Math.round(s.cobra).toLocaleString('pt-BR'):'')+'"></div></div>'+
+    '</div>'+(s.horaInformada>0&&s.horaInformada<c0.horaM?'<p class="nota">Você informou '+brl(s.horaInformada)+' por hora. Pelo que você construiu, o mercado paga '+brl(c0.horaM)+'. A conta usa o mercado.</p>':'')+'</section>'+
+    (c0.itens.length? '<section class="sec"><h3 class="sub-t">Quanto custam os parceiros</h3><p class="sec-d">Já veio a média de mercado. Troque pelo preço que o seu parceiro passou.</p><div class="tab" id="r-parc"></div></section>':'')+
+    '<section class="sec"><h3 class="sub-t">E se você cobrar outro valor?</h3>'+
+    '<div class="ese-box"><div><label for="r-ese" class="rot" style="margin-top:0">Preço que você quer testar'+(g?', por participante':'')+'</label><div class="moeda grande"><span>R$</span><input class="campo" id="r-ese" inputmode="numeric" placeholder="'+Math.round(c0.vit).toLocaleString('pt-BR')+'" value="'+(s.ese?Math.round(s.ese).toLocaleString('pt-BR'):'')+'"></div></div><div class="ese-out" id="r-ese-out"></div></div></section>'+
+    '<section class="sec"><h3 class="sub-t">Como chegamos ao preço</h3><div class="passos" id="r-passos"></div><p class="nota" id="r-min"></p></section>'+
+    '<section class="sec"><h3 class="sub-t">Cuidados</h3><ul class="cuid">'+listaCuidados().map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
+    '<section class="sec"><h3 class="sub-t">Antes de divulgar</h3><ul class="cuid">'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
+    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026. Cada fato vale de 0 a 2 pontos (máximo '+MAXPTS+'), calibrado no briefing de 73 alunos do Mentor de Líderes. O nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os parceiros seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
+  '</details>'+
+  '<div class="acoes"><button class="btn" id="b-pdf">Baixar PDF</button><button class="btn ghost" id="b-mudar">Mudar respostas</button><button class="btn ghost" id="b-refazer">Refazer as perguntas</button></div>'+
+  '<div id="r-pdf"></div></div>';
+  app.innerHTML=html;
+  pintarEnvio();
+  /* na visão da equipe não se mexe nas respostas; quem já respondeu de verdade não refaz (o banco guarda uma vez só por WhatsApp) */
+  if(MODO_VER){ ['b-mudar','b-refazer'].forEach(function(id){ var x=document.getElementById(id); if(x) x.remove(); }); }
+  else if(ident.ok){ var xr=document.getElementById('b-refazer'); if(xr) xr.remove(); }
+  if(c0.itens.length) desenharParceirosRes();
+  function liga(id,fn){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){ fn(el.value); atualizar(); }); }
+  liga('r-hora',function(v){ var n=num(v); s.horaInformada=n>0?n:null; s.horaTipo=n>0?'outro':'mercado'; });
+  liga('r-horas',function(v){ var n=num(v); if(n>0) s.horasManual=n; });
+  liga('r-pessoas',function(v){ var n=Math.round(num(v)); if(n>=1) s.pessoas=n; });
+  liga('r-cobra',function(v){ var n=num(v); s.cobra=n>0?n:0; });
+  liga('r-ese',function(v){ var n=num(v); s.ese=n>0?n:null; });
+  var br=document.getElementById('b-refazer'); if(br) br.onclick=function(){ s=novo(); ir('capa'); };
+  var bm=document.getElementById('b-mudar'); if(bm) bm.onclick=function(){ s.exemplo=false; s.horasManual=null; ir('construido'); };
+  document.getElementById('b-pdf').onclick=baixarPDF;
+  var bc=document.getElementById('b-copiar'); if(bc) bc.onclick=function(){ var t=document.getElementById('r-frase').childNodes[0].textContent; var fim=function(ok){ bc.textContent=ok?'Frase copiada':'Selecione e copie a frase'; setTimeout(function(){bc.textContent='Copiar a frase';},2200); }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){fim(true);},function(){fim(false);}); } else fim(false); };
+  atualizar();
+}
+function desenharParceirosRes(){
+  var c=calcular(), box=document.getElementById('r-parc'), g=c.g;
+  box.innerHTML='<div class="tr h"><span>Serviço</span><span class="m">Média de mercado</span><span>Valor usado</span></div>'+
+  c.itens.map(function(p){
+    var d=p.ref, q=COM_QTD[p.un]&&p.qtd>1?' × '+p.qtd+' '+UN_PLURAL[p.un]:'';
+    var merc = d? 'média '+brl(d.med)+' '+unTxt(d.un)+(d.min!==d.max?'<br>faixa '+brl(d.min)+' a '+brl(d.max):'')+'<br><span class="conf'+(d.conf==='alta'?' alta':'')+'">confiança '+d.conf+'</span>' : 'sem média na base';
+    return '<div class="tr"><span class="n">'+esc(p.nome)+'<small>'+(p.det?esc(p.det)+' · ':'')+(d?'fonte: '+esc(d.fonte):'informado por você')+(g&&p.esc==='turma'?' · custo da turma, dividido por pessoa':'')+'</small></span>'+
+      '<span class="m">'+merc+'</span>'+
+      '<span><span class="moeda"><span>R$</span><input class="campo" data-pid="'+p.id+'" inputmode="numeric" aria-label="Valor usado para '+esc(p.nome)+'" value="'+Math.round(p.valor).toLocaleString('pt-BR')+'"></span>'+(q?'<small style="display:block;font-size:12px;color:var(--mu2);margin-top:4px">'+q+'</small>':'')+'</span></div>';
+  }).join('')+
+  '<div class="tr tot"><span class="n">Total dos parceiros'+(g?'<small>por participante</small>':'')+'</span><span class="m"></span><span class="tt" id="r-ptot" style="text-align:right"></span></div>';
+  box.querySelectorAll('input[data-pid]').forEach(function(inp){ inp.addEventListener('input',function(){ var id=inp.getAttribute('data-pid'), v=num(inp.value); if(id.charAt(0)==='o'){ s.outros[+id.slice(1)].valor=v; } else if(s.sel[id]) s.sel[id].valor=v; atualizar(); }); });
+}
+function atualizar(){
+  var c=calcular(); window.__ultimo=c;
+  var P=c.cobra>0?c.cobra:0;
+  document.getElementById('r-manchete').innerHTML=htmlManchete(c);
+  document.getElementById('r-tiles').innerHTML=htmlTiles(c);
+  document.getElementById('r-regua').innerHTML=htmlRegua(c,P);
+  document.getElementById('r-leitura').textContent=textoLeitura(c);
+  document.getElementById('r-subir').innerHTML=htmlSubir(c);
+  var pt=document.getElementById('r-ptot'); if(pt) pt.textContent=brl(c.Cp);
+  document.getElementById('r-passos').innerHTML=htmlPassos(c);
+  document.getElementById('r-min').textContent='O mínimo é só o custo, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+', arredondado para '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.';
+  var e=htmlEse(c,s.ese||0), eo=document.getElementById('r-ese-out'); eo.innerHTML=e.t; eo.classList.toggle('at',e.at);
+  var ip=document.getElementById('r-ese'); if(ip) ip.placeholder=Math.round(c.vit).toLocaleString('pt-BR');
+}
+
+/* ---------- PDF ---------- */
+function htmlPapel(){
+  var c=calcular(), P=c.cobra>0?c.cobra:0, g=c.g, hoje=new Date().toLocaleDateString('pt-BR');
+  var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g?' · turma de '+c.N:'')+'</p></div>';
+  function sh(n,t){ return '<div class="ps2"><b>'+n+'</b><span>'+t+'</span></div>'; }
+  var rod=function(n){ return '<div class="rod"><span>Piloto · calculadora de preço do Mentor de Líderes</span><span>'+hoje+' · página '+n+' de 2</span></div>'; };
+  var manch = htmlManchete(c).replace('class="manchete"','class="manch"').replace(/<div class="mk">/,'<div class="mk-p">').replace(/<div class="mt">/,'<div class="mt-p">');
+  var fr=fraseAutoridade();
+  var mapa='<div class="nvl"><b>'+c.nv.n+'</b><span>'+c.pts+' de '+MAXPTS+' pontos · '+esc(c.nv.d)+'</span></div><div class="mp">'+FATOS.map(function(f){ var o=f.ops[s.fatos[f.id]]; return '<div><span>'+esc(f.t)+': '+esc(o[0].toLowerCase())+'</span><span>'+o[1]+' de '+f.ops[0][1]+'</span></div>'; }).join('')+'</div>'+(fr?'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic">'+esc(fr)+'</p>':'');
+  var tl='<div class="tl"><div><div class="k">Mínimo</div><div class="v">'+brl(c.pisoR)+'</div><div class="s">paga tudo, sem lucro</div></div><div class="d"><div class="k">Sugerido</div><div class="v">'+brl(c.vit)+'</div><div class="s">'+(c.origem==='nivel'?'pelo seu nível':'pelo custo com lucro')+'</div></div><div><div class="k">Mercado</div><div class="v">'+faixaTxt(c.regua[0],c.regua[1])+'</div><div class="s">quem compra igual a você</div></div></div>'+(g?'<p class="lt">Valores por participante.</p>':'');
+  var pn=proximoNivel(c), subir = !pn ? '<p class="lt">Você está no nível mais alto da régua.</p>' : (pn.passos.length? '<ul>'+pn.passos.map(function(p){ return '<li>'+esc(p.f.sobe)+' (+'+ptsTxt(p.ganho)+')</li>'; }).join('')+'</ul><p class="lt">'+(pn.alcanca?'Com isso você chega a '+pn.alvo.n.toLowerCase()+': quem está lá cobra por volta de '+brl(pn.preco)+'.':'Faltam '+ptsTxt(pn.falta)+' para '+pn.alvo.n.toLowerCase()+'.')+'</p>' : '<p class="lt">Os itens que faltam dependem de tempo de mercado.</p>');
+  var pg1='<div class="pg">'+band+'<div class="ct">'+manch+sh('01','O que você já construiu')+mapa+sh('02','Sua faixa de preço')+tl+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p></div>'+rod(1)+'</div>';
+  var k=3, parc='';
+  if(c.itens.length){ parc=sh('0'+(k++),'Quanto custam os parceiros')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos parceiros</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>'; }
+  var linhas=[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+', '+ptsTxt(c.pts)+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'parceiros + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]];
+  var pp=linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">Mínimo, só o custo: '+brl(c.piso)+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.</p>';
+  var pg2='<div class="pg"><div class="ct" style="padding-top:30px">'+sh('0'+(k++),'Para subir de nível')+subir+parc+sh('0'+(k++),'Como chegamos ao preço')+pp+sh('0'+(k++),'Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>'+sh('0'+(k++),'Antes de divulgar')+'<ul>'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
+    '<p class="lt" style="font-size:11px;color:#6B7280;margin-top:20px">Fontes: preços públicos pesquisados em 21 e 30/10/2026. Nível: regra da casa aprovada em 30/10/2026, calibrada no briefing de 73 alunos. Os 23%: imposto de 15% (o contador confirma), comissão de 7% e Pix de 1%. O preço sugerido não é preço validado.</p></div>'+rod(2)+'</div>';
+  return [pg1,pg2];
+}
+function carregar(src){ return new Promise(function(ok,err){ var sc=document.createElement('script'); sc.src=src; sc.onload=ok; sc.onerror=function(){err(new Error('carga'));}; document.head.appendChild(sc); }); }
+async function gerarPDF(onEtapa){
+  onEtapa(0);
+  if(!window.html2canvas) await carregar('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  if(!window.jspdf) await carregar('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  var papel=document.getElementById('papel'); papel.innerHTML=htmlPapel().join('');
+  if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+  var pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  var pgs=papel.querySelectorAll('.pg');
+  for(var i=0;i<pgs.length;i++){
+    onEtapa(i+1);
+    var cv=await window.html2canvas(pgs[i],{scale:2,backgroundColor:'#ffffff',logging:false});
+    var img=cv.toDataURL('image/jpeg',0.92), h=cv.height/cv.width*210;
+    if(i>0) pdf.addPage();
+    if(h>297){ var wd=297/h*210; pdf.addImage(img,'JPEG',(210-wd)/2,0,wd,297); } else pdf.addImage(img,'JPEG',0,0,210,h);
+  }
+  onEtapa(3);
+  papel.innerHTML='';
+  return pdf.output('blob');
+}
+async function salvar(blob,nome){
+  if(window.claude&&typeof window.claude.use==='function'){
+    var dl=await window.claude.use('downloads');
+    if(!dl) throw {code:'unavailable'};
+    return dl.save({filename:nome,data:blob});
+  }
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; document.body.appendChild(a); a.click(); a.remove();
+}
+var gerando=false;
+async function baixarPDF(){
+  if(gerando) return; gerando=true;
+  var box=document.getElementById('r-pdf');
+  var etapas=['Carregando o gerador de PDF','Montando a página 1','Montando a página 2','Preparando o arquivo'];
+  var pcts=[12,45,78,96];
+  function pinta(k,msg){
+    box.innerHTML='<div class="pdfp" role="status"><div class="st"><span>'+(msg?'Não foi possível baixar':etapas[Math.min(k,3)])+'</span><span>'+(k>=4?100:pcts[Math.min(k,3)])+'%</span></div><div class="pb"><i style="width:'+(k>=4?100:pcts[Math.min(k,3)])+'%"></i></div>'+
+      (msg?'<p class="msg">'+msg+'</p>':'<ol>'+etapas.map(function(t,i){return '<li class="'+(i<k?'ok':i===k?'agora':'')+'">'+t+'</li>';}).join('')+'</ol>')+'</div>';
+  }
+  try{
+    var blob=await gerarPDF(function(k){ pinta(k); });
+    var nome='Preco-'+prodNome().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)+'.pdf';
+    pinta(4);
+    await salvar(blob,nome);
+    box.innerHTML='<div class="pdfp" role="status"><div class="st"><span>PDF pronto</span><span>100%</span></div><div class="pb"><i style="width:100%"></i></div><p class="nota" style="margin:0">'+esc(nome)+'</p></div>';
+  }catch(err){
+    var cd=err&&err.code, m='Não consegui gerar o PDF. Tente de novo.';
+    if(cd==='declined') m='Download cancelado.';
+    else if(cd==='unavailable'||cd==='not_granted'||cd==='capability_disabled') m='O download não está disponível nesta visualização. Abra o link pelo claude.ai.';
+    else if(err&&err.message==='carga') m='Não consegui carregar o gerador de PDF. Confira a internet e tente de novo.';
+    pinta(0,m);
+  }finally{ gerando=false; document.getElementById('papel').innerHTML=''; }
+}
+
+/* ---------- Exemplo (João, agro) ---------- */
+function carregarExemplo(){
+  s=novo();
+  s.nome='João'; s.prodNome='Mentoria para produtores rurais'; s.produto='individual'; s.mercado='agro'; s.comprador='pequena';
+  s.fatos={metodo:0, mentoria:1, palestra:1, livro:1, anos:1, posic:2, clientes:0, equipe:0, credencial:0, midia:1};
+  s.cobra=4000; s.horaTipo='mercado'; s.horaInformada=null; s.encontros=6; s.duracao=2; s.extra=0;
+  s.temParceiros=false; s.exemplo=true;
+  ir('resultado');
+}
+
+function desenhar(){
+  var f={capa:telaCapa,construido:telaConstruido,cobra:telaCobra,venda:telaVenda,tempo:telaTempo,hora:telaHora,temparc:telaTemParc,parceiros:telaParceiros,mercado:telaMercado,resultado:telaResultado,jafez:telaJaFez,pin:function(){ telaPin(''); },aviso:telaAvisoAtual}[vista];
+  f();
+}
+window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade};
+if(MODO_VER) iniciarVer(); else if(EXEMPLO) carregarExemplo(); else desenhar();
+})();
+</script>
+</body>
+</html>
