@@ -250,6 +250,29 @@
   .pill.risco{background:var(--bad-bg);color:var(--bad)}
   .pill.alerta{background:var(--warn-bg);color:var(--warn)}
   .pill.neutro{background:rgba(234,229,225,.08);color:var(--muted)}
+
+  /* alerta "sem interação": quem o time precisa procurar */
+  .alerta-int{background:rgba(0,24,84,.72);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:14px;min-width:0}
+  .alerta-int>h3{font-size:18px;font-weight:800;margin-bottom:2px}
+  .alerta-int>.ajuda{margin-bottom:12px}
+  .alerta-grupos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+  .alerta-g{border:1px solid var(--line);border-left-width:4px;border-radius:12px;padding:12px 14px;background:rgba(0,10,46,.45);min-width:0}
+  .alerta-g.risco{border-left-color:var(--bad)}
+  .alerta-g.alerta{border-left-color:var(--warn)}
+  .alerta-g.neutro{border-left-color:var(--faint)}
+  .alerta-g h4{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .alerta-g.risco h4 .pill{background:var(--bad-bg);color:var(--bad)}
+  .alerta-g.alerta h4 .pill{background:var(--warn-bg);color:var(--warn)}
+  .alerta-g .dica{font-size:13px;color:var(--muted);margin:2px 0 6px}
+  .alerta-g ul{list-style:none;padding:0;margin:0;display:grid}
+  .alerta-g ul.rola{max-height:320px;overflow:auto}
+  .alerta-g li{display:flex;justify-content:space-between;align-items:baseline;gap:4px 10px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .alerta-g li:last-child{border-bottom:0}
+  .alerta-g li .nm{min-width:0;overflow-wrap:anywhere}
+  .alerta-g li .ult{font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .alerta-g .link-btn{margin-top:4px}
+  .alerta-ok{background:var(--ok-bg);border:1px solid var(--ok-line);border-radius:12px;padding:9px 12px;font-size:13.5px;margin-bottom:14px}
+  .alerta-ok.neutro{background:rgba(234,229,225,.06);border-color:var(--line);color:var(--muted)}
   .busca{margin:10px 0 6px}
   .discreto-bloco{margin-top:26px;padding-top:6px;border-top:1px solid var(--line)}
   .discreto-bloco .ajuda{margin-bottom:4px}
@@ -352,7 +375,10 @@
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnZ2NidmFma3d5cXl2bGtpeXRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTY5NDMsImV4cCI6MjEwMTA5Mjk0M30.y2FaXpreVN_eeFMmlWDuQUXCN3C69qI8ooTcRl2k7ZI';
   var PIN_KEY = 'febracis_gam_pin_v1';   // o mesmo PIN dos placares: quem entrou em um já entra nos outros
   var AUTO_MS = 60000;                   // atualização automática, só com a aba visível
-  var HORA_CORTE = 17;                   // no dia de hoje, "sem mimo" só vira vermelho depois desta hora (Brasília)
+  var AUTO_OCULTA_MS = 180000;           // com a aba escondida, atualiza em silêncio a cada 3 min só para manter o número da aba em dia
+  var ALERTA_MAX = 8;                    // nomes mostrados por grupo do alerta "sem interação" antes do "Ver todos"
+  var TITULO_BASE = document.title;
+  var HORA_CORTE = 17;                  // no dia de hoje, "sem mimo" só vira vermelho depois desta hora (Brasília)
 
   var STATUS_NOME = {lista:'Lista', aberto:'Sorteio aberto', fechado:'Sorteio fechado', encerrado:'Encerrada'};
   var PASSO_DE = {lista:2, aberto:3, fechado:4, encerrado:5};     // passo atual de cada situação
@@ -396,6 +422,17 @@
     return Math.round((Date.UTC(+h[0], +h[1] - 1, +h[2]) - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000) + 1;
   }
   function diaHoje(ev){ var d = diaReal(ev); return d >= 1 && d <= ev.dias ? d : 0; }
+  // data (aaaa-mm-dd) de um instante, no calendário de Brasília
+  function dataBR(d){ return new Intl.DateTimeFormat('en-CA', {timeZone:TZ, year:'numeric', month:'2-digit', day:'2-digit'}).format(d); }
+  function ontemBR(){ var h = hojeBR().split('-'); return new Date(Date.UTC(+h[0], +h[1] - 1, +h[2] - 1)).toISOString().slice(0, 10); }
+  // último acesso de uma pessoa, em palavras: "hoje 09:12", "ontem 17:20", "dd/mm hh:mm" ou "nunca entrou"
+  function fmtUltimo(p, hoje, ontem){
+    if (!(+p.acessos > 0)) return 'nunca entrou';
+    var d = p.ultimo_acesso ? new Date(p.ultimo_acesso) : null;
+    if (!d || isNaN(d.getTime())) return 'entrou, sem horário';
+    var dia = dataBR(d), pt = partes(d), hm = pt.hour + ':' + pt.minute;
+    return dia === hoje ? 'hoje ' + hm : dia === ontem ? 'ontem ' + hm : pt.day + '/' + pt.month + ' ' + hm;
+  }
 
   // ---------- estado ----------
   var S = {
@@ -421,6 +458,7 @@
     busy: false,
     carregando: false,
     atualizadoEm: null,
+    alertaTodos: {},       // grupos do alerta "sem interação" abertos em "Ver todos"
     seq: 0
   };
 
@@ -807,6 +845,68 @@
     return '<div class="grade-2">' + esq + dir + '</div>' + rod;
   }
 
+  // ---------- alerta "sem interação" (sorteio aberto e imersão) ----------
+  // Só pessoas ativas. Cada pessoa cai em um único grupo. Devolve null fora do sorteio aberto e da imersão.
+  function alertaDados(){
+    var P = S.painel, C = S.C; if (!P || !C) return null;
+    var ev = P.evento, nunca = [], g = [], total = 0;
+    var acs = function(p){ return +p.acessos > 0; };
+    if (ev.status === 'aberto') {
+      var abriu = [];
+      C.pend.forEach(function(p){ (acs(p) ? abriu : nunca).push(p); });     // quem já tem protegido sorteou: não entra
+      g.push({k:'nunca-link', cls:'risco', tit:'Nunca abriram o link', dica:'Confirme se a pessoa veio.', lista:nunca});
+      g.push({k:'abriu-sem-sortear', cls:'alerta', tit:'Abriram, mas não sortearam', dica:'Pode estar com dificuldade. Vá até ela.', lista:abriu});
+      return {modo:'sorteio', grupos:g, total:C.pend.length};
+    }
+    if (ev.status === 'fechado') {
+      var dh = diaHoje(ev);
+      if (!dh) return {modo:'imersao', grupos:[], total:0, fora: diaReal(ev) > ev.dias ? 'Os dias da imersão já passaram. O alerta aparece só durante a imersão.' : 'Hoje ainda não é dia de imersão. O alerta aparece a partir do primeiro dia.'};
+      var hoje = hojeBR(), naoHoje = [], semMimo = [], semAnjo = [];
+      C.ativos.forEach(function(p){
+        if (!acs(p)) { nunca.push(p); return; }
+        var d = p.ultimo_acesso ? new Date(p.ultimo_acesso) : null;
+        if (!d || isNaN(d.getTime()) || dataBR(d) < hoje) { naoHoje.push(p); return; }
+        if (p.protegido == null) semAnjo.push(p);                            // entrou, mas não tem protegido: não consegue dar mimo
+        else if (!C.mimosAnjo[p.id + ':' + ev.dia]) semMimo.push(p);
+      });
+      g.push({k:'nunca-entrou', cls:'risco', tit:'Nunca entraram', dica:'Confirme se a pessoa veio.', lista:nunca});
+      g.push({k:'nao-hoje', cls:'alerta', tit:'Não entraram hoje', dica:'Verifique se está presente hoje.', lista:naoHoje});
+      g.push({k:'sem-mimo', cls:'neutro', tit:'Entraram hoje, sem mimo', dica:'Pode estar com algum problema ou precisando de ajuda.', lista:semMimo});
+      g.push({k:'sem-anjo', cls:'neutro', tit:'Sem anjo sorteado', dica:'Fale com a pessoa e use o Incluir do painel, se precisar.', lista:semAnjo});
+      return {modo:'imersao', grupos:g, total:nunca.length + naoHoje.length + semMimo.length + semAnjo.length};
+    }
+    return null;
+  }
+  function htmlAlerta(){
+    var A = alertaDados(); if (!A) return '';
+    if (A.fora) return '<p class="alerta-ok neutro" role="status">' + esc(A.fora) + '</p>';
+    var sorteio = A.modo === 'sorteio';
+    if (!A.total) return '<p class="alerta-ok" role="status">' + (sorteio ? 'Todos já sortearam.' : 'Todos interagiram hoje.') + '</p>';
+    var hoje = hojeBR(), ontem = ontemBR();
+    var tit = sorteio ? A.total + ' ' + plural(A.total, 'pessoa ainda não sorteou', 'pessoas ainda não sortearam') : A.total + ' ' + plural(A.total, 'pessoa sem interação hoje', 'pessoas sem interação hoje');
+    var h = '<section class="alerta-int" aria-labelledby="alerta-tit"><h3 id="alerta-tit">' + tit + '</h3>' +
+      '<p class="ajuda">' + (sorteio ? 'Vá até essas pessoas: confirme se vieram e se precisam de ajuda para sortear.' : 'Vá até essas pessoas: confirme se vieram e se precisam de ajuda.') + '</p><div class="alerta-grupos">';
+    A.grupos.forEach(function(gr){
+      var n = gr.lista.length; if (!n) return;
+      var todos = !!S.alertaTodos[gr.k], lista = gr.lista.slice().sort(cmpNome), ver = todos ? lista : lista.slice(0, ALERTA_MAX);
+      h += '<div class="alerta-g ' + gr.cls + '" data-grupo="' + gr.k + '"><h4>' + esc(gr.tit) + ' <span class="pill ' + gr.cls + '">' + n + '</span></h4><p class="dica">' + esc(gr.dica) + '</p>' +
+        '<ul' + (todos && n > ALERTA_MAX ? ' class="rola" data-rol="alerta-' + gr.k + '"' : '') + '>' + ver.map(function(p){
+          return '<li><span class="nm">' + esc(p.nome) + '</span><span class="ult">' + esc(fmtUltimo(p, hoje, ontem)) + '</span></li>';
+        }).join('') + '</ul>' +
+        (n > ALERTA_MAX ? '<button type="button" class="link-btn" id="alerta-b-' + gr.k + '" data-acao="alerta-todos" data-g="' + gr.k + '" aria-expanded="' + todos + '">' + (todos ? 'Mostrar só os ' + ALERTA_MAX + ' primeiros' : 'Ver todos (' + n + ')') + '</button>' : '') + '</div>';
+    });
+    return h + '</div></section>';
+  }
+  // número de pessoas no alerta, para o título da aba (0 quando não há alerta ou a tela não é de uma dinâmica)
+  function totalAlerta(){
+    if (S.fase !== 'evento' || !S.painel || !S.C) return 0;
+    try { var A = alertaDados(); return A && !A.fora ? A.total : 0; } catch (e) { return 0; }
+  }
+  function tituloAba(){
+    var n = totalAlerta(), t = n > 0 ? '(' + n + ') ' + TITULO_BASE : TITULO_BASE;
+    if (document.title !== t) document.title = t;
+  }
+
   // ---------- Passo 3: sorteio ----------
   function linhasSorteio(){
     var C = S.C, q = norm(S.busca);
@@ -833,7 +933,7 @@
   }
   function htmlSorteio(){
     var C = S.C, ev = S.painel.evento, st = ev.status, n = C.ativos.length, s = C.sortearam.length;
-    var h = '';
+    var h = st === 'aberto' ? htmlAlerta() : '';
     if (st === 'aberto' || st === 'fechado') {
       h += '<div class="acao-telao"><div class="txt"><b>QR do telão</b><span>Abre numa aba só do QR. Leve essa aba para o projetor: ela não volta para o painel.</span></div>' +
         '<button class="btn pri grande" data-acao="telao">Abrir o QR do telão ↗</button>' +
@@ -914,7 +1014,7 @@
     var C = S.C, ev = S.painel.evento, st = ev.status, d = S.diaSel, anjos = C.sortearam, dh = diaHoje(ev);
     var botoes = '';
     for (var i = 1; i <= ev.dias; i++) botoes += '<button type="button" data-acao="dia" data-dia="' + i + '" aria-pressed="' + (i === d) + '">Dia ' + i + (i === dh ? ' · hoje' : '') + '</button>';
-    var h = '';
+    var h = st === 'fechado' ? htmlAlerta() : '';
     if (st === 'aberto') {
       var np = C.pend.length;
       h += '<div class="aviso-sorteio" role="status"><div class="txt"><b>O sorteio ainda está aberto: ' + (np ? np + ' ' + plural(np, 'pessoa não sorteou', 'pessoas não sortearam') : 'todo mundo já sorteou') + '.</b>' +
@@ -1000,6 +1100,7 @@
     $('conn').className = 'conn' + (logado && S.atualizadoEm ? ' on' : '');
     $('conn-txt').textContent = logado && S.atualizadoEm ? 'Atualizado às ' + fmtHora(S.atualizadoEm) : '';
     $('b-atualizar').hidden = !logado;
+    tituloAba();
   }
   function render(){
     var raiz = $('raiz'), foco = null, rol = {};
@@ -1068,7 +1169,7 @@
     S.codigo = ''; S.painel = null; S.C = null; S.confirmar = null; S.vista = null; S.busca = ''; S.diaSel = null;
     S.pinConf = ''; S.pinErro = ''; S.histTudo = false;
     S.textoLista = ''; S.problemas = []; S.resultadoLista = ''; S.copia = ''; S.novoNome = '';
-    S.incluirAberto = false; S.verRoda = false; S.editar = false;
+    S.incluirAberto = false; S.verRoda = false; S.editar = false; S.alertaTodos = {};
   }
   async function abrirEvento(cod){
     limparDinamica();
@@ -1107,6 +1208,17 @@
     } else if (S.fase === 'inicio') {
       if (await carregarEventos() && S.fase === 'inicio') render();
     }
+  }
+  // aba escondida: busca o painel sem barra, sem aviso e sem deslogar; se falhar, tenta de novo na próxima volta
+  async function atualizarEscondida(){
+    if (S.busy || S.fase !== 'evento' || !S.codigo || !S.pin) return;
+    var meu = ++S.seq, cod = S.codigo;
+    try {
+      var d = await rpc('gamificacao_anjo_t_painel', {p_pin: S.pin, p_evento: cod});
+      if (meu !== S.seq || S.fase !== 'evento' || S.codigo !== cod || !d || !d.evento || !d.pessoas) return;
+      definirPainel(d); S.atualizadoEm = new Date();
+      render();
+    } catch (e) { /* em silêncio */ }
   }
   // depois de uma ação, usa o JSON que a própria função devolveu
   function aplicarPainel(P){
@@ -1323,6 +1435,7 @@
         S[k].dias = Math.max(1, Math.min(30, nd)); render(); break;
       case 'dia': S.diaSel = parseInt(b.getAttribute('data-dia'), 10); S.confirmar = null; render(); break;
       case 'roda': S.verRoda = !S.verRoda; render(); break;
+      case 'alerta-todos': var gk = b.getAttribute('data-g'); S.alertaTodos[gk] = !S.alertaTodos[gk]; render(); break;
       case 'incluir-abrir': S.incluirAberto = !S.incluirAberto; S.confirmar = null; renderComFoco(); break;
       case 'incluir-fechar': S.incluirAberto = false; render(); break;
       case 'pedir': S.confirmar = {t: b.getAttribute('data-t'), cod: b.getAttribute('data-cod') || '', onde: b.getAttribute('data-onde') || ''}; S.pinConf = ''; S.pinErro = ''; renderComFoco(); break;
@@ -1370,6 +1483,8 @@
 
   // atualização automática: só com a aba visível
   setInterval(function(){ if (document.visibilityState === 'visible') atualizar(); }, AUTO_MS);
+  // aba escondida: a cada 3 min, só para manter o número do título da aba em dia
+  setInterval(function(){ if (document.visibilityState === 'hidden') atualizarEscondida(); }, AUTO_OCULTA_MS);
   document.addEventListener('visibilitychange', function(){
     if (document.visibilityState === 'visible' && S.atualizadoEm && Date.now() - S.atualizadoEm.getTime() > AUTO_MS) atualizar();
   });
