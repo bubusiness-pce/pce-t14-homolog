@@ -588,7 +588,7 @@ document.querySelectorAll("#q-escala button").forEach(b => b.onclick = () => res
 $("#q-voltar").onclick = () => { if(estado.atual > 0){ estado.atual--; mostrarPergunta(); guardar(); } };
 document.addEventListener("keydown", e => {
   if($("#tela-quiz").hidden || e.ctrlKey || e.metaKey || e.altKey) return;
-  if(/^[1-5]$/.test(e.key)) responder(Number(e.key));
+  if(/^[1-5]$/.test(e.key)){ e.stopImmediatePropagation(); responder(Number(e.key)); }
 });
 
 // Cálculo. Motor 2 (03/11/2026) para o teste novo; Motor 1 (calcularV1) para as respostas antigas, que não podem mudar de resultado.
