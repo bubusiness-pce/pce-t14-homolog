@@ -36,26 +36,8 @@ button{font:inherit}
 .voltar:hover{color:var(--ivory)}
 .prog{height:3px;background:var(--ln);border-radius:2px;overflow:hidden;margin:8px 0 26px}
 .prog>i{display:block;height:100%;background:var(--gold);transition:width .45s ease}
-/* Como funciona (abertura) */
-.como{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr);gap:8px;align-items:stretch;margin:26px 0 8px}
-.como .seta{display:flex;align-items:center;justify-content:center;color:var(--gold2);font-size:20px}
-.passo{background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px;min-width:0}
-.passo .pn{font-family:var(--display);color:var(--gold);font-size:22px;line-height:1}
-.passo .pt{font-weight:600;color:var(--ivory);font-size:15px;margin:4px 0 10px}
-.passo .lin{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--tx);padding:5px 0;border-top:1px solid var(--ln)}
-.passo .lin b{color:var(--ivory);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
-.passo .lin.dest{color:var(--gold)}
-.passo .lin.dest b{color:var(--gold);font-family:var(--display);font-size:20px;font-weight:600}
-.legenda{font-size:13px;color:var(--mu2);margin:6px 0 0}
-.serve{margin-top:22px;background:var(--s1);border:1px solid var(--gold2);border-radius:14px;overflow:hidden}
-.serve .sv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:13px 16px;border-top:1px solid var(--ln)}
-.serve .sv:first-child{border-top:none}
-.serve .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:500;padding-top:2px}
-.serve .v{font-size:15px;color:var(--ivory);line-height:1.5}
-@media (max-width:560px){.serve .sv{grid-template-columns:1fr;gap:4px}}
-@media (max-width:640px){.como{grid-template-columns:1fr}.como .seta{transform:rotate(90deg);height:18px}}
 .opcoes{display:grid;gap:10px;margin-top:24px}
-.op,.serv,.exemplo{position:relative;overflow:hidden;width:100%;text-align:left;background:var(--s1);border:1px solid var(--ln2);border-radius:14px;color:var(--ivory);cursor:pointer;transition:transform .18s,border-color .18s,background .18s}
+.op,.serv{position:relative;overflow:hidden;width:100%;text-align:left;background:var(--s1);border:1px solid var(--ln2);border-radius:14px;color:var(--ivory);cursor:pointer;transition:transform .18s,border-color .18s,background .18s}
 .op{display:flex;gap:14px;align-items:flex-start;padding:16px;min-height:60px}
 .op .letra{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--gold2);color:var(--gold);display:grid;place-items:center;font-size:13px;font-weight:600;transition:background .2s,color .2s}
 .op .t{display:block;font-weight:500;font-size:16px;color:var(--ivory)}
@@ -64,9 +46,9 @@ button{font:inherit}
 .op.sel .letra{background:var(--gold);color:var(--bg)}
 @media (min-width:640px){.opcoes.duas{grid-template-columns:1fr 1fr}}
 @media (hover:hover){
-  .op:hover,.serv:hover,.exemplo:hover{transform:translateY(-2px);border-color:var(--gold2)}
-  .op::before,.serv::before,.exemplo::before{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(217,184,114,.11),transparent 60%);opacity:0;transition:opacity .2s;pointer-events:none}
-  .op:hover::before,.serv:hover::before,.exemplo:hover::before{opacity:1}
+  .op:hover,.serv:hover{transform:translateY(-2px);border-color:var(--gold2)}
+  .op::before,.serv::before{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(217,184,114,.11),transparent 60%);opacity:0;transition:opacity .2s;pointer-events:none}
+  .op:hover::before,.serv:hover::before{opacity:1}
 }
 .op:active,.serv:active{transform:scale(.98)}
 .ripple{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:rgba(217,184,114,.42);pointer-events:none;animation:rp .6s ease-out forwards}
@@ -103,11 +85,6 @@ button{font:inherit}
 .btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold2)}
 .btn.ghost:hover{background:rgba(217,184,114,.08)}
 .btn.sm{min-height:44px;padding:10px 16px;font-size:15px}
-.exemplo{display:block;padding:16px;margin-top:14px}
-.exemplo .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu2)}
-.exemplo .t{display:block;font-family:var(--display);font-size:24px;color:var(--ivory);margin-top:4px}
-.exemplo .d{display:block;font-size:14px;color:var(--mu)}
-.exemplo .d b{color:var(--gold);font-weight:500}
 .cat{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu2);margin:26px 0 10px}
 .lista-serv{display:grid;gap:8px}
 .serv{display:flex;gap:12px;align-items:flex-start;padding:13px 14px}
@@ -139,21 +116,11 @@ details.extra summary{cursor:pointer;color:var(--mu);font-size:14px;padding:6px 
 .fato.ok{border-color:var(--gold2)}
 .fato .ft{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .fato .ft b{font-size:15px;font-weight:600;color:var(--ivory)}
-.fato .ft span{font-size:12px;color:var(--gold);white-space:nowrap}
 .fato .fd{font-size:13px;color:var(--mu);margin:2px 0 0}
 .fato .chips{margin-top:10px}
 .fato .chip{min-height:40px;padding:8px 14px;font-size:14px}
-.medidor{position:relative;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
-.medidor>i{position:absolute;left:0;top:0;bottom:0;background:var(--gold);border-radius:5px;transition:width .3s}
-.medidor>s{position:absolute;top:0;bottom:0;width:2px;background:var(--s2)}
-.niveis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;font-size:11px;color:var(--mu2);margin-top:6px}
-.niveis span.on{color:var(--gold);font-weight:600}
 .barra .info b{color:var(--gold);font-weight:600}
 /* Devolutiva */
-.manchete{background:var(--s2);border:1px solid var(--gold);border-radius:16px;padding:18px 20px}
-.manchete .mk{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:500}
-.manchete .mt{font-family:var(--display);font-size:clamp(24px,5vw,34px);line-height:1.22;color:var(--ivory);margin-top:8px;text-wrap:balance}
-.manchete .mt b{color:var(--gold);font-weight:600;white-space:nowrap}
 .frase{background:var(--s1);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:12px 16px;font-size:16px;line-height:1.5;color:var(--ivory);font-style:italic}
 .frase small{display:block;font-style:normal;color:var(--mu2);font-size:12px;margin-top:8px}
 details.conta{margin-top:44px;border-top:1px solid var(--ln);padding-top:6px}
@@ -163,24 +130,6 @@ details.conta>summary .sec-t{font-size:22px;color:var(--mu)}
 details.conta[open]>summary .sec-t{color:var(--ivory)}
 details.conta .sec{margin-top:28px}
 .sub-t{font-family:var(--display);color:var(--ivory);font-size:22px;font-weight:500;margin:0 0 10px}
-.nivel-card{background:var(--s2);border:1px solid var(--gold);border-radius:14px;padding:16px}
-.nivel-card .nk{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
-.nivel-card .nv{font-family:var(--display);font-size:clamp(30px,6vw,40px);color:var(--ivory);line-height:1.1;margin:4px 0 2px}
-.nivel-card .np{font-size:14px;color:var(--mu);margin-bottom:12px}
-.mapa{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-top:12px}
-.mi{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:baseline;background:var(--s1);border:1px solid var(--ln2);border-radius:10px;padding:9px 12px;font-size:14px}
-.mi .ic{font-size:15px;text-align:center}
-.mi.tem .ic{color:var(--gold)}
-.mi.meio .ic{color:var(--warn)}
-.mi.nao .ic{color:var(--mu2)}
-.mi .tx{color:var(--ivory)}
-.mi .tx small{display:block;color:var(--mu);font-size:12px}
-.mi .pt{color:var(--mu);font-size:12px;white-space:nowrap}
-.subir{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.subir li{display:flex;justify-content:space-between;gap:12px;background:var(--s1);border:1px solid var(--ln2);border-radius:10px;padding:10px 12px;font-size:15px;color:var(--tx)}
-.subir li b{color:var(--gold);white-space:nowrap;font-weight:600}
-.alvo{margin-top:12px;font-size:15px;color:var(--ivory)}
-.alvo b{color:var(--gold);font-family:var(--display);font-size:22px;font-weight:600}
 .cab .sub{color:var(--mu);font-size:15px;margin:0}
 .aviso-ex{margin-top:16px;font-size:14px;color:var(--tx);background:var(--s1);border:1px solid var(--ln2);border-radius:12px;padding:12px 14px}
 .sec{margin-top:40px}
@@ -188,14 +137,6 @@ details.conta .sec{margin-top:28px}
 .sec-n{font-family:var(--display);color:var(--gold);font-size:22px;font-variant-numeric:tabular-nums}
 .sec-t{font-family:var(--display);color:var(--ivory);font-size:26px;font-weight:500;line-height:1.15;margin:0}
 .sec-d{color:var(--mu);font-size:14px;margin:-6px 0 14px}
-.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.tile{background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px;min-width:0}
-.tile .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu2)}
-.tile .v{font-family:var(--display);font-size:clamp(26px,4.6vw,32px);color:var(--ivory);line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tile .s{font-size:13px;color:var(--mu);margin-top:4px}
-.tile.dest{border-color:var(--gold);background:var(--s2)}
-.tile.dest .k{color:var(--gold)}
-@media (max-width:520px){.tiles{grid-template-columns:1fr}.tile{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}.tile .k{grid-column:1}.tile .v{grid-column:2;grid-row:1/3;margin:0}.tile .s{grid-column:1;margin:0}}
 .regua{margin-top:14px;background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px 16px}
 .rr{margin:12px 0}
 .rr .lb{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--tx)}
@@ -274,13 +215,6 @@ details.fontes p{margin:10px 0 0}
 .pg .ps2{display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--p-ln);padding-bottom:6px;margin:26px 0 12px}
 .pg .ps2 b{font-family:var(--display);color:var(--p-gold);font-size:18px;font-weight:600}
 .pg .ps2 span{font-family:var(--display);color:var(--p-ink);font-size:22px;font-weight:600}
-.pg .tl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.pg .tl>div{border:1px solid var(--p-ln);border-radius:10px;padding:12px;background:var(--p-soft)}
-.pg .tl>div.d{border-color:var(--p-gold);background:#fff}
-.pg .tl .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--p-mu)}
-.pg .tl .d .k{color:var(--p-gold)}
-.pg .tl .v{font-family:var(--display);font-size:26px;font-weight:600;color:var(--p-ink);margin-top:4px}
-.pg .tl .s{font-size:11px;color:var(--p-mu)}
 .pg .rg{margin-top:12px;border:1px solid var(--p-ln);border-radius:10px;padding:10px 14px}
 .pg .rg .rr .lb{color:var(--p-tx);font-size:12px}
 .pg .rg .rr .lb span:last-child{color:var(--p-mu)}
@@ -307,16 +241,6 @@ details.fontes p{margin:10px 0 0}
 .pg .pp.f .v{font-family:var(--display);font-size:20px;font-weight:600;color:var(--p-gold)}
 .pg ul{margin:0;padding-left:18px}
 .pg li{margin:0 0 6px}
-.pg .nvl{display:flex;justify-content:space-between;align-items:baseline;border:1px solid var(--p-gold);border-radius:10px;padding:10px 14px}
-.pg .nvl b{font-family:var(--display);font-size:24px;color:var(--p-ink);font-weight:600}
-.pg .nvl span{color:var(--p-mu);font-size:12px}
-.pg .mp{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;font-size:11.5px;margin-top:8px}
-.pg .mp div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--p-ln);padding:4px 0;color:var(--p-tx)}
-.pg .mp div span:last-child{color:var(--p-mu);white-space:nowrap}
-.pg .manch{border:1px solid var(--p-gold);border-radius:10px;padding:14px 16px;margin-top:18px;background:var(--p-soft)}
-.pg .mk-p{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--p-gold)}
-.pg .mt-p{font-family:var(--display);font-size:22px;line-height:1.25;color:var(--p-ink);margin-top:6px}
-.pg .mt-p b{color:var(--p-gold);font-weight:600}
 .pg .rod{position:absolute;left:56px;right:56px;bottom:22px;font-size:10px;color:var(--p-mu);border-top:1px solid var(--p-ln);padding-top:8px;display:flex;justify-content:space-between}
 .consent{display:flex;gap:12px;align-items:flex-start;margin-top:22px;font-size:14px;line-height:1.5;color:var(--tx);cursor:pointer}
 .consent input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--gold);cursor:pointer}
@@ -326,6 +250,71 @@ details.fontes p{margin:10px 0 0}
 .envio.mal{color:var(--warn)}
 .envio .btn{min-height:36px;padding:6px 14px;font-size:14px}
 .zap-dica{font-size:13px;color:var(--mu2);margin:6px 0 0}
+/* Tela inicial curta */
+.tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:26px 0 4px}
+.tres .p{background:var(--s1);border:1px solid var(--ln2);border-radius:14px;padding:14px 8px 12px;text-align:center;min-width:0}
+.tres .ic{display:grid;place-items:center;width:42px;height:42px;margin:0 auto 10px;border-radius:50%;border:1px solid var(--gold2);color:var(--gold)}
+.tres svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tres .t{display:block;font-size:13px;line-height:1.35;color:var(--ivory)}
+.link-ex{display:block;text-align:center;margin:14px auto 0;padding:12px;min-height:44px;color:var(--mu);font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.link-ex:hover{color:var(--gold)}
+.pbm{height:4px;background:var(--ln);border-radius:2px;margin-top:6px;overflow:hidden}
+.pbm i{display:block;height:100%;background:var(--gold);transition:width .3s}
+/* Devolutiva: a solução primeiro. Os tokens --k-* valem na tela e no papel do PDF (o .pg troca os valores para o fundo branco). */
+:root{--k-card:var(--s1);--k-card2:var(--s2);--k-ln:var(--ln2);--k-ink:var(--ivory);--k-tx:var(--tx);--k-mu:var(--mu);--k-gold:var(--gold);--k-gold2:var(--gold2);--k-trk:var(--bg);--k-soft:rgba(217,184,114,.22)}
+.pg{--k-card:#F7F4ED;--k-card2:#FFFFFF;--k-ln:#E4DED1;--k-ink:#0B1426;--k-tx:#2B3445;--k-mu:#6B7280;--k-gold:#8C6A2B;--k-gold2:#C9A45C;--k-trk:#EFE9DB;--k-soft:#EADFC6}
+.preco{background:var(--k-card2);border:1px solid var(--k-gold);border-radius:16px;padding:20px 20px 18px}
+.preco .kick{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--k-gold);font-weight:500;margin-bottom:6px}
+.preco .pv{font-family:var(--display);font-weight:600;font-size:clamp(46px,14vw,68px);line-height:1;color:var(--k-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.preco .pu{font-size:15px;color:var(--k-mu);margin-top:6px}
+.preco .pd{font-size:14px;color:var(--k-tx);margin-top:12px;line-height:1.45}
+.preco .pd span{display:block;color:var(--k-mu)}
+.preco .pn{font-size:14px;color:var(--k-tx);margin:14px 0 0;line-height:1.5}
+.fbar{margin-top:20px}
+.trk2{position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--k-soft),var(--k-gold))}
+.trk2 i{position:absolute;top:-3px;width:18px;height:18px;border-radius:50%;box-sizing:border-box}
+.trk2 .e1{left:0;border:2px solid var(--k-gold);background:var(--k-card2)}
+.trk2 .e2{right:0;background:var(--k-gold);border:2px solid var(--k-card2)}
+.lg2{display:flex;justify-content:space-between;gap:12px;margin-top:10px}
+.lg2 span{display:block;min-width:0}
+.lg2 .d{text-align:right}
+.lg2 small{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--k-mu)}
+.lg2 b{display:block;font-family:var(--display);font-size:24px;font-weight:600;line-height:1.15;color:var(--k-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lg2 .d b{color:var(--k-gold)}
+.fbar .nun{margin:10px 0 0;font-size:14px;color:var(--k-tx)}
+.deg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:end}
+.dg{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
+.dg .pin{display:block;height:16px;text-align:center}
+.dg.atual .pin::before{content:"";display:inline-block;border:7px solid transparent;border-top:9px solid var(--k-gold);border-bottom:0}
+.dg .blk{display:block;border-radius:8px 8px 4px 4px;background:var(--k-card);border:1px solid var(--k-ln)}
+.dg.feito .blk{background:var(--k-soft);border-color:var(--k-gold2)}
+.dg.atual .blk{background:var(--k-gold);border-color:var(--k-gold)}
+.dg.prox .blk{border:1px dashed var(--k-gold2)}
+.dg .nm{display:block;font-size:12px;line-height:1.25;color:var(--k-mu);margin-top:8px;text-align:center}
+.dg.atual .nm{color:var(--k-ink);font-weight:600}
+.deg-t{margin:16px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;color:var(--k-mu);font-size:14px}
+.deg-t b{font-family:var(--display);font-size:28px;font-weight:600;color:var(--k-gold);line-height:1.1}
+.deg-d{margin:4px 0 0;font-size:15px;color:var(--k-tx)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{display:inline-flex;gap:8px;align-items:baseline;max-width:100%;border:1px solid var(--k-gold2);background:var(--k-card);color:var(--k-ink);border-radius:999px;padding:7px 14px;font-size:14px;line-height:1.35}
+.tag i{font-style:normal;color:var(--k-gold)}
+.tags-c .tag{border-style:dashed;border-color:var(--k-ln);background:transparent;color:var(--k-mu)}
+.sub-g{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--k-mu);margin:18px 0 8px}
+.subir{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.subir li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:center;background:var(--k-card);border:1px solid var(--k-ln);border-radius:12px;padding:11px 14px;font-size:15px;color:var(--k-tx);line-height:1.4}
+.subir .n{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--k-gold2);color:var(--k-gold);font-size:13px;font-weight:600}
+.alvo{margin:14px 0 0;font-size:15px;color:var(--k-ink);line-height:1.5}
+.alvo b{color:var(--k-gold);font-weight:600}
+.alvo b.big{font-family:var(--display);font-size:24px;white-space:nowrap}
+.pg .preco{padding:16px 20px 14px}
+.pg .preco .pv{font-size:50px}
+.pg .preco .pn{margin-top:10px}
+.pg .fbar{margin-top:14px}
+.pg .deg-t{margin-top:10px}
+.pg .ps2{margin:16px 0 10px}
+.pg .alvo b.big{font-size:20px}
+.pg .subir li{margin:0;padding:8px 12px}
+.pg .tag{margin:0}
 </style>
 </head>
 <body>
@@ -366,21 +355,20 @@ var COMPRADORES = {
   pequena:{t:'Pequena empresa', d:'Faturamento de até cerca de R$ 4,8 milhões por ano'},
   media:{t:'Média ou grande empresa', d:'Faturamento acima disso'}
 };
-/* O que o aluno já construiu. Pontos e cortes: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos. */
+/* O que o aluno já construiu. Cada opção: texto, pontos, estado (t tem, c em construção, n não) e etiqueta da devolutiva. Pontos e cortes: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos. */
 var FATOS = [
-  {id:'metodo', t:'Método próprio', d:'Com nome e etapas, que você já aplica com clientes', ops:[['Tenho',2],['Em construção',1],['Não',0]], sobe:'Estruturar o método próprio, com nome e etapas'},
-  {id:'mentoria', t:'Mentoria', d:'O produto que você vai precificar', ops:[['Estruturada e já vendida',2],['Já vendi, sem estrutura',1],['Em construção',1],['Ainda não',0]], sobe:'Estruturar a mentoria e vender as primeiras'},
-  {id:'palestra', t:'Palestra', d:'', ops:[['Faço com frequência',2],['Já palestrei',1],['Nunca',0]], sobe:'Palestrar com frequência'},
-  {id:'livro', t:'Livro', d:'', ops:[['Publicado',2],['Tema e estrutura prontos',1],['Não',0]], sobe:'Publicar o livro'},
-  {id:'anos', t:'Anos de mercado na sua área', d:'', ops:[['20 ou mais',2],['10 a 19',1],['Menos de 10',0]], sobe:null},
-  {id:'posic', t:'Posicionamento digital', d:'Na rede em que o seu cliente está', ops:[['Posto com frequência e tenho público',2],['Tenho perfil, mas parado',1],['Não tenho',0]], sobe:'Ativar o posicionamento digital'},
-  {id:'clientes', t:'Clientes com resultado comprovado', d:'Case com número ou depoimento', ops:[['20 ou mais',2],['1 a 19',1],['Nenhum ainda',0]], sobe:'Registrar cases com número e depoimentos'},
-  {id:'equipe', t:'Equipe ou sócio', d:'', ops:[['Sim',1],['Não',0]], sobe:'Montar equipe ou sociedade para entregar'},
-  {id:'credencial', t:'Prêmio, certificação ou registro profissional', d:'', ops:[['Sim',1],['Não',0]], sobe:'Conquistar certificação ou prêmio do seu setor'},
-  {id:'midia', t:'Mídia e convites', d:'Entrevista, evento, podcast', ops:[['Sim',1],['Não',0]], sobe:'Aceitar convites de mídia e eventos'}
+  {id:'metodo', t:'Método próprio', d:'Com nome e etapas, que você já aplica com clientes', ops:[['Tenho',2,'t','Método próprio'],['Em construção',1,'c','Método próprio'],['Não',0,'n','']], sobe:'Estruturar o método próprio, com nome e etapas'},
+  {id:'mentoria', t:'Mentoria', d:'O produto que você vai precificar', ops:[['Estruturada e já vendida',2,'t','Mentoria estruturada e já vendida'],['Já vendi, sem estrutura',1,'t','Mentoria já vendida'],['Em construção',1,'c','Mentoria'],['Ainda não',0,'n','']], sobe:'Estruturar a mentoria e vender as primeiras', sobeOp:{1:'Estruturar a mentoria que você já vende'}},
+  {id:'palestra', t:'Palestra', d:'', ops:[['Faço com frequência',2,'t','Palestras com frequência'],['Já palestrei',1,'t','Já palestrei'],['Nunca',0,'n','']], sobe:'Palestrar com frequência'},
+  {id:'livro', t:'Livro', d:'', ops:[['Publicado',2,'t','Livro publicado'],['Tema e estrutura prontos',1,'c','Livro: tema e estrutura prontos'],['Não',0,'n','']], sobe:'Publicar o livro'},
+  {id:'anos', t:'Anos de mercado na sua área', d:'', ops:[['20 ou mais',2,'t','20 anos ou mais de mercado'],['10 a 19',1,'t','10 a 19 anos de mercado'],['Menos de 10',0,'n','']], sobe:null},
+  {id:'posic', t:'Posicionamento digital', d:'Na rede em que o seu cliente está', ops:[['Posto com frequência e tenho público',2,'t','Posicionamento digital ativo'],['Tenho perfil, mas parado',1,'c','Perfil digital'],['Não tenho',0,'n','']], sobe:'Ativar o posicionamento digital'},
+  {id:'clientes', t:'Clientes com resultado comprovado', d:'Case com número ou depoimento', ops:[['20 ou mais',2,'t','20 ou mais clientes com resultado'],['1 a 19',1,'t','Clientes com resultado comprovado'],['Nenhum ainda',0,'n','']], sobe:'Registrar cases com número e depoimentos', sobeOp:{2:'Conquistar os primeiros clientes com resultado e registrar os cases'}},
+  {id:'equipe', t:'Equipe ou sócio', d:'', ops:[['Sim',1,'t','Equipe ou sócio'],['Não',0,'n','']], sobe:'Montar equipe ou sociedade para entregar'},
+  {id:'credencial', t:'Prêmio, certificação ou registro profissional', d:'', ops:[['Sim',1,'t','Prêmio, certificação ou registro'],['Não',0,'n','']], sobe:'Conquistar certificação ou prêmio do seu setor'},
+  {id:'midia', t:'Mídia e convites', d:'Entrevista, evento, podcast', ops:[['Sim',1,'t','Mídia e convites'],['Não',0,'n','']], sobe:'Aceitar convites de mídia e eventos'}
 ];
 var PRIORIDADE = ['livro','posic','metodo','mentoria','palestra','clientes','midia','credencial','equipe'];
-var MAXPTS = FATOS.reduce(function(a,f){ return a+f.ops[0][1]; },0);
 /* Nomes medem quanto do valor já está visível ao mercado, não quanto o aluno vale. Palavras finais: Carlos e Sofia. */
 var NIVEIS = [
   {n:'Valor escondido', de:0, ate:5, f:0.15, d:'o mercado ainda não vê o que você tem'},
@@ -479,7 +467,7 @@ var CUIDADOS_EMPRESA = ['Vendendo para empresa, escreva no contrato o escopo, o 
 var CUIDADO_NOTA = 'Uma nota só, com repasse aos parceiros, paga imposto também sobre o repasse. Pergunte ao seu contador se cada parceiro pode emitir a nota direto ao cliente.';
 var ANTES = [
   'Teste o valor em 3 a 5 conversas de venda. O preço sugerido ainda não é um preço validado.',
-  'Leve a sua frase de autoridade e os fatos do seu mapa para a conversa. É com eles que o cliente entende o preço.',
+  'Leve a sua frase de autoridade e os fatos que sustentam o seu preço para a conversa. É com eles que o cliente entende o preço.',
   'A conta supõe pagamento no Pix. Parcelado no cartão custa mais: em 12x a operadora leva de 12% a 21%. Plataformas como Hotmart e Kiwify cobram cerca de 9% a 10% por venda.',
   'O custo para vender (tráfego, página de vendas própria, closer) não entra nesta conta. A comissão de 7% cobre só quem vende.'
 ];
@@ -510,8 +498,8 @@ function horasTotal(){ if(s.horasManual!=null) return s.horasManual; return (s.e
 function ehGrupo(){ return !!(s.produto && PRODUTOS[s.produto].g); }
 function pontos(){ return FATOS.reduce(function(a,f){ var i=s.fatos[f.id]; return a+(i!=null?f.ops[i][1]:0); },0); }
 function nivelDe(p){ for(var i=0;i<NIVEIS.length;i++){ if(p>=NIVEIS[i].de&&p<=NIVEIS[i].ate) return NIVEIS[i]; } return NIVEIS[NIVEIS.length-1]; }
-function horaMercado(){ var nv=nivelDe(pontos()); return Math.round(HORA_REGUA[0]*Math.pow(HORA_REGUA[1]/HORA_REGUA[0],nv.f)/10)*10; }
-function horaUsada(){ var m=horaMercado(); return s.horaInformada>0?Math.max(s.horaInformada,m):m; }
+function horaMercado(nvx){ var nv=nvx||nivelDe(pontos()); return Math.round(HORA_REGUA[0]*Math.pow(HORA_REGUA[1]/HORA_REGUA[0],nv.f)/10)*10; }
+function horaUsada(nvx){ var m=horaMercado(nvx); return s.horaInformada>0?Math.max(s.horaInformada,m):m; }
 function parceirosLista(){
   var L=[];
   SERV.forEach(function(d){ var x=s.sel[d.id]; if(x) L.push({id:d.id,nome:d.nome,det:d.det,un:d.un,qtd:x.qtd,valor:x.valor,esc:d.esc,ref:d}); });
@@ -537,16 +525,16 @@ function tiers(){
 }
 function faixaRegua(){ var ts=tiers(); return [Math.min.apply(null,ts.map(function(t){return t.min;})), Math.max.apply(null,ts.map(function(t){return t.max;}))]; }
 function precoNivel(nv){ var r=faixaRegua(); return r[0]*Math.pow(r[1]/r[0], nv.f); }
-function calcular(){
-  var g=ehGrupo(), N=g?Math.max(1,s.pessoas||1):1, H=horasTotal(), hora=horaUsada(), Tw=H*hora/N;
+function calcular(nvx){
+  var g=ehGrupo(), N=g?Math.max(1,s.pessoas||1):1, H=horasTotal(), hora=horaUsada(nvx), Tw=H*hora/N;
   var itens=parceirosLista().map(function(p){ var tot=p.qtd*p.valor; p.tot=tot; p.pp=(g&&p.esc==='turma')?tot/N:tot; return p; });
   var Cp=itens.reduce(function(a,p){return a+p.pp;},0);
-  var pts=pontos(), nv=nivelDe(pts), pNivel=precoNivel(nv);
+  var pts=pontos(), nv=nvx||nivelDe(pts), pNivel=precoNivel(nv);
   var piso=(Cp+Tw)/K, custoLucro=(Cp*(1+MARGEM)+Tw)/K, base=Math.max(pNivel,custoLucro);
   var stp = piso>=1000?100:10, vit=arred(base);
   if(vit<piso){ var st=base>=10000?1000:(base>=1000?100:10); vit=Math.ceil((base+st/10)/st)*st-st/10; }
   var pisoR=Math.min(Math.ceil(piso/stp)*stp,vit);
-  return {g:g,N:N,H:H,hora:hora,horaM:horaMercado(),T:Tw,itens:itens,Cp:Cp,pts:pts,nv:nv,pNivel:pNivel,piso:piso,custoLucro:custoLucro,sug:base,origem:(pNivel>=custoLucro?'nivel':'custo'),vit:vit,pisoR:pisoR,regua:faixaRegua(),cobra:s.cobra,gap:(s.cobra>0?vit-s.cobra:null)};
+  return {g:g,N:N,H:H,hora:hora,horaM:horaMercado(nvx),T:Tw,itens:itens,Cp:Cp,pts:pts,nv:nv,pNivel:pNivel,piso:piso,custoLucro:custoLucro,sug:base,origem:(pNivel>=custoLucro?'nivel':'custo'),vit:vit,pisoR:pisoR,regua:faixaRegua(),cobra:s.cobra,gap:(s.cobra>0?vit-s.cobra:null)};
 }
 function seCobrar(c,P){
   var rec=P*c.N, liq=rec*K, parc=c.Cp*c.N, sobra=liq-parc, ph=c.H>0?sobra/c.H:0;
@@ -558,8 +546,8 @@ function proximoNivel(c){
   var cand=FATOS.filter(function(f){ return f.sobe && s.fatos[f.id]!=null && f.ops[s.fatos[f.id]][1]<f.ops[0][1]; })
     .map(function(f){ return {f:f, ganho:f.ops[0][1]-f.ops[s.fatos[f.id]][1]}; })
     .sort(function(a,b){ return (b.ganho-a.ganho)||(PRIORIDADE.indexOf(a.f.id)-PRIORIDADE.indexOf(b.f.id)); });
-  var soma=0; for(var k=0;k<cand.length&&soma<falta;k++){ passos.push(cand[k]); soma+=cand[k].ganho; }
-  return {alvo:alvo, falta:falta, passos:passos, alcanca:soma>=falta, preco:precoNivel(alvo)};
+  var soma=0; for(var k=0;k<cand.length&&soma<falta&&passos.length<3;k++){ passos.push(cand[k]); soma+=cand[k].ganho; }
+  return {alvo:alvo, falta:falta, passos:passos, alcanca:soma>=falta, preco:precoNivel(alvo), vit:calcular(alvo).vit};
 }
 /* Frase de autoridade: só com os fatos marcados como "tenho". */
 function fraseAutoridade(){
@@ -588,7 +576,6 @@ function durTxt(d){ return d===1.5?'1h30':d===8?'dia inteiro (8 h)':(d+' h'); }
 function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function num(v){ var n=parseFloat(String(v).replace(/\./g,'').replace(',','.')); return isFinite(n)?n:0; }
 function prodNome(){ return s.prodNome.trim() || (s.produto?PRODUTOS[s.produto].t:'Sua mentoria'); }
-function ptsTxt(p){ return p===1?'1 ponto':p+' pontos'; }
 
 /* ---------- Interação ---------- */
 function ripple(e,el){
@@ -598,7 +585,7 @@ function ripple(e,el){
   el.appendChild(sp); setTimeout(function(){sp.remove();},650);
 }
 app.addEventListener('pointermove',function(e){
-  var el=e.target.closest&&e.target.closest('.op,.serv,.exemplo'); if(!el) return;
+  var el=e.target.closest&&e.target.closest('.op,.serv'); if(!el) return;
   var r=el.getBoundingClientRect(); el.style.setProperty('--mx',(e.clientX-r.left)+'px'); el.style.setProperty('--my',(e.clientY-r.top)+'px');
 });
 var ocupado=false;
@@ -646,55 +633,32 @@ function ligarOutro(id,valida,depois){
   ok.onclick=confirma; inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confirma(); } });
   inp.addEventListener('input',function(){ er.textContent=''; });
 }
-function htmlMedidor(p,semNomes){
-  var nv=nivelDe(p), w=(p/MAXPTS*100).toFixed(1);
-  var cortes=NIVEIS.slice(1).map(function(n){ return '<s style="left:'+((n.de-0.5)/MAXPTS*100).toFixed(1)+'%"></s>'; }).join('');
-  return '<div class="medidor" aria-hidden="true"><i style="width:'+w+'%"></i>'+cortes+'</div>'+(semNomes?'':'<div class="niveis">'+NIVEIS.map(function(n){ return '<span'+(n===nv?' class="on"':'')+'>'+n.n+'</span>'; }).join('')+'</div>');
-}
-
 /* ---------- Telas ---------- */
-function htmlComo(){
-  return '<div class="como" aria-label="Como funciona, com o exemplo do João">'+
-    '<div class="passo"><div class="pn">1</div><div class="pt">Você conta</div>'+
-      '<div class="lin"><span>O que já construiu: método, 40 clientes com resultado, palestra, 15 anos</span><b>10 de 17 pontos</b></div>'+
-      '<div class="lin"><span>Quanto cobra hoje</span><b>R$ 4.000</b></div>'+
-      '<div class="lin"><span>O que vende e para quem: mentoria para produtores (pequena empresa)</span><b>régua R$ 3 a 63 mil</b></div></div>'+
-    '<div class="seta" aria-hidden="true">→</div>'+
-    '<div class="passo"><div class="pn">2</div><div class="pt">A ferramenta faz a conta</div>'+
-      '<div class="lin"><span>10 pontos = valor visível, ponto da régua</span><b>R$ 21.700</b></div>'+
-      '<div class="lin"><span>Sua hora pelo mercado, no seu nível</span><b>R$ 670</b></div>'+
-      '<div class="lin"><span>Mínimo: 12 h × R$ 670 ÷ 0,77</span><b>R$ 10.500</b></div></div>'+
-    '<div class="seta" aria-hidden="true">→</div>'+
-    '<div class="passo"><div class="pn">3</div><div class="pt">Você recebe</div>'+
-      '<div class="lin dest"><span>Você cobra R$ 4.000. Vale R$ 21.900. Ficam na mesa</span><b>R$ 17.900</b></div>'+
-      '<div class="lin"><span>Seu nível e o mapa do que já tem</span><b>valor visível</b></div>'+
-      '<div class="lin"><span>Sua frase de autoridade e o que falta para subir</span><b>pronta</b></div></div>'+
-  '</div><p class="legenda">Exemplo: João, produtor rural há 15 anos, mentora outros produtores e cobra R$ 4 mil.</p>';
-}
+var ICONES = {
+  marcar:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 14l2 2 4-4"/></svg>',
+  preco:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.2"/></svg>',
+  subir:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h5v-5h5v-5h5V6"/><path d="M15 6l3-3 3 3"/></svg>'
+};
 function telaCapa(){
   if(!TURMA){ telaSemTurma(); return; }
   app.innerHTML='<div class="tela">'+
   '<p class="eyebrow">Mentor de Líderes · precificação</p>'+
-  '<h1 class="titulo">Quanto vale o que você já construiu</h1>'+
-  '<div class="serve">'+
-    '<div class="sv"><span class="k">Objetivo</span><span class="v">Mostrar, com fatos, quanto vale o que você já construiu e transformar isso no preço da sua mentoria.</span></div>'+
-    '<div class="sv"><span class="k">O problema</span><span class="v">Muito aluno já tem método, palestra, anos de mercado e clientes com resultado, e mesmo assim cobra pouco ou não sabe quanto cobrar.</span></div>'+
-    '<div class="sv"><span class="k">Como</span><span class="v">Você marca fatos (tem, está construindo ou não tem). Nada de dar nota a si mesmo. Os fatos dão o seu nível, e o nível posiciona o seu preço no mercado de quem compra de você.</span></div>'+
-    '<div class="sv"><span class="k">O que você recebe</span><span class="v">A diferença entre o que você cobra e o que o seu trabalho vale, o mapa do que já tem, a sua frase de autoridade e o que falta para subir de nível. Uns três minutos.</span></div>'+
-    '<div class="sv"><span class="k">Para quem</span><span class="v">Aluno do Mentor de Líderes de qualquer mercado: saúde, direito, agro, indústria, varejo, serviços, desenvolvimento humano.</span></div>'+
+  '<h1 class="titulo">Descubra o preço da sua mentoria</h1>'+
+  '<p class="contexto">Com base no que você já construiu. Uns três minutos.</p>'+
+  '<div class="tres">'+
+    '<div class="p"><span class="ic">'+ICONES.marcar+'</span><span class="t">Marque o que você já tem</span></div>'+
+    '<div class="p"><span class="ic">'+ICONES.preco+'</span><span class="t">Receba o seu preço</span></div>'+
+    '<div class="p"><span class="ic">'+ICONES.subir+'</span><span class="t">Veja como subir</span></div>'+
   '</div>'+
-  '<p class="cat" style="margin-top:30px">Como ela chega no preço: o exemplo do João</p>'+
-  htmlComo()+
   '<label class="rot" for="f-nome">Seu nome completo</label><input class="campo" id="f-nome" autocomplete="name" placeholder="João da Silva" value="'+esc(ident.nome)+'"><p class="erro c" id="e-nome"></p>'+
   '<label class="rot" for="f-zap">Seu WhatsApp com DDD</label><input class="campo" id="f-zap" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" value="'+esc(ident.zap)+'"><p class="zap-dica" id="d-zap">Cada WhatsApp faz o teste uma vez nesta turma.</p><p class="erro c" id="e-zap"></p>'+
   '<label class="rot" for="f-prod">Nome da sua mentoria ou produto <span>(opcional)</span></label><input class="campo" id="f-prod" placeholder="Mentoria Produtor Lucrativo" value="'+esc(s.exemplo?'':s.prodNome)+'">'+
   '<label class="consent" for="f-consent"><input type="checkbox" id="f-consent"><span>Concordo que a equipe do Mentor de Líderes guarde minhas respostas e meu WhatsApp para melhorar esta ferramenta e acompanhar meu plano. Não guardamos CPF nem faturamento.</span></label><p class="erro c" id="e-consent"></p>'+
   '<button class="btn lg" id="b-comecar">Começar</button><div id="cx-espera"></div>'+
-  '<button class="exemplo" id="b-exemplo"><span class="k">Ver o exemplo do João completo</span><span class="t">Mentoria para produtores rurais</span><span class="d">Cobra R$ 4.000; o que construiu vale <b>R$ 21.900</b></span></button>'+
+  '<a class="link-ex" id="b-exemplo" href="?exemplo&amp;t='+encodeURIComponent(TURMA)+'">Ver um exemplo pronto</a>'+
   '</div>';
   document.getElementById('b-comecar').onclick=comecar;
   var fz=document.getElementById('f-zap'); fz.addEventListener('input',function(){ fz.value=mascaraZap(fz.value); });
-  document.getElementById('b-exemplo').onclick=function(){ carregarExemplo(); };
 }
 
 /* ---------- Identificação, conexão e telas do piloto ---------- */
@@ -863,10 +827,10 @@ function iniciarVer(){
   var g=pinGuardado(); if(g) abrirVer(g,true); else telaPin('');
 }
 function telaConstruido(){
-  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você já construiu?</h1><p class="contexto">Marque o que é fato hoje. Cada item vale pontos, e os pontos mostram quanto do seu valor já está visível para o mercado. Veja o nível mudar embaixo enquanto responde.</p><div class="fatos">';
+  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você já construiu?</h1><p class="contexto">Marque o que você já tem hoje. Não existe resposta certa.</p><div class="fatos">';
   FATOS.forEach(function(f){
     var sel=s.fatos[f.id];
-    html+='<div class="fato'+(sel!=null?' ok':'')+'" id="fa-'+f.id+'"><div class="ft"><b>'+esc(f.t)+'</b><span id="fp-'+f.id+'">'+(sel!=null?ptsTxt(f.ops[sel][1]):'')+'</span></div>'+(f.d?'<p class="fd">'+esc(f.d)+'</p>':'')+
+    html+='<div class="fato'+(sel!=null?' ok':'')+'" id="fa-'+f.id+'"><div class="ft"><b>'+esc(f.t)+'</b></div>'+(f.d?'<p class="fd">'+esc(f.d)+'</p>':'')+
       '<div class="chips" role="radiogroup" aria-label="'+esc(f.t)+'">'+f.ops.map(function(o,i){ return '<button class="chip'+(sel===i?' sel':'')+'" role="radio" aria-checked="'+(sel===i)+'" data-f="'+f.id+'" data-i="'+i+'">'+esc(o[0])+'</button>'; }).join('')+'</div></div>';
   });
   html+='</div><p class="erro" id="e-fatos"></p></div>'+
@@ -874,15 +838,14 @@ function telaConstruido(){
   app.innerHTML=html;
   document.getElementById('b-voltar').onclick=anterior;
   function info(){
-    var resp=FATOS.filter(function(f){return s.fatos[f.id]!=null;}).length, p=pontos();
-    document.getElementById('b-info').innerHTML= resp? '<b>'+p+' de '+MAXPTS+' pontos</b> · '+nivelDe(p).n.toLowerCase()+(resp<FATOS.length?' · faltam '+(FATOS.length-resp):'')+'<div style="margin-top:6px">'+htmlMedidor(p,true)+'</div>' : 'Marque os '+FATOS.length+' itens';
+    var resp=FATOS.filter(function(f){return s.fatos[f.id]!=null;}).length, falta=FATOS.length-resp;
+    document.getElementById('b-info').innerHTML=(falta? (falta===1?'Falta <b>1</b> item':'Faltam <b>'+falta+'</b> itens') : 'Tudo marcado')+'<div class="pbm" aria-hidden="true"><i style="width:'+(resp/FATOS.length*100).toFixed(0)+'%"></i></div>';
   }
   app.querySelectorAll('.chip[data-f]').forEach(function(c){
     c.onclick=function(){
       var id=c.getAttribute('data-f'), i=parseInt(c.getAttribute('data-i'),10); s.fatos[id]=i;
       app.querySelectorAll('.chip[data-f="'+id+'"]').forEach(function(x){ var on=x===c; x.classList.toggle('sel',on); x.setAttribute('aria-checked',on); });
-      var f=FATOS.filter(function(x){return x.id===id;})[0];
-      document.getElementById('fa-'+id).classList.add('ok'); document.getElementById('fp-'+id).textContent=ptsTxt(f.ops[i][1]);
+      document.getElementById('fa-'+id).classList.add('ok');
       document.getElementById('e-fatos').textContent=''; info();
     };
   });
@@ -894,7 +857,7 @@ function telaConstruido(){
   info();
 }
 function telaCobra(){
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto você cobra hoje pela sua mentoria?</h1><p class="contexto">O valor que um cliente paga pelo programa inteiro. É esse número que a devolutiva compara com o que o seu trabalho vale.</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto você cobra hoje pela sua mentoria?</h1><p class="contexto">O valor que um cliente paga pelo programa inteiro.</p>'+
   '<div class="moeda grande" style="margin-top:24px"><span>R$</span><input class="campo" id="f-cobra" inputmode="numeric" aria-label="Quanto você cobra hoje, em reais" placeholder="4.000" value="'+(s.cobra>0?Math.round(s.cobra).toLocaleString('pt-BR'):'')+'"></div>'+
   '<button class="btn lg" id="b-cobra" style="margin-top:12px">Confirmar</button><p class="erro" id="e-cobra"></p>'+
   '<div class="opcoes"><button class="op'+(s.cobra===0?' sel':'')+'" id="b-nunca"><span class="letra">?</span><span><span class="t">Ainda não vendi</span><span class="d">A devolutiva mostra o preço para começar.</span></span></button></div></div>';
@@ -911,7 +874,7 @@ function telaVenda(){
   var compOps=Object.keys(COMPRADORES).map(function(k){return {v:k,t:COMPRADORES[k].t,d:COMPRADORES[k].d};});
   var turmaOps=[5,10,20,40];
   var g=ehGrupo();
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você vende, e para quem?</h1><p class="contexto">Quem paga pesa mais no preço do que o nicho. As duas respostas definem a régua do mercado.</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você vende, e para quem?</h1><p class="contexto">Escolha o formato e quem compra de você.</p>'+
   '<span class="rot" style="margin-top:22px">Formato</span>'+cartoes(prodOps,s.produto,'',	'prod')+
   '<div id="l-turma"'+(g?'':' hidden')+'><span class="rot">Pessoas por turma</span><div class="chips">'+turmaOps.map(function(v){return '<button class="chip'+(s.pessoas===v?' sel':'')+'" data-p="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.pessoas&&turmaOps.indexOf(s.pessoas)<0?' sel':'')+'" data-p="outro">outro</button></div>'+caixaOutro('ou-pessoas',false,'15',s.pessoas&&turmaOps.indexOf(s.pessoas)<0?s.pessoas:'')+'</div>'+
   '<div id="l-comp"'+(s.produto&&(!g||s.pessoas)?'':' hidden')+'><span class="rot">Quem compra de você</span>'+cartoes(compOps,s.comprador,'','comp')+'</div></div>';
@@ -927,7 +890,7 @@ function telaVenda(){
 function telaTempo(){
   var enc=[1,2,3,4,6,8,12,24], dur=[1,1.5,2,3,4,8], ext=[0,1,2,5,10];
   var g=ehGrupo(), revisita=s.encontros&&s.duracao&&s.extra!=null;
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto tempo seu o cliente recebe?</h1><p class="contexto">'+(g?'Conte o tempo da turma inteira. A conta divide pelo número de pessoas.':'Escolha em ordem: a próxima linha abre depois de cada resposta.')+'</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto do seu tempo o cliente recebe?</h1><p class="contexto">'+(g?'Conte o tempo da turma inteira.':'Responda em ordem. A próxima pergunta abre sozinha.')+'</p>'+
   '<div class="linha-t" id="l-enc"><span class="rot">Quantos encontros com você</span><div class="chips">'+enc.map(function(v){return '<button class="chip'+(s.encontros===v?' sel':'')+'" data-k="encontros" data-v="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.encontros&&enc.indexOf(s.encontros)<0?' sel':'')+'" data-k="encontros" data-v="outro">outro</button></div>'+
     caixaOutro('ou-enc',false,'15',s.encontros&&enc.indexOf(s.encontros)<0?s.encontros:'')+'</div>'+
   '<div class="linha-t" id="l-dur"'+(s.encontros?'':' hidden')+'><span class="rot">Quanto dura cada encontro</span><div class="chips">'+dur.map(function(v){return '<button class="chip'+(s.duracao===v?' sel':'')+'" data-k="duracao" data-v="'+v+'">'+durTxt(v)+'</button>';}).join('')+'</div></div>'+
@@ -967,7 +930,7 @@ function telaHora(){
   FAIXAS_HORA.forEach(function(f){ ops.push({v:String(f.v),t:f.t,d:'Eu cobro nessa faixa hoje'}); });
   ops.push({v:'outro',t:'Outro valor',d:'Você digita e confirma'});
   var atual = s.horaTipo==='faixa'?String(s.horaInformada):s.horaTipo;
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto vale uma hora sua?</h1><p class="contexto">Pelo que você já construiu, o mercado paga cerca de <b style="color:var(--gold);font-weight:600">'+brl(hm)+'</b> por hora de mentor no seu nível. Se você cobra mais do que isso por hora hoje, informe: a conta usa o maior. Se cobra menos, a conta usa o mercado, e a devolutiva mostra a diferença.</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto vale uma hora sua?</h1><p class="contexto">No seu nível, o mercado paga cerca de <b style="color:var(--gold);font-weight:600">'+brl(hm)+'</b> por hora. Se você cobra mais, informe.</p>'+
   cartoes(ops,atual)+caixaOutro('ou-hora',true,'1.000',s.horaTipo==='outro'?Math.round(s.horaInformada).toLocaleString('pt-BR'):'')+'</div>';
   document.getElementById('b-voltar').onclick=anterior;
   if(s.horaTipo==='outro') document.getElementById('ou-hora').hidden=false;
@@ -979,20 +942,20 @@ function telaHora(){
   ligarOutro('ou-hora',function(n){ if(!(n>=10&&n<=100000)) return 'Digite o valor da sua hora, a partir de R$ 10.'; s.horaInformada=n; s.horaTipo='outro'; return ''; });
 }
 function telaTemParc(){
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Alguém além de você entrega parte do pacote?</h1><p class="contexto">Um especialista convidado, uma sala de evento, uma apostila feita por terceiros. Se tudo é você, o preço sai das suas horas e do seu nível.</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Alguém além de você entrega parte do pacote?</h1><p class="contexto">Um especialista convidado, uma sala de evento, uma apostila feita por terceiros.</p>'+
   cartoes([{v:'nao',t:'Não, tudo é entregue por mim'},{v:'sim',t:'Sim, tem parceiros',d:'Você marca quem são na próxima tela'}], s.temParceiros===true?'sim':s.temParceiros===false?'nao':null)+'</div>';
   document.getElementById('b-voltar').onclick=anterior;
   ligarCartoes(function(v){ s.temParceiros=(v==='sim'); if(!s.temParceiros){ s.sel={}; s.outros=[]; } });
 }
 function telaMercado(){
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Em que mercado você atua?</h1><p class="contexto">Última pergunta. O mercado entra na sua frase de autoridade e nos cuidados da devolutiva.</p>'+
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Em que mercado você atua?</h1><p class="contexto">Última pergunta. O mercado entra na sua frase de autoridade.</p>'+
   cartoes(Object.keys(MERCADOS).map(function(k){return {v:k,t:MERCADOS[k].t,d:MERCADOS[k].d};}),s.mercado,'duas')+'</div>';
   document.getElementById('b-voltar').onclick=anterior;
   ligarCartoes(function(v){ s.mercado=v; });
 }
 function telaParceiros(){
   var g=ehGrupo(), m=MERCADOS[s.mercado]||MERCADOS.outro;
-  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quem são os parceiros?</h1><p class="contexto">Marque o que não é você quem entrega. Ao lado está a média de mercado. Na devolutiva você troca pelo preço que o seu parceiro passou.</p>';
+  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quem são os parceiros?</h1><p class="contexto">Marque o que não é você quem entrega. Você ajusta os valores no fim.</p>';
   CATS.forEach(function(c){
     var itens=SERV.filter(function(x){return x.cat===c[0];}); if(!itens.length) return;
     html+='<p class="cat">'+c[1]+'</p><div class="lista-serv">'+itens.map(cartaoServ).join('')+'</div>';
@@ -1047,28 +1010,48 @@ function telaParceiros(){
 }
 
 /* ---------- Devolutiva ---------- */
-function htmlManchete(c){
-  var pp=c.g?' por participante':'', comp=COMPRADORES[s.comprador].t.toLowerCase();
-  if(!(c.cobra>0)) return '<div class="manchete"><div class="mk">O preço para começar</div><div class="mt">O que você construiu vale <b>'+brl(c.vit)+'</b>'+pp+' para '+esc(comp)+'. Comece por aí, e nunca abaixo de '+brl(c.pisoR)+'.</div></div>';
-  if(c.gap>0) return '<div class="manchete"><div class="mk">A diferença</div><div class="mt">Você cobra <b>'+brl(c.cobra)+'</b>. O que você construiu vale <b>'+brl(c.vit)+'</b> no seu mercado. São <b>'+brl(c.gap)+'</b>'+(c.g?' por participante':' por cliente')+' que ficam na mesa.'+(c.cobra<c.pisoR?' Abaixo de '+brl(c.pisoR)+', você paga para trabalhar.':'')+'</div></div>';
-  return '<div class="manchete"><div class="mk">Você já cobra o que vale</div><div class="mt">Você cobra <b>'+brl(c.cobra)+'</b>'+pp+', e o que você construiu vale cerca de <b>'+brl(c.vit)+'</b> no seu mercado. O caminho agora é subir de nível para subir o preço.</div></div>';
+function cap(t){ t=String(t||''); return t.charAt(0).toUpperCase()+t.slice(1); }
+function unidadeCliente(c){ return c.g?'por participante':'por cliente'; }
+/* 1. Seu preço: o sugerido grande, a faixa do mínimo ao sugerido e, se já cobra o que o trabalho sustenta, só a constatação. */
+function htmlPreco(c){
+  var P=c.cobra>0?c.cobra:0, h='<div class="preco">';
+  if(!(P>0)) h+='<div class="kick">Para começar a vender</div>';
+  h+='<div class="pv">'+brl(c.vit)+'</div><div class="pu">'+unidadeCliente(c)+'</div>'+
+    '<div class="pd">'+esc(PRODUTOS[s.produto].t)+' para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+'<span>Mercado: '+faixaTxt(c.regua[0],c.regua[1])+'</span></div>';
+  if(P>0&&c.gap<=0){
+    h+='<p class="pn">Você já cobra '+brl(P)+'. '+(P<=c.regua[1]?'Esse valor está dentro do que o seu trabalho sustenta, e os fatos abaixo mostram por quê.':'Esse valor está acima da faixa que o mercado pratica para esse formato. Os fatos abaixo são a sua prova nessa conversa.')+'</p>';
+  }
+  if(c.origem==='custo') h+='<p class="pn">O custo de entregar, com lucro, pede mais do que o seu nível costuma cobrar. Este é o preço que paga a entrega.</p>';
+  h+='<div class="fbar"><div class="trk2" aria-hidden="true"><i class="e1"></i><i class="e2"></i></div>'+
+    '<div class="lg2"><span><small>mínimo</small><b>'+brl(c.pisoR)+'</b></span><span class="d"><small>sugerido</small><b>'+brl(c.vit)+'</b></span></div>'+
+    '<p class="nun">Nunca abaixo de '+brl(c.pisoR)+', o custo de entregar.</p></div></div>';
+  return h;
 }
-function htmlMapa(){
-  return FATOS.map(function(f){
-    var i=s.fatos[f.id], o=f.ops[i], max=f.ops[0][1], cls=o[1]===max?'tem':(o[1]>0?'meio':'nao'), ic=cls==='tem'?'✓':cls==='meio'?'◐':'✗';
-    return '<div class="mi '+cls+'"><span class="ic" aria-hidden="true">'+ic+'</span><span class="tx">'+esc(f.t)+'<small>'+esc(o[0])+'</small></span><span class="pt">'+o[1]+' de '+max+'</span></div>';
+/* 2. Seu nível de autoridade: quatro degraus, o atual marcado, sem pontos. */
+function htmlNivel(c){
+  var i=NIVEIS.indexOf(c.nv), alt=[34,54,74,94];
+  var deg=NIVEIS.map(function(n,k){
+    var cls=k<i?' feito':k===i?' atual':k===i+1?' prox':'';
+    return '<div class="dg'+cls+'"><span class="pin"></span><span class="blk" style="height:'+alt[k]+'px"></span><span class="nm">'+esc(n.n)+'</span></div>';
   }).join('');
+  return '<div class="deg" role="img" aria-label="'+(i+1)+' de '+NIVEIS.length+' degraus: '+esc(c.nv.n)+'">'+deg+'</div>'+
+    '<p class="deg-t"><b>'+esc(c.nv.n)+'</b><span>'+(i+1)+' de '+NIVEIS.length+' degraus</span></p><p class="deg-d">'+esc(cap(c.nv.d))+'.</p>';
 }
+/* 3. O que já sustenta esse preço: só o que o aluno tem (✓); o que está em construção (◐) num grupo à parte. O que falta não aparece. */
+function htmlSustenta(){
+  var tem=[], cons=[];
+  FATOS.forEach(function(f){ var o=f.ops[s.fatos[f.id]]; if(!o) return; if(o[2]==='t') tem.push(o[3]); else if(o[2]==='c') cons.push(o[3]); });
+  var h='';
+  if(tem.length) h+='<div class="tags">'+tem.map(function(t){ return '<span class="tag"><i aria-hidden="true">✓</i>'+esc(t)+'</span>'; }).join('')+'</div>';
+  else h+='<p class="nota" style="margin:0">Os primeiros fatos aparecem aqui quando houver o que marcar. Veja abaixo por onde começar.</p>';
+  if(cons.length) h+='<p class="sub-g">em construção</p><div class="tags tags-c">'+cons.map(function(t){ return '<span class="tag"><i aria-hidden="true">◐</i>'+esc(t)+'</span>'; }).join('')+'</div>';
+  return h;
+}
+/* 4. Frase de autoridade */
 function htmlFrase(){
   var fr=fraseAutoridade();
-  if(!fr) return '<p class="nota">Quando você marcar fatos como "tenho", a sua frase de autoridade aparece aqui, pronta para a conversa de venda.</p>';
+  if(!fr) return '<p class="nota" style="margin:0">Quando você marcar fatos como "tenho", a sua frase de autoridade aparece aqui, pronta para a conversa de venda.</p>';
   return '<div class="frase" id="r-frase">'+esc(fr)+'<small>Sua frase de autoridade, só com fatos. Leve para a conversa de venda.</small></div><button class="btn ghost sm" id="b-copiar" style="margin-top:10px">Copiar a frase</button>';
-}
-function htmlTiles(c){
-  var pp=c.g?' por participante':'';
-  return '<div class="tile"><div class="k">Mínimo</div><div class="v">'+brl(c.pisoR)+'</div><div class="s">paga tudo, sem lucro'+pp+'</div></div>'+
-    '<div class="tile dest"><div class="k">Sugerido</div><div class="v">'+brl(c.vit)+'</div><div class="s">'+(c.origem==='nivel'?'pelo seu nível: '+c.nv.n.toLowerCase():'pelo custo de entregar, com lucro')+pp+'</div></div>'+
-    '<div class="tile"><div class="k">Mercado</div><div class="v">'+faixaTxt(c.regua[0],c.regua[1])+'</div><div class="s">'+esc(PRODUTOS[s.produto].t.toLowerCase())+' para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+'</div></div>';
 }
 function htmlRegua(c,P){
   var ts=tiers(); var vals=[c.pisoR,c.vit]; if(P>0) vals.push(P);
@@ -1089,22 +1072,25 @@ function htmlRegua(c,P){
   return h;
 }
 function textoLeitura(c){
-  var t='Quem está no seu nível ('+c.nv.n.toLowerCase()+', '+ptsTxt(c.pts)+') cobra por volta de '+brl(c.pNivel)+' por '+PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase()+(c.g?', por participante':'')+'.';
+  var t='Quem está no seu nível ('+c.nv.n.toLowerCase()+') cobra por volta de '+brl(c.pNivel)+' por '+PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase()+(c.g?', por participante':'')+'.';
   if(c.origem==='custo') t+=' Pelo custo de entregar, com lucro, o preço sobe para '+brl(c.custoLucro)+', e é esse que vale.';
   if(s.produto==='grupo') t+=' Os comparáveis de grupo ainda são poucos.';
   return t;
 }
+/* 5. Para subir de nível: no máximo 3 passos, escritos como ação; o degrau de cima e o preço dele só quando os passos o alcançam. */
 function htmlSubir(c){
   var pn=proximoNivel(c);
-  if(!pn) return '<p class="nota" style="margin:0">Você está no nível mais alto da régua. Para manter o preço, mantenha a prova em dia: cases com número, presença e convites.</p>';
-  if(!pn.passos.length) return '<p class="nota" style="margin:0">Faltam '+ptsTxt(pn.falta)+' para '+pn.alvo.n.toLowerCase()+'. Os itens que faltam dependem de tempo de mercado.</p>';
-  return '<ul class="subir">'+pn.passos.map(function(p){ return '<li><span>'+esc(p.f.sobe)+'</span><b>+'+ptsTxt(p.ganho)+'</b></li>'; }).join('')+'</ul>'+
-    '<p class="alvo">'+(pn.alcanca?'Com isso você chega a '+pn.alvo.n.toLowerCase()+': quem está lá cobra por volta de <b>'+brl(pn.preco)+'</b>'+(c.g?' por participante':'')+'.':'Faltam '+ptsTxt(pn.falta)+' para '+pn.alvo.n.toLowerCase()+'.')+'</p>';
+  if(!pn) return '<p class="nota" style="margin:0">Você está no degrau mais alto. Para manter o preço, mantenha a prova em dia: cases com número, presença e convites.</p>';
+  if(!pn.passos.length) return '<p class="nota" style="margin:0">O que falta para chegar a '+esc(pn.alvo.n.toLowerCase())+' depende de tempo de mercado.</p>';
+  return '<ol class="subir">'+pn.passos.map(function(p,i){ return '<li><span class="n">'+(i+1)+'</span><span>'+esc((p.f.sobeOp && p.f.sobeOp[s.fatos[p.f.id]]) || p.f.sobe)+'</span></li>'; }).join('')+'</ol>'+
+    '<p class="alvo">'+(pn.alcanca
+      ? 'Com isso, você chega a <b>'+esc(pn.alvo.n.toLowerCase())+'</b>. Nesse degrau, o seu preço sugerido passa a ser <b class="big">'+brl(pn.vit)+'</b> '+unidadeCliente(c)+'.'
+      : 'Esses passos levam você na direção de <b>'+esc(pn.alvo.n.toLowerCase())+'</b>.')+'</p>';
 }
 function htmlPassos(c){
   var g=c.g, i=1, p=[];
   p.push(['Régua de quem compra igual a você', PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase(), faixaTxt(c.regua[0],c.regua[1])]);
-  p.push(['Seu nível: '+c.nv.n.toLowerCase(), ptsTxt(c.pts)+' de '+MAXPTS+'; quem está nesse nível cobra por volta de', brl(c.pNivel)]);
+  p.push(['Seu nível: '+c.nv.n.toLowerCase(), 'quem está nesse nível cobra por volta de', brl(c.pNivel)]);
   p.push(['Custo de entregar', (c.Cp>0?'parceiros '+brl(c.Cp)+' + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)')+(g?' ÷ '+c.N+' pessoas':''), brl(c.Cp+c.T)]);
   p.push(['Com lucro e impostos', (c.Cp>0?'80% sobre os parceiros, ':'')+'dividido por 0,77 (imposto 15%, comissão 7%, cobrança 1%)', brl(c.custoLucro)]);
   p.push(['O maior dos dois', c.origem==='nivel'?'vale o seu nível':'vale o custo com lucro', brl(c.sug)]);
@@ -1130,32 +1116,33 @@ function telaResultado(){
   var g=ehGrupo(), c0=calcular(), n=0;
   /* grava as respostas uma única vez, só para quem fez o teste de verdade (não no exemplo e não na visão da equipe) */
   if(ident.ok && !s.exemplo && !MODO_VER && envio.estado==='nada'){ envio.payload=montarEnvio(c0); enviarResposta(); }
-  function sec(t,d){ n++; return '<section class="sec"><div class="sec-h"><span class="sec-n">'+(n<10?'0':'')+n+'</span><h2 class="sec-t">'+t+'</h2></div>'+(d?'<p class="sec-d">'+d+'</p>':''); }
+  function sec(t){ n++; return '<section class="sec"><div class="sec-h"><span class="sec-n">0'+n+'</span><h2 class="sec-t">'+t+'</h2></div>'; }
   var sub=(s.nome?esc(s.nome)+', ':'')+esc(PRODUTOS[s.produto].t.toLowerCase())+' · '+esc(MERCADOS[s.mercado].t.toLowerCase())+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase());
   var html='<div class="tela cab">'+
   '<p class="eyebrow">Devolutiva de preço</p><h1 class="titulo">'+esc(prodNome())+'</h1><p class="sub">'+sub+'</p>'+
   (MODO_VER&&verInfo?'<p class="aviso-ex"><b>Visão da equipe.</b> Resposta nº '+esc(verInfo.id)+(verInfo.turma?' da turma '+esc(verInfo.turma):'')+(verInfo.quando?', enviada em '+esc(verInfo.quando):'')+'. Abrir esta página não grava nada de novo.</p>':'')+
   (s.exemplo?'<p class="aviso-ex">Exemplo: João, produtor rural há 15 anos, mentora outros produtores e cobra R$ 4 mil. Para fazer a sua, use Refazer as perguntas no fim da página.</p>':'')+
-  '<p class="envio" id="r-envio" aria-live="polite"></p><div id="r-manchete" style="margin-top:22px"></div>'+
-  sec('O que você já construiu','São os fatos que você marcou. Cada ponto vem de um deles.')+
-    '<div class="nivel-card"><div class="nk">Quanto do seu valor já está visível</div><div class="nv">'+c0.nv.n+'</div><div class="np">'+c0.pts+' de '+MAXPTS+' pontos · '+esc(c0.nv.d)+'</div>'+htmlMedidor(c0.pts)+'</div><div class="mapa">'+htmlMapa()+'</div><div style="margin-top:16px" id="r-frase-box">'+htmlFrase()+'</div></section>'+
-  sec('Sua faixa de preço','O sugerido é o que quem está no seu nível cobra, e nunca fica abaixo do custo de entregar com lucro. O mínimo paga tudo, mas sem lucro.')+
-    '<div class="tiles" id="r-tiles"></div><div class="regua" id="r-regua"></div><p class="leitura" id="r-leitura"></p></section>'+
-  sec('Para subir de nível','O que falta, em ordem do que mais soma pontos.')+'<div id="r-subir"></div></section>'+
+  '<p class="envio" id="r-envio" aria-live="polite"></p>'+
+  sec('Seu preço')+'<div id="r-preco"></div></section>'+
+  sec('Seu nível de autoridade')+htmlNivel(c0)+'</section>'+
+  sec('O que já sustenta esse preço')+htmlSustenta()+'</section>'+
+  sec('Sua frase de autoridade')+'<div id="r-frase-box">'+htmlFrase()+'</div></section>'+
+  sec('Para subir de nível')+'<div id="r-subir"></div></section>'+
   '<details class="conta"><summary><span class="sec-n">+</span><span class="sec-t">Ver a conta e ajustar os números</span></summary>'+
     '<section class="sec"><h3 class="sub-t">Seus números</h3><p class="sec-d">Mude aqui e o preço muda na hora.</p>'+
     '<div class="nums"><div><label for="r-hora">Sua hora (pelo mercado: '+brl(c0.horaM)+')</label><div class="moeda"><span>R$</span><input class="campo" id="r-hora" inputmode="numeric" value="'+Math.round(c0.hora).toLocaleString('pt-BR')+'"></div></div>'+
     '<div><label for="r-horas">Horas suas no total</label><input class="campo" id="r-horas" inputmode="decimal" value="'+(Math.round(horasTotal()*10)/10).toLocaleString('pt-BR')+'"></div>'+
     (g?'<div><label for="r-pessoas">Pessoas por turma</label><input class="campo" id="r-pessoas" inputmode="numeric" value="'+s.pessoas+'"></div>':'')+
     '<div><label for="r-cobra">Quanto você cobra hoje</label><div class="moeda"><span>R$</span><input class="campo" id="r-cobra" inputmode="numeric" placeholder="ainda não vendi" value="'+(s.cobra>0?Math.round(s.cobra).toLocaleString('pt-BR'):'')+'"></div></div>'+
-    '</div>'+(s.horaInformada>0&&s.horaInformada<c0.horaM?'<p class="nota">Você informou '+brl(s.horaInformada)+' por hora. Pelo que você construiu, o mercado paga '+brl(c0.horaM)+'. A conta usa o mercado.</p>':'')+'</section>'+
+    '</div>'+(s.horaInformada>0&&s.horaInformada<c0.horaM?'<p class="nota">Você informou '+brl(s.horaInformada)+' por hora. Pelo que você construiu, o mercado paga '+brl(c0.horaM)+'. A conta usa o mercado.</p>':'')+'<p class="nota" id="r-hoje"></p></section>'+
+    '<section class="sec"><h3 class="sub-t">Onde o seu preço cai no mercado</h3><div class="regua" id="r-regua"></div><p class="leitura" id="r-leitura"></p></section>'+
     (c0.itens.length? '<section class="sec"><h3 class="sub-t">Quanto custam os parceiros</h3><p class="sec-d">Já veio a média de mercado. Troque pelo preço que o seu parceiro passou.</p><div class="tab" id="r-parc"></div></section>':'')+
     '<section class="sec"><h3 class="sub-t">E se você cobrar outro valor?</h3>'+
     '<div class="ese-box"><div><label for="r-ese" class="rot" style="margin-top:0">Preço que você quer testar'+(g?', por participante':'')+'</label><div class="moeda grande"><span>R$</span><input class="campo" id="r-ese" inputmode="numeric" placeholder="'+Math.round(c0.vit).toLocaleString('pt-BR')+'" value="'+(s.ese?Math.round(s.ese).toLocaleString('pt-BR'):'')+'"></div></div><div class="ese-out" id="r-ese-out"></div></div></section>'+
     '<section class="sec"><h3 class="sub-t">Como chegamos ao preço</h3><div class="passos" id="r-passos"></div><p class="nota" id="r-min"></p></section>'+
     '<section class="sec"><h3 class="sub-t">Cuidados</h3><ul class="cuid">'+listaCuidados().map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
     '<section class="sec"><h3 class="sub-t">Antes de divulgar</h3><ul class="cuid">'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
-    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026. Cada fato vale de 0 a 2 pontos (máximo '+MAXPTS+'), calibrado no briefing de 73 alunos do Mentor de Líderes. O nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os parceiros seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
+    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível, e o nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os parceiros seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
   '</details>'+
   '<div class="acoes"><button class="btn" id="b-pdf">Baixar PDF</button><button class="btn ghost" id="b-mudar">Mudar respostas</button><button class="btn ghost" id="b-refazer">Refazer as perguntas</button></div>'+
   '<div id="r-pdf"></div></div>';
@@ -1193,11 +1180,11 @@ function desenharParceirosRes(){
 function atualizar(){
   var c=calcular(); window.__ultimo=c;
   var P=c.cobra>0?c.cobra:0;
-  document.getElementById('r-manchete').innerHTML=htmlManchete(c);
-  document.getElementById('r-tiles').innerHTML=htmlTiles(c);
+  document.getElementById('r-preco').innerHTML=htmlPreco(c);
   document.getElementById('r-regua').innerHTML=htmlRegua(c,P);
   document.getElementById('r-leitura').textContent=textoLeitura(c);
   document.getElementById('r-subir').innerHTML=htmlSubir(c);
+  document.getElementById('r-hoje').textContent= P>0 ? 'Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'. O preço sugerido é '+brl(c.vit)+'.' : 'Você ainda não vendeu a mentoria. O preço sugerido serve para começar.';
   var pt=document.getElementById('r-ptot'); if(pt) pt.textContent=brl(c.Cp);
   document.getElementById('r-passos').innerHTML=htmlPassos(c);
   document.getElementById('r-min').textContent='O mínimo é só o custo, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+', arredondado para '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.';
@@ -1206,42 +1193,57 @@ function atualizar(){
 }
 
 /* ---------- PDF ---------- */
+/* PDF: a ordem é a da tela (preço, nível, o que sustenta, frase, subir) e depois a conta. Os blocos são medidos e distribuídos em páginas A4 sem cortar nenhum ao meio. */
 function htmlPapel(){
-  var c=calcular(), P=c.cobra>0?c.cobra:0, g=c.g, hoje=new Date().toLocaleDateString('pt-BR');
+  var c=calcular(), P=c.cobra>0?c.cobra:0, g=c.g, hoje=new Date().toLocaleDateString('pt-BR'), k=0;
   var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g?' · turma de '+c.N:'')+'</p></div>';
-  function sh(n,t){ return '<div class="ps2"><b>'+n+'</b><span>'+t+'</span></div>'; }
-  var rod=function(n){ return '<div class="rod"><span>Piloto · precificação do Mentor de Líderes</span><span>'+hoje+' · página '+n+' de 2</span></div>'; };
-  var manch = htmlManchete(c).replace('class="manchete"','class="manch"').replace(/<div class="mk">/,'<div class="mk-p">').replace(/<div class="mt">/,'<div class="mt-p">');
-  var fr=fraseAutoridade();
-  var mapa='<div class="nvl"><b>'+c.nv.n+'</b><span>'+c.pts+' de '+MAXPTS+' pontos · '+esc(c.nv.d)+'</span></div><div class="mp">'+FATOS.map(function(f){ var o=f.ops[s.fatos[f.id]]; return '<div><span>'+esc(f.t)+': '+esc(o[0].toLowerCase())+'</span><span>'+o[1]+' de '+f.ops[0][1]+'</span></div>'; }).join('')+'</div>'+(fr?'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic">'+esc(fr)+'</p>':'');
-  var tl='<div class="tl"><div><div class="k">Mínimo</div><div class="v">'+brl(c.pisoR)+'</div><div class="s">paga tudo, sem lucro</div></div><div class="d"><div class="k">Sugerido</div><div class="v">'+brl(c.vit)+'</div><div class="s">'+(c.origem==='nivel'?'pelo seu nível':'pelo custo com lucro')+'</div></div><div><div class="k">Mercado</div><div class="v">'+faixaTxt(c.regua[0],c.regua[1])+'</div><div class="s">quem compra igual a você</div></div></div>'+(g?'<p class="lt">Valores por participante.</p>':'');
-  var pn=proximoNivel(c), subir = !pn ? '<p class="lt">Você está no nível mais alto da régua.</p>' : (pn.passos.length? '<ul>'+pn.passos.map(function(p){ return '<li>'+esc(p.f.sobe)+' (+'+ptsTxt(p.ganho)+')</li>'; }).join('')+'</ul><p class="lt">'+(pn.alcanca?'Com isso você chega a '+pn.alvo.n.toLowerCase()+': quem está lá cobra por volta de '+brl(pn.preco)+'.':'Faltam '+ptsTxt(pn.falta)+' para '+pn.alvo.n.toLowerCase()+'.')+'</p>' : '<p class="lt">Os itens que faltam dependem de tempo de mercado.</p>');
-  var pg1='<div class="pg">'+band+'<div class="ct">'+manch+sh('01','O que você já construiu')+mapa+sh('02','Sua faixa de preço')+tl+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p></div>'+rod(1)+'</div>';
-  var k=3, parc='';
-  if(c.itens.length){ parc=sh('0'+(k++),'Quanto custam os parceiros')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos parceiros</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>'; }
-  var linhas=[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+', '+ptsTxt(c.pts)+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'parceiros + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]];
-  var pp=linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">Mínimo, só o custo: '+brl(c.piso)+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.</p>';
-  var pg2='<div class="pg"><div class="ct" style="padding-top:30px">'+sh('0'+(k++),'Para subir de nível')+subir+parc+sh('0'+(k++),'Como chegamos ao preço')+pp+sh('0'+(k++),'Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>'+sh('0'+(k++),'Antes de divulgar')+'<ul>'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
-    '<p class="lt" style="font-size:11px;color:#6B7280;margin-top:20px">Fontes: preços públicos pesquisados em 21 e 30/10/2026. Nível: regra da casa aprovada em 30/10/2026, calibrada no briefing de 73 alunos. Os 23%: imposto de 15% (o contador confirma), comissão de 7% e Pix de 1%. O preço sugerido não é preço validado.</p></div>'+rod(2)+'</div>';
-  return [pg1,pg2];
+  function sh(t){ k++; return '<div class="ps2"><b>0'+k+'</b><span>'+t+'</span></div>'; }
+  var fr=fraseAutoridade(), B=[];
+  B.push(sh('Seu preço')+htmlPreco(c));
+  B.push(sh('Seu nível de autoridade')+htmlNivel(c));
+  B.push(sh('O que já sustenta esse preço')+htmlSustenta());
+  if(fr) B.push(sh('Sua frase de autoridade')+'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic;margin-top:0">'+esc(fr)+'</p>');
+  B.push(sh('Para subir de nível')+htmlSubir(c));
+  B.push(sh('Onde o seu preço cai no mercado')+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p>');
+  if(c.itens.length) B.push(sh('Quanto custam os parceiros')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos parceiros</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>');
+  var linhas=[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'parceiros + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]];
+  B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">Mínimo, só o custo: '+brl(c.piso)+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
+  B.push(sh('Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>');
+  B.push(sh('Antes de divulgar')+'<ul>'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
+    '<p class="lt" style="font-size:11px;color:#6B7280;margin-top:20px">Fontes: preços públicos pesquisados em 21 e 30/10/2026. Nível: regra da casa aprovada em 30/10/2026, calibrada no briefing de 73 alunos. Os 23%: imposto de 15% (o contador confirma), comissão de 7% e Pix de 1%. O preço sugerido não é preço validado.</p>');
+  /* mede cada bloco na largura da página e distribui; o que não cabe vai para a página seguinte */
+  var m=document.createElement('div'); m.className='pg'; m.style.cssText='position:absolute;left:-12000px;top:0;min-height:0;padding:0;visibility:hidden';
+  m.innerHTML='<div id="m-band">'+band+'</div><div class="ct">'+B.map(function(b){ return '<div class="bk" style="display:flow-root">'+b+'</div>'; }).join('')+'</div>';
+  document.body.appendChild(m);
+  var bandH=m.querySelector('#m-band').getBoundingClientRect().height;
+  var hs=[].map.call(m.querySelectorAll('.bk'),function(e){ return e.getBoundingClientRect().height; });
+  document.body.removeChild(m);
+  var util=1123-76-8, paginas=[[]], livre=util-bandH;
+  B.forEach(function(b,i){
+    if(hs[i]>livre && paginas[paginas.length-1].length){ paginas.push([]); livre=util-30; }
+    paginas[paginas.length-1].push(b); livre-=hs[i];
+  });
+  var total=paginas.length;
+  var rod=function(n){ return '<div class="rod"><span>Piloto · precificação do Mentor de Líderes</span><span>'+hoje+' · página '+n+' de '+total+'</span></div>'; };
+  return paginas.map(function(bl,i){ return '<div class="pg">'+(i===0?band+'<div class="ct">':'<div class="ct" style="padding-top:30px">')+bl.join('')+'</div>'+rod(i+1)+'</div>'; });
 }
 function carregar(src){ return new Promise(function(ok,err){ var sc=document.createElement('script'); sc.src=src; sc.onload=ok; sc.onerror=function(){err(new Error('carga'));}; document.head.appendChild(sc); }); }
 async function gerarPDF(onEtapa){
-  onEtapa(0);
+  onEtapa(0,0);
   if(!window.html2canvas) await carregar('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
   if(!window.jspdf) await carregar('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-  var papel=document.getElementById('papel'); papel.innerHTML=htmlPapel().join('');
   if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+  var papel=document.getElementById('papel'); papel.innerHTML=htmlPapel().join('');
   var pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  var pgs=papel.querySelectorAll('.pg');
-  for(var i=0;i<pgs.length;i++){
-    onEtapa(i+1);
+  var pgs=papel.querySelectorAll('.pg'), N=pgs.length;
+  for(var i=0;i<N;i++){
+    onEtapa(i+1,N);
     var cv=await window.html2canvas(pgs[i],{scale:2,backgroundColor:'#ffffff',logging:false});
     var img=cv.toDataURL('image/jpeg',0.92), h=cv.height/cv.width*210;
     if(i>0) pdf.addPage();
     if(h>297){ var wd=297/h*210; pdf.addImage(img,'JPEG',(210-wd)/2,0,wd,297); } else pdf.addImage(img,'JPEG',0,0,210,h);
   }
-  onEtapa(3);
+  onEtapa(N+1,N);
   papel.innerHTML='';
   return pdf.output('blob');
 }
@@ -1257,16 +1259,21 @@ var gerando=false;
 async function baixarPDF(){
   if(gerando) return; gerando=true;
   var box=document.getElementById('r-pdf');
-  var etapas=['Carregando o gerador de PDF','Montando a página 1','Montando a página 2','Preparando o arquivo'];
-  var pcts=[12,45,78,96];
-  function pinta(k,msg){
-    box.innerHTML='<div class="pdfp" role="status"><div class="st"><span>'+(msg?'Não foi possível baixar':etapas[Math.min(k,3)])+'</span><span>'+(k>=4?100:pcts[Math.min(k,3)])+'%</span></div><div class="pb"><i style="width:'+(k>=4?100:pcts[Math.min(k,3)])+'%"></i></div>'+
+  var totalPag=0;
+  /* etapa k: 0 carrega o gerador, 1..N monta cada página, N+1 prepara o arquivo, N+2 pronto */
+  function pinta(k,N,msg){
+    if(N) totalPag=N; else N=totalPag;
+    var etapas=['Carregando o gerador de PDF'];
+    if(N){ for(var j=1;j<=N;j++) etapas.push('Montando a página '+j+' de '+N); } else etapas.push('Montando as páginas');
+    etapas.push('Preparando o arquivo');
+    var fim=etapas.length, pct=k>=fim?100:(k<=0?12:Math.round(12+Math.min(k,fim-1)/(fim-1)*84));
+    box.innerHTML='<div class="pdfp" role="status"><div class="st"><span>'+(msg?'Não foi possível baixar':etapas[Math.min(k,fim-1)])+'</span><span>'+pct+'%</span></div><div class="pb"><i style="width:'+pct+'%"></i></div>'+
       (msg?'<p class="msg">'+msg+'</p>':'<ol>'+etapas.map(function(t,i){return '<li class="'+(i<k?'ok':i===k?'agora':'')+'">'+t+'</li>';}).join('')+'</ol>')+'</div>';
   }
   try{
-    var blob=await gerarPDF(function(k){ pinta(k); });
+    var blob=await gerarPDF(function(k,N){ pinta(k,N); });
     var nome='Preco-'+prodNome().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)+'.pdf';
-    pinta(4);
+    pinta(totalPag+2,totalPag);
     await salvar(blob,nome);
     box.innerHTML='<div class="pdfp" role="status"><div class="st"><span>PDF pronto</span><span>100%</span></div><div class="pb"><i style="width:100%"></i></div><p class="nota" style="margin:0">'+esc(nome)+'</p></div>';
   }catch(err){
@@ -1274,7 +1281,7 @@ async function baixarPDF(){
     if(cd==='declined') m='Download cancelado.';
     else if(cd==='unavailable'||cd==='not_granted'||cd==='capability_disabled') m='O download não está disponível nesta visualização. Abra o link pelo claude.ai.';
     else if(err&&err.message==='carga') m='Não consegui carregar o gerador de PDF. Confira a internet e tente de novo.';
-    pinta(0,m);
+    pinta(0,0,m);
   }finally{ gerando=false; document.getElementById('papel').innerHTML=''; }
 }
 
@@ -1292,7 +1299,7 @@ function desenhar(){
   var f={capa:telaCapa,construido:telaConstruido,cobra:telaCobra,venda:telaVenda,tempo:telaTempo,hora:telaHora,temparc:telaTemParc,parceiros:telaParceiros,mercado:telaMercado,resultado:telaResultado,jafez:telaJaFez,pin:function(){ telaPin(''); },aviso:telaAvisoAtual}[vista];
   f();
 }
-window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade};
+window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade,papel:htmlPapel};
 if(MODO_VER) iniciarVer(); else if(EXEMPLO) carregarExemplo(); else desenhar();
 })();
 </script>
