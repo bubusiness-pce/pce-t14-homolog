@@ -189,7 +189,8 @@
   .capa-tela .fio{margin:10px 0 2px}
   .capa-tela .nome{font-size:clamp(25px,5vw,36px);margin:10px 0 6px}
   .capa-tela .sub{font-size:15px}
-  .capa-tela .foto{width:100%;max-width:520px;margin-top:18px}
+  .capa-tela .fotos2{max-width:640px;margin-top:18px}
+  .capa-tela .fotos2 figcaption{font-size:15px}
   .capa-tela .legenda{font-size:13.5px;max-width:52ch;margin-top:10px}
 
   /* relatório: blocos comuns à tela e ao PDF (medidas em em; a folha usa base própria) */
@@ -229,6 +230,21 @@
   .rel .cor i{display:block;width:4em;height:4em;border-radius:50%;border:1px solid var(--r-linha);margin-bottom:.35em}
   .rel .cor b{color:var(--r-tinta);font-weight:700}
   .rel .foto-visual{width:100%;max-width:340px;height:auto;border-radius:12px;display:block;background:#060C0C;border:1px solid rgba(216,160,56,.45)}
+  .fotos2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;width:100%}
+  .fotos2 figure{margin:0;display:flex;flex-direction:column;align-items:center;min-width:0}
+  .fotos2 .foto,.fotos2 .foto-visual{width:100%;max-width:none}
+  .fotos2 figcaption{margin-top:8px;font-weight:800;color:#FFFFFF;line-height:1.25;text-align:center}
+  .fotos2 figcaption span{display:block;font-family:var(--cond);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-soft);font-size:.72em;margin-bottom:2px}
+  .rel .fotos2{max-width:560px;margin:.8em 0 .2em}
+  @media (max-width:520px){.capa-tela .fotos2,.rel .fotos2{grid-template-columns:minmax(0,1fr);max-width:400px;margin-left:auto;margin-right:auto}}
+  .rel .fotos2 figcaption{color:var(--r-titulo)}
+  .rel .fotos2 figcaption span{color:var(--r-fio)}
+  .rel .dois-arq h3 span,.rel .pal-tit span{display:block;font-family:var(--cond);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--r-fio);font-size:.78em}
+  .rel .pal-tit{margin-top:.2em}
+  .rel .pal-tit em{font-style:normal;font-weight:500;color:var(--r-tinta2)}
+  .rel .combo{display:flex;gap:.35em;margin:.5em 0 .6em}
+  .rel .combo div{display:flex;flex-direction:column;gap:.3em;min-width:0;font-size:.78em;color:var(--r-tinta2);text-align:center}
+  .rel .combo i{display:block;height:3.4em;border-radius:.45em;border:1px solid var(--r-linha)}
   .rel .nota-empate{background:var(--r-alt-bg);color:var(--r-alt-ink);border-radius:.5em;padding:.6em .9em}
   .rel-secao{font-size:15.5px;gap:1em}
   @media (max-width:600px){
@@ -255,7 +271,8 @@
   .capa-folha .fio{margin:12px 0 2px}
   .capa-folha .nome{font-size:33px;margin:12px 0 5px;padding:0 70px}
   .capa-folha .sub{font-size:12.7px}
-  .capa-folha .foto{width:578px;margin-top:18px}
+  .capa-folha .fotos2{width:690px;gap:16px;margin-top:20px}
+  .capa-folha .fotos2 figcaption{font-size:15px}
   .capa-folha .legenda{font-size:11.3px;margin-top:10px;padding:0 91px}
 </style>
 </head>
@@ -595,6 +612,18 @@ function campos(r, extra){
 }
 const faixa = v => FAIXAS.find(f => v <= f[0])[1];
 const fotoUrl = id => "assets/arquetipos/fotos/" + id + ".jpg";
+// 03/11/2026: os dois arquétipos mais fortes (no empate, os dois dominantes; senão, o principal e o secundário)
+function segundoArq(r){ return r.segundoDom || r.secundario; }
+function duasFotos(r, classeImg){
+  const rot1 = r.segundoDom ? "Dominante" : "Principal", rot2 = r.segundoDom ? "Dominante" : "Secundário";
+  return '<div class="fotos2">' + [[r.dom, rot1], [segundoArq(r), rot2]].map(([id, rot]) =>
+    '<figure><img class="' + (classeImg || "foto") + '" src="' + fotoUrl(id) + '" alt="Arquétipo ' + esc(nomeArq(id)) + ': sugestão de roupa e paleta" width="1122" height="1402"'
+    + (classeImg ? ' loading="lazy"' : '') + '><figcaption><span>' + rot + '</span>' + esc(nomeArq(id)) + '</figcaption></figure>').join("") + '</div>';
+}
+function paletaHTML(id, rot){
+  return '<h3 class="pal-tit"><span>' + rot + '</span>' + esc(nomeArq(id)) + ' <em>· ' + esc(minuscula(D.palette[id].direction)) + '</em></h3>'
+    + '<div class="cores">' + D.cores[id].map(k => '<div class="cor"><i style="background:' + esc(k.hex) + '"></i><b>' + esc(k.nome) + '</b>' + esc(k.hex) + '</div>').join("") + '</div>';
+}
 
 function capaHTML(r){
   const sub = r.segundoDom
@@ -603,24 +632,27 @@ function capaHTML(r){
   return '<div class="capa-rel"><img class="logo" src="' + LOGO + '" alt="Febracis">'
     + '<div class="kicker">RELATÓRIO DE ARQUÉTIPOS</div><div class="fio"></div><div class="nome">' + esc(estado.nome) + '</div>'
     + '<div class="sub">' + sub + '</div>'
-    + '<img class="foto" src="' + fotoUrl(r.dom) + '" alt="Arquétipo ' + esc(nomeArq(r.dom)) + ': sugestão de roupa e paleta" width="1122" height="1402">'
+    + duasFotos(r)
     + '<div class="legenda">' + esc(D.fixos.legenda) + '</div></div>';
 }
 
 // Cada seção é uma lista de blocos; no PDF, seção começa em folha nova e bloco nunca se divide
 function secoes(r, onde){
-  const A = D.archetypes[r.dom], N = D.novos[r.dom], c = campos(r);
+  const A = D.archetypes[r.dom], N = D.novos[r.dom], c = campos(r), seg = segundoArq(r);
   const titulo = r.segundoDom ? nomeArq(r.dom) + " e " + nomeArq(r.segundoDom) : nomeArq(r.dom);
   const s1 = [
     '<div class="bl"><div class="sobre">Seu arquétipo</div><h2>' + esc(titulo) + '</h2>'
       + (r.segundoDom ? '<p class="nota-empate">Você tem dois arquétipos dominantes, com a mesma pontuação: ' + esc(nomeArq(r.dom)) + ' e ' + esc(nomeArq(r.segundoDom)) + '. As páginas a seguir detalham ' + esc(nomeArq(r.dom)) + '.</p>' : '')
       + '<p class="essencia">' + esc(concordar(A.essence)) + '</p></div>',
     '<div class="bl"><p>' + esc(concordar(D.portraitExtra[r.dom])) + '</p></div>',
-    '<div class="bl"><p class="muted"><b>' + esc(nomeArq(r.secundario)) + ', o seu secundário,</b> ' + esc(concordar(D.secondaryFlavor[r.secundario])) + '</p></div>',
+    '<div class="bl duas dois-arq"><div><h3><span>' + (r.segundoDom ? 'Dominante' : 'Principal') + '</span>' + esc(nomeArq(r.dom)) + '</h3><p>É o que as pessoas percebem primeiro em você: ' + esc(D.forca[r.dom]) + '.</p></div>'
+      + '<div><h3><span>' + (r.segundoDom ? 'Dominante' : 'Secundário') + '</span>' + esc(nomeArq(seg)) + '</h3><p>'
+      + (r.segundoDom ? 'Divide o primeiro lugar, com a mesma pontuação: ' + esc(D.forca[seg]) + '.' : 'É o que completa o seu jeito: ' + esc(concordar(D.secondaryFlavor[seg]))) + '</p></div></div>',
+    r.segundoDom ? '<div class="bl"><p class="muted"><b>' + esc(nomeArq(r.secundario)) + ', o seu secundário,</b> ' + esc(concordar(D.secondaryFlavor[r.secundario])) + '</p></div>' : '',
     '<div class="bl duas"><div><h3>Suas forças</h3><ul>' + A.strengths.map(s => '<li>' + esc(s) + '</li>').join("") + '</ul></div>'
       + '<div><h3>Pontos de atenção</h3><ul>' + N.atencao.map(s => '<li>' + esc(s) + '</li>').join("") + '</ul></div></div>',
     '<div class="bl"><h3>Sua sombra sob pressão</h3><p class="muted">' + esc(N.sombra) + '</p></div>'
-  ];
+  ].filter(Boolean);
   const s2 = ['<div class="bl"><div class="sobre">Os seis eixos</div><h2>Como você aparece</h2><p class="abertura">' + esc(D.fixos.aberturaEixos) + '</p></div>']
     .concat(D.eixos.map(e => {
       const v = r.eixos[e.id];
@@ -649,8 +681,12 @@ function secoes(r, onde){
   const vis = D.visualComm[r.dom];
   const s5 = [
     '<div class="bl"><div class="sobre">Sua direção visual</div><h2>' + esc(D.palette[r.dom].direction) + '</h2><p>' + esc(D.fixos.fraseVisual) + '</p>'
-      + (onde === "tela" ? '<img class="foto-visual" src="' + fotoUrl(r.dom) + '" alt="Arquétipo ' + esc(nomeArq(r.dom)) + ': sugestão de roupa e paleta" width="1122" height="1402" loading="lazy">' : '')
-      + '<div class="cores">' + D.cores[r.dom].map(k => '<div class="cor"><i style="background:' + esc(k.hex) + '"></i><b>' + esc(k.nome) + '</b>' + esc(k.hex) + '</div>').join("") + '</div></div>',
+      + (onde === "tela" ? duasFotos(r, "foto-visual") : '') + '</div>',
+    '<div class="bl">' + paletaHTML(r.dom, 'Base') + paletaHTML(seg, 'Toque') + '</div>',
+    '<div class="bl"><h3>Sua paleta combinada</h3><div class="combo">'
+      + D.cores[r.dom].slice(0, 3).map(k => [k, 3]).concat(D.cores[seg].slice(0, 2).map(k => [k, 2]))
+        .map(([k, peso]) => '<div style="flex:' + peso + ' 1 0"><i style="background:' + esc(k.hex) + '"></i>' + esc(k.nome) + '</div>').join("")
+      + '</div><p class="muted">As cores da base vão nas roupas e no fundo das fotos. As do toque entram nos detalhes: um acessório, uma peça, o destaque das artes.</p></div>',
     '<div class="bl duas"><div><h3>Fotos</h3><p>' + esc(vis.photo) + '</p><h3>Tipografia</h3><p>' + esc(vis.type) + '</p></div><div><h3>O que evitar</h3><p>' + esc(vis.avoid) + '</p></div></div>'
   ];
   return [s1, s2, s3, s4, s5];
