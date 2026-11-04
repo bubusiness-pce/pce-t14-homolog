@@ -76,6 +76,15 @@ button{font:inherit}
 .total-vivo{margin-top:22px;padding:14px 16px;border:1px solid var(--ln2);border-radius:12px;background:var(--s1);color:var(--tx);font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .total-vivo b{font-family:var(--display);font-size:26px;font-weight:500;color:var(--gold)}
 .erro{color:var(--warn);font-size:14px;margin:10px 0 0;min-height:1.2em}
+/* v7: o que o cliente recebe (campos que abrem sob o cartão) e a linha do pacote na devolutiva */
+.sub-r{margin:0 0 6px 34px;padding:2px 0 6px}
+.sub-r .rot{margin-top:0}
+.sub-r .chips{margin-top:8px}
+.sub-r .outro-box{margin-top:10px}
+.pacote{margin:14px 2px 0;font-size:14px;line-height:1.5;color:var(--mu)}
+.pacote b{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu2);font-weight:500;margin-bottom:3px}
+.pg .pacote{font-size:12px;color:var(--p-mu);margin-top:10px}
+.pg .pacote b{color:var(--p-mu)}
 .barra{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(11,20,38,.97);border-top:1px solid var(--ln);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .barra .in{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center}
 .barra .info{font-size:13px;color:var(--mu);flex:1;min-width:0}
@@ -382,11 +391,7 @@ var FAIXAS_HORA = [
   {t:'R$ 100 a R$ 300', v:200},{t:'R$ 300 a R$ 700', v:500},{t:'R$ 700 a R$ 1.500', v:1100},
   {t:'R$ 1.500 a R$ 3.000', v:2250},{t:'R$ 3.000 a R$ 5.000', v:4000}
 ];
-var CATS = [
-  ['pessoas','Pessoas que ajudam na entrega'],['conteudo','Aulas e material'],['evento','Evento presencial'],
-  ['ferramentas','Diagnóstico e ferramentas'],['negocio','Para o negócio do cliente']
-];
-var CATS_EXTRA = [['imagem','Imagem e estilo'],['comunicacao','Comunicação e presença'],['livro','Livro']];
+/* O catálogo de serviços abaixo não aparece mais para o aluno: serve de base de preço para os itens do pacote (pergunta 5) e para as respostas antigas. */
 function sv(id,cat,nome,det,un,min,max,med,fonte,conf,esc){return {id:id,cat:cat,nome:nome,det:det,un:un,min:min,max:max,med:med,fonte:fonte,conf:conf,esc:esc||'pessoa'};}
 var SERV = [
   sv('G49','pessoas','Especialista ou consultor convidado','encontro com você ou com a turma','hora',200,600,400,'FreelaSemCrise, hora de mentor de negócios','média','turma'),
@@ -461,9 +466,9 @@ var CUIDADOS_MERCADO = {
 };
 var CUIDADOS_CONSUMIDOR = [
   'Tudo o que você promete no anúncio, no vídeo ou na conversa de venda passa a fazer parte do contrato.<small> Código de Defesa do Consumidor, arts. 30 e 35</small>',
-  'Venda feita pela internet ou fora do seu espaço tem 7 dias de arrependimento, com devolução integral. Pague os parceiros depois desse prazo.<small> CDC, art. 49</small>'
+  'Venda feita pela internet ou fora do seu espaço tem 7 dias de arrependimento, com devolução integral. Pague os fornecedores depois desse prazo.<small> CDC, art. 49</small>'
 ];
-var CUIDADOS_EMPRESA = ['Vendendo para empresa, escreva no contrato o escopo, o prazo, a forma de pagamento e o que cada parceiro entrega.'];
+var CUIDADOS_EMPRESA = ['Vendendo para empresa, escreva no contrato o escopo, o prazo, a forma de pagamento e o que cada pessoa envolvida entrega.'];
 var CUIDADO_NOTA = 'Uma nota só, com repasse aos parceiros, paga imposto também sobre o repasse. Pergunte ao seu contador se cada parceiro pode emitir a nota direto ao cliente.';
 var ANTES = [
   'Teste o valor em 3 a 5 conversas de venda. O preço sugerido ainda não é um preço validado.',
@@ -473,7 +478,64 @@ var ANTES = [
 ];
 
 /* ---------- Estado ---------- */
-function novo(){ return {nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
+function novo(){ return {nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,periodo:null,frequencia:null,recebe:null,eventoDias:null,livroCusto:null,socio:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
+
+/* ---------- v7: duração, o que o cliente recebe e quem entrega ---------- */
+/* Cada encontro vale 1 hora e não há horas fora dos encontros: encontros = meses × encontros por mês; duracao = 1; extra = 0.
+   Respostas antigas (sem periodo) seguem com os encontros, duracao, extra, sel e outros gravados. */
+var FREQ_M = {semanal:4, quinzenal:2, mensal:1};
+var DURACOES = [{v:1,t:'30 dias'},{v:3,t:'90 dias'},{v:6,t:'6 meses'},{v:12,t:'1 ano'}];
+var RECEBE = [
+  {v:'plataforma',t:'Plataforma ou área de membros',nm:'plataforma'},
+  {v:'aulas',t:'Aulas gravadas',nm:'aulas gravadas'},
+  {v:'digital',t:'Produto digital',d:'Hotmart, Kiwify',nm:'produto digital'},
+  {v:'material',t:'Material de apoio',d:'workbook, apostila',nm:'material de apoio'},
+  {v:'livro',t:'Seu livro',nm:'livro'},
+  {v:'evento',t:'Evento presencial',nm:'evento presencial'},
+  {v:'comunidade',t:'Comunidade ou grupo',nm:'comunidade'}
+];
+var IMERSAO_HORAS_DIA = 8;
+function mesesTxt(m){ return m===1?'30 dias':m===3?'90 dias':m%12===0?(m===12?'1 ano':(m/12)+' anos'):(m+' meses'); }
+function diasTxt(d){ return d+(d===1?' dia':' dias'); }
+function encTxt(n){ return n+(n===1?' encontro':' encontros'); }
+/* Recalcula encontros, duração e horas fora a partir das respostas novas. */
+function aplicarTempo(){
+  if(s.produto==='imersao'){ if(s.encontros>0){ s.duracao=IMERSAO_HORAS_DIA; s.extra=0; } }
+  else if(s.periodo>0 && FREQ_M[s.frequencia]){ s.encontros=s.periodo*FREQ_M[s.frequencia]; s.duracao=1; s.extra=0; }
+  s.horasManual=null;
+}
+/* Se o formato mudou depois de responder a duração (imersão x as outras), a pergunta recomeça. */
+function coerenciaTempo(){
+  var im=s.produto==='imersao';
+  if(s.periodo!=null && ((im && s.frequencia!=='imersao') || (!im && s.frequencia==='imersao'))){ s.periodo=null; s.frequencia=null; s.encontros=null; s.duracao=null; s.extra=null; }
+}
+/* Os itens do pacote que têm custo entram em s.sel (ids do catálogo) e s.outros (o livro); a conta (calcular) não muda.
+   O valor que o aluno ajustou no fim da página é mantido ao voltar e mudar a duração. */
+function aplicarRecebe(){
+  if(s.periodo==null || !s.recebe) return;
+  var im=s.produto==='imersao', rec=s.recebe, ant=s.sel||{}, sel={}, out=[];
+  function poe(id,qtd){ var v=ant[id]&&ant[id].valor!=null?ant[id].valor:SERV_ID[id].med; sel[id]={qtd:qtd,valor:v}; }
+  if(rec.indexOf('plataforma')>=0) poe('L01', im?1:s.periodo);
+  if(rec.indexOf('material')>=0) poe('G44',1);
+  if(im){ poe('G34',s.encontros); poe('L17',s.encontros); }          /* na imersão o evento é o produto: sala e coffee dos dias da imersão */
+  else if(rec.indexOf('evento')>=0 && s.eventoDias>0){ poe(ehGrupo()?'G34':'G33',s.eventoDias); poe('L17',s.eventoDias); }
+  if(rec.indexOf('livro')>=0 && s.livroCusto!=null) out.push({nome:'Seu livro',valor:s.livroCusto,esc:'pessoa',pacote:'livro'});
+  s.sel=sel; s.outros=out; s.temParceiros=Object.keys(sel).length>0||out.length>0;
+}
+/* Linha "O que o seu pacote inclui": só com o que foi marcado. Vazia nas respostas antigas. */
+function textoPacote(){
+  if(s.periodo==null) return '';
+  var im=s.produto==='imersao', partes=[], rec=s.recebe||[];
+  partes.push(im ? 'Imersão presencial de '+diasTxt(s.encontros)+', '+IMERSAO_HORAS_DIA+' horas por dia' : mesesTxt(s.periodo)+', '+encTxt(s.encontros)+' de 1 hora');
+  RECEBE.forEach(function(r){
+    if(rec.indexOf(r.v)<0 || (im&&r.v==='evento')) return;
+    partes.push(r.v==='evento'&&s.eventoDias>0 ? 'evento presencial de '+diasTxt(s.eventoDias) : r.nm);
+  });
+  var t=partes.join(', ')+'.';
+  if(s.socio!=null) t+=' Entregue por você'+(s.socio?' e um sócio':'')+'.';
+  return t;
+}
+function htmlPacote(paraPdf){ var t=textoPacote(); return t?'<div class="pacote"'+(paraPdf?'':' id="r-pacote"')+'><b>O que o seu pacote inclui</b>'+esc(t)+'</div>':''; }
 var s = novo();
 var vista = 'capa';
 
@@ -588,16 +650,14 @@ app.addEventListener('pointermove',function(e){
   var el=e.target.closest&&e.target.closest('.op,.serv'); if(!el) return;
   var r=el.getBoundingClientRect(); el.style.setProperty('--mx',(e.clientX-r.left)+'px'); el.style.setProperty('--my',(e.clientY-r.top)+'px');
 });
-var ocupado=false;
-function avancarDepois(fn,ms){ if(ocupado) return; ocupado=true; setTimeout(function(){ ocupado=false; fn(); }, reduz?0:(ms||350)); }
+var ocupado=false, navToken=0;
+/* O avanço automático só vale se o aluno continua na mesma tela: Voltar (ou qualquer troca de tela) cancela o que estava marcado. */
+function avancarDepois(fn,ms){ if(ocupado) return; ocupado=true; var t0=navToken; setTimeout(function(){ if(navToken!==t0) return; ocupado=false; fn(); }, reduz?0:(ms||350)); }
 
-function passos(){
-  var p=['construido','cobra','venda','tempo','hora','temparc']; if(s.temParceiros) p.push('parceiros'); p.push('mercado');
-  return p;
-}
-var NOME_ETAPA = {construido:'O que você já construiu',cobra:'Quanto cobra hoje',venda:'O que vende e para quem',tempo:'Seu tempo',hora:'Sua hora',temparc:'Parceiros',parceiros:'Parceiros',mercado:'Seu mercado'};
-function ir(v){ vista=v; desenhar(); window.scrollTo(0,0); }
-function proximo(){ var p=passos(), i=p.indexOf(vista); ir(i<p.length-1?p[i+1]:'resultado'); }
+function passos(){ return ['construido','cobra','venda','tempo','recebe','socio','hora','mercado']; }
+var NOME_ETAPA = {construido:'O que você já construiu',cobra:'Quanto cobra hoje',venda:'O que vende e para quem',tempo:'Duração da mentoria',recebe:'O que o cliente recebe',socio:'Quem entrega',hora:'Sua hora',mercado:'Seu mercado'};
+function ir(v){ navToken++; ocupado=false; vista=v; desenhar(); window.scrollTo(0,0); }
+function proximo(){ if(vista==='tempo'||vista==='recebe') aplicarRecebe(); var p=passos(), i=p.indexOf(vista); ir(i<p.length-1?p[i+1]:'resultado'); }
 function anterior(){ var p=passos(), i=p.indexOf(vista); ir(i>0?p[i-1]:'capa'); }
 function cabecalho(){
   var p=passos(), i=p.indexOf(vista);
@@ -629,7 +689,7 @@ function caixaOutro(id,moeda,ph,valor,rotulo){
 function abrirOutro(id){ document.getElementById(id).hidden=false; var i=document.getElementById(id+'-in'); setTimeout(function(){i.focus();},30); }
 function ligarOutro(id,valida,depois){
   var inp=document.getElementById(id+'-in'), ok=document.getElementById(id+'-ok'), er=document.getElementById(id+'-e');
-  function confirma(){ var msg=valida(num(inp.value)); if(msg){ er.textContent=msg; return; } er.textContent=''; (depois||proximo)(); }
+  function confirma(){ if(ocupado) return; var msg=valida(num(inp.value)); if(msg){ er.textContent=msg; return; } er.textContent=''; (depois||proximo)(); }
   ok.onclick=confirma; inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confirma(); } });
   inp.addEventListener('input',function(){ er.textContent=''; });
 }
@@ -760,7 +820,7 @@ async function comecar(){
 
 /* envio das respostas: acontece uma vez, quando a devolutiva é montada pela primeira vez */
 function montarEnvio(c){
-  var carga=JSON.parse(JSON.stringify({v:'v5',nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
+  var carga=JSON.parse(JSON.stringify({v:'v7',nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,periodo:s.periodo,frequencia:s.frequencia,recebe:s.recebe,eventoDias:s.eventoDias,livroCusto:s.livroCusto,socio:s.socio,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
   var resultado={pts:c.pts,nivel:c.nv.n,nivel_idx:NIVEIS.indexOf(c.nv),horaM:c.horaM,hora:c.hora,H:c.H,N:c.N,Cp:c.Cp,pisoR:c.pisoR,vit:c.vit,pNivel:c.pNivel,custoLucro:c.custoLucro,regua:c.regua,gap:c.gap,origem:c.origem};
   return {p_turma:TURMA,p_nome:ident.nome,p_contato:ident.zap,p_consentiu:true,p_carga:carga,p_resultado:resultado};
 }
@@ -888,41 +948,154 @@ function telaVenda(){
   ligarCartoes(function(v){ s.comprador=v; },'comp');
 }
 function telaTempo(){
-  var enc=[1,2,3,4,6,8,12,24], dur=[1,1.5,2,3,4,8], ext=[0,1,2,5,10];
-  var g=ehGrupo(), revisita=s.encontros&&s.duracao&&s.extra!=null;
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto do seu tempo o cliente recebe?</h1><p class="contexto">'+(g?'Conte o tempo da turma inteira.':'Responda em ordem. A próxima pergunta abre sozinha.')+'</p>'+
-  '<div class="linha-t" id="l-enc"><span class="rot">Quantos encontros com você</span><div class="chips">'+enc.map(function(v){return '<button class="chip'+(s.encontros===v?' sel':'')+'" data-k="encontros" data-v="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.encontros&&enc.indexOf(s.encontros)<0?' sel':'')+'" data-k="encontros" data-v="outro">outro</button></div>'+
-    caixaOutro('ou-enc',false,'15',s.encontros&&enc.indexOf(s.encontros)<0?s.encontros:'')+'</div>'+
-  '<div class="linha-t" id="l-dur"'+(s.encontros?'':' hidden')+'><span class="rot">Quanto dura cada encontro</span><div class="chips">'+dur.map(function(v){return '<button class="chip'+(s.duracao===v?' sel':'')+'" data-k="duracao" data-v="'+v+'">'+durTxt(v)+'</button>';}).join('')+'</div></div>'+
-  '<div class="linha-t" id="l-ext"'+(s.duracao&&s.encontros?'':' hidden')+'><span class="rot">Fora dos encontros (preparo, acompanhamento, mensagens), quanto tempo no total</span><div class="chips">'+ext.map(function(v){return '<button class="chip'+(s.extra===v?' sel':'')+'" data-k="extra" data-v="'+v+'">'+(v===0?'nenhum':v+' h')+'</button>';}).join('')+'</div></div>'+
-  '<div class="total-vivo" id="t-vivo"'+(revisita?'':' hidden')+'></div></div>';
+  coerenciaTempo();
+  if(s.produto==='imersao') telaDias(); else telaDuracao();
+}
+/* Pergunta 4: duração da mentoria e frequência. 1 hora por encontro; o número de encontros é calculado. */
+function telaDuracao(){
+  var g=ehGrupo(), revisita=!!(s.periodo&&FREQ_M[s.frequencia]);
+  var freq=[{v:'semanal',t:'Semanal'},{v:'quinzenal',t:'Quinzenal'},{v:'mensal',t:'Mensal'}];
+  var fora=s.periodo>0 && !DURACOES.some(function(d){return d.v===s.periodo;});
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quanto tempo dura a sua mentoria?</h1><p class="contexto">'+(g?'Cada encontro vale 1 hora, e o tempo conta para a turma inteira.':'Cada encontro vale 1 hora.')+'</p>'+
+  '<div class="linha-t" id="l-dur"><span class="rot">Duração</span><div class="chips" role="radiogroup" aria-label="Duração da mentoria">'+DURACOES.map(function(d){return '<button class="chip" role="radio" aria-checked="false" data-k="periodo" data-v="'+d.v+'">'+d.t+'</button>';}).join('')+'<button class="chip" role="radio" aria-checked="false" data-k="periodo" data-v="outro">outro</button></div>'+
+    caixaOutro('ou-per',false,'Meses, de 1 a 36',fora?s.periodo:'')+'</div>'+
+  '<div class="linha-t" id="l-frq"'+(s.periodo?'':' hidden')+'><span class="rot">Com que frequência vocês se encontram?</span><div class="chips" role="radiogroup" aria-label="Frequência dos encontros">'+freq.map(function(f){return '<button class="chip" role="radio" aria-checked="false" data-k="frequencia" data-v="'+f.v+'">'+f.t+'</button>';}).join('')+'</div></div>'+
+  '<div class="total-vivo" id="t-vivo" hidden></div></div>';
   document.getElementById('b-voltar').onclick=anterior;
-  if(s.encontros&&enc.indexOf(s.encontros)<0) document.getElementById('ou-enc').hidden=false;
+  document.getElementById('ou-per-in').setAttribute('aria-label','Meses de duração da mentoria, de 1 a 36');
+  if(fora) document.getElementById('ou-per').hidden=false;
   function marca(){
-    app.querySelectorAll('.chip[data-k]').forEach(function(c){ var k=c.getAttribute('data-k'), v=c.getAttribute('data-v');
-      c.classList.toggle('sel', v==='outro' ? (k==='encontros'&&s.encontros&&enc.indexOf(s.encontros)<0) : parseFloat(v)===s[k]); });
-    var tv=document.getElementById('t-vivo');
-    if(s.encontros&&s.duracao&&s.extra!=null){ tv.hidden=false; tv.innerHTML='<span>Total: <b>'+hTxt(horasTotal())+'</b> suas</span>'+(revisita?'<button class="btn ghost sm" id="b-seguir">Seguir com este total</button>':''); var bs=document.getElementById('b-seguir'); if(bs) bs.onclick=proximo; }
+    app.querySelectorAll('.chip[data-k]').forEach(function(c){
+      var k=c.getAttribute('data-k'), v=c.getAttribute('data-v'), on;
+      if(k==='periodo') on = v==='outro' ? (s.periodo>0&&!DURACOES.some(function(d){return d.v===s.periodo;})) : parseInt(v,10)===s.periodo;
+      else on = v===s.frequencia;
+      c.classList.toggle('sel',!!on); c.setAttribute('aria-checked',!!on);
+    });
+    document.getElementById('l-frq').hidden=!s.periodo;
+    var tv=document.getElementById('t-vivo'), n=s.encontros;
+    if(s.periodo&&FREQ_M[s.frequencia]&&n>0){
+      tv.hidden=false; tv.innerHTML='<span>'+encTxt(n)+' de 1 hora · <b>'+n+' h</b> '+(n===1?'sua':'suas')+'</span>'+(revisita?'<button class="btn ghost sm" id="b-seguir">Seguir com este total</button>':'');
+      var bs=document.getElementById('b-seguir'); if(bs) bs.onclick=function(){ if(!ocupado) proximo(); };
+    } else tv.hidden=true;
   }
-  function abre(){ document.getElementById('l-dur').hidden=!s.encontros; document.getElementById('l-ext').hidden=!(s.encontros&&s.duracao); }
+  function rolaFreq(){ document.getElementById('l-frq').scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'}); }
   app.querySelectorAll('.chip[data-k]').forEach(function(c){
     c.onclick=function(){
       if(ocupado) return;
       var k=c.getAttribute('data-k'), v=c.getAttribute('data-v');
-      s.horasManual=null;
-      if(v==='outro'){ abrirOutro('ou-enc'); return; }
-      if(k==='encontros') document.getElementById('ou-enc').hidden=true;
-      s[k]=parseFloat(v); abre(); marca();
-      if(k==='extra'&&s.encontros&&s.duracao) avancarDepois(proximo,700);
-      else if(k==='encontros') document.getElementById('l-dur').scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'});
-      else if(k==='duracao') document.getElementById('l-ext').scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'});
+      if(v==='outro'){ abrirOutro('ou-per'); return; }
+      if(k==='periodo'){ document.getElementById('ou-per').hidden=true; document.getElementById('ou-per-e').textContent=''; s.periodo=parseInt(v,10); } else s.frequencia=v;
+      aplicarTempo(); marca();
+      if(k==='frequencia') avancarDepois(proximo,700); else rolaFreq();
     };
   });
-  var inp=document.getElementById('ou-enc-in'), er=document.getElementById('ou-enc-e');
-  function confEnc(){ var n=Math.round(num(inp.value)); if(!(n>=1&&n<=500)){ er.textContent='Digite quantos encontros, de 1 a 500.'; return; } er.textContent=''; s.encontros=n; s.horasManual=null; abre(); marca(); }
-  document.getElementById('ou-enc-ok').onclick=confEnc;
-  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confEnc(); } });
+  ligarOutro('ou-per',function(n){ if(!(n>=1&&n<=36&&n===Math.floor(n))) return 'Digite os meses da mentoria, de 1 a 36.'; s.periodo=n; aplicarTempo(); return ''; },function(){ marca(); rolaFreq(); });
   marca();
+}
+/* Imersão presencial: a pergunta vira "quantos dias"; cada dia vale 8 horas e não há frequência. */
+function telaDias(){
+  var dias=[1,2,3], revisita=!!(s.periodo&&s.frequencia==='imersao'&&s.encontros>0), fora=revisita&&dias.indexOf(s.encontros)<0;
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quantos dias de imersão?</h1><p class="contexto">Cada dia vale '+IMERSAO_HORAS_DIA+' horas, e o tempo conta para a turma inteira.</p>'+
+  '<div class="linha-t"><span class="rot">Dias</span><div class="chips" role="radiogroup" aria-label="Dias de imersão">'+dias.map(function(d){return '<button class="chip" role="radio" aria-checked="false" data-v="'+d+'">'+d+'</button>';}).join('')+'<button class="chip" role="radio" aria-checked="false" data-v="outro">outro</button></div>'+
+    caixaOutro('ou-dias',false,'Dias, de 1 a 10',fora?s.encontros:'')+'</div>'+
+  '<div class="total-vivo" id="t-vivo" hidden></div></div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  document.getElementById('ou-dias-in').setAttribute('aria-label','Dias de imersão, de 1 a 10');
+  if(fora) document.getElementById('ou-dias').hidden=false;
+  function poe(d){ s.periodo=1; s.frequencia='imersao'; s.encontros=d; aplicarTempo(); }
+  function marca(){
+    var d=(s.periodo&&s.frequencia==='imersao')?s.encontros:null;
+    app.querySelectorAll('.chip[data-v]').forEach(function(c){ var v=c.getAttribute('data-v'), on=v==='outro'?(d>0&&dias.indexOf(d)<0):parseInt(v,10)===d; c.classList.toggle('sel',!!on); c.setAttribute('aria-checked',!!on); });
+    var tv=document.getElementById('t-vivo');
+    if(d>0){ var h=d*IMERSAO_HORAS_DIA; tv.hidden=false; tv.innerHTML='<span>'+diasTxt(d)+' de '+IMERSAO_HORAS_DIA+' horas · <b>'+h+' h</b> suas</span>'+(revisita?'<button class="btn ghost sm" id="b-seguir">Seguir com este total</button>':''); var bs=document.getElementById('b-seguir'); if(bs) bs.onclick=function(){ if(!ocupado) proximo(); }; }
+    else tv.hidden=true;
+  }
+  app.querySelectorAll('.chip[data-v]').forEach(function(c){
+    c.onclick=function(){
+      if(ocupado) return;
+      var v=c.getAttribute('data-v');
+      if(v==='outro'){ abrirOutro('ou-dias'); return; }
+      document.getElementById('ou-dias').hidden=true; document.getElementById('ou-dias-e').textContent='';
+      poe(parseInt(v,10)); marca(); avancarDepois(proximo);
+    };
+  });
+  ligarOutro('ou-dias',function(n){ if(!(n>=1&&n<=10&&n===Math.floor(n))) return 'Digite os dias de imersão, de 1 a 10.'; poe(n); return ''; },function(){ marca(); avancarDepois(proximo); });
+  marca();
+}
+/* Pergunta 5: o que o cliente recebe além dos encontros. Marque quantos quiser; "Nada além dos encontros" desmarca os outros. */
+function telaRecebe(){
+  var im=s.produto==='imersao', dias=[1,2,3];
+  var lista=RECEBE.filter(function(r){ return !(im&&r.v==='evento'); });
+  var rec=(s.recebe||[]).filter(function(x){ return x==='nada'||lista.some(function(r){return r.v===x;}); });
+  var foraEv=s.eventoDias>0&&dias.indexOf(s.eventoDias)<0;
+  function cartao(id,t,d){
+    var on=rec.indexOf(id)>=0;
+    return '<div class="serv'+(on?' sel':'')+'" role="checkbox" tabindex="0" aria-checked="'+on+'" data-r="'+id+'"><span class="cx" aria-hidden="true">'+(on?'✓':'')+'</span><span class="txt"><span class="t">'+esc(t)+'</span>'+(d?'<span class="d">'+esc(d)+'</span>':'')+'</span></div>';
+  }
+  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Além dos encontros, o que o cliente recebe?</h1><p class="contexto">Marque quantos quiser, ou escolha que não há nada além dos encontros.</p><div class="lista-serv" style="margin-top:22px">';
+  lista.forEach(function(r){
+    html+=cartao(r.v,r.t,r.d);
+    if(r.v==='livro') html+='<div class="sub-r" id="sr-livro"'+(rec.indexOf('livro')>=0?'':' hidden')+'><label class="rot" for="rc-livro">Quanto custa cada exemplar para você? (R$)</label><div class="moeda"><span>R$</span><input class="campo" id="rc-livro" inputmode="decimal" placeholder="0 se for digital" value="'+(s.livroCusto!=null?esc(s.livroCusto.toLocaleString('pt-BR',{maximumFractionDigits:2})):'')+'"></div><p class="erro" id="e-livro"></p></div>';
+    if(r.v==='evento') html+='<div class="sub-r" id="sr-evento"'+(rec.indexOf('evento')>=0?'':' hidden')+'><span class="rot">Quantos dias?</span><div class="chips" role="radiogroup" aria-label="Dias de evento presencial">'+dias.map(function(d){return '<button class="chip" role="radio" aria-checked="false" data-ev="'+d+'">'+d+'</button>';}).join('')+'<button class="chip" role="radio" aria-checked="false" data-ev="outro">outro</button></div>'+caixaOutro('ou-ev',false,'Dias, de 1 a 10',foraEv?s.eventoDias:'')+'</div>';
+  });
+  html+=cartao('nada','Nada além dos encontros','')+'</div><p class="erro" id="e-recebe"></p></div>'+
+    '<div class="barra"><div class="in"><span class="info" id="b-info"></span><button class="btn" id="b-seguir">Continuar</button></div></div>';
+  app.innerHTML=html;
+  document.getElementById('b-voltar').onclick=anterior;
+  var iev=document.getElementById('ou-ev-in'); if(iev) iev.setAttribute('aria-label','Dias de evento presencial, de 1 a 10');
+  if(foraEv&&rec.indexOf('evento')>=0) document.getElementById('ou-ev').hidden=false;
+  function guarda(){ s.recebe=RECEBE.map(function(r){return r.v;}).concat(['nada']).filter(function(x){return rec.indexOf(x)>=0;}); }
+  function foraEvento(){ return s.eventoDias>0&&dias.indexOf(s.eventoDias)<0; }
+  function pinta(){
+    app.querySelectorAll('.serv[data-r]').forEach(function(el){ var on=rec.indexOf(el.getAttribute('data-r'))>=0; el.classList.toggle('sel',on); el.setAttribute('aria-checked',on); el.querySelector('.cx').textContent=on?'✓':''; });
+    var sl=document.getElementById('sr-livro'); if(sl) sl.hidden=rec.indexOf('livro')<0;
+    var se=document.getElementById('sr-evento'); if(se) se.hidden=rec.indexOf('evento')<0;
+    app.querySelectorAll('.chip[data-ev]').forEach(function(c){ var v=c.getAttribute('data-ev'), on=v==='outro'?foraEvento():parseInt(v,10)===s.eventoDias; c.classList.toggle('sel',!!on); c.setAttribute('aria-checked',!!on); });
+    var n=rec.filter(function(x){return x!=='nada';}).length;
+    document.getElementById('b-info').textContent = rec.indexOf('nada')>=0 ? 'Nada além dos encontros' : n ? (n===1?'1 item marcado':n+' itens marcados') : 'Nada marcado ainda';
+  }
+  function alterna(el){
+    var id=el.getAttribute('data-r'), i=rec.indexOf(id);
+    if(i>=0) rec.splice(i,1);
+    else if(id==='nada'){ rec.length=0; rec.push('nada'); }
+    else { var j=rec.indexOf('nada'); if(j>=0) rec.splice(j,1); rec.push(id); }
+    document.getElementById('e-recebe').textContent='';
+    guarda(); pinta();
+  }
+  app.querySelectorAll('.serv[data-r]').forEach(function(el){
+    el.onclick=function(e){ ripple(e,el); alterna(el); };
+    el.onkeydown=function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); alterna(el); } };
+  });
+  app.querySelectorAll('.chip[data-ev]').forEach(function(c){
+    c.onclick=function(){
+      var v=c.getAttribute('data-ev');
+      if(v==='outro'){ abrirOutro('ou-ev'); return; }
+      document.getElementById('ou-ev').hidden=true; document.getElementById('ou-ev-e').textContent=''; s.eventoDias=parseInt(v,10); pinta();
+    };
+  });
+  ligarOutro('ou-ev',function(n){ if(!(n>=1&&n<=10&&n===Math.floor(n))) return 'Digite os dias de evento, de 1 a 10.'; s.eventoDias=n; return ''; },pinta);
+  var inp=document.getElementById('rc-livro');
+  if(inp) inp.addEventListener('input',function(){ document.getElementById('e-livro').textContent=''; var raw=inp.value.trim(), n=num(raw); if(raw!==''&&n>=0&&n<=5000) s.livroCusto=n; });
+  document.getElementById('b-seguir').onclick=function(){
+    if(ocupado) return;
+    var er=document.getElementById('e-recebe'); er.textContent='';
+    if(!rec.length){ er.textContent='Marque o que o cliente recebe, ou escolha "Nada além dos encontros".'; return; }
+    if(rec.indexOf('livro')>=0){
+      var raw=inp.value.trim(), n=num(raw);
+      if(raw===''||!(n>=0&&n<=5000)){ document.getElementById('e-livro').textContent='Digite quanto custa cada exemplar, de R$ 0 a R$ 5.000. Se for digital, digite 0.'; inp.scrollIntoView({behavior:reduz?'auto':'smooth',block:'center'}); inp.focus(); return; }
+      s.livroCusto=n;
+    }
+    if(rec.indexOf('evento')>=0 && !(s.eventoDias>=1)){ document.getElementById('ou-ev-e').textContent='Escolha quantos dias de evento.'; document.getElementById('sr-evento').scrollIntoView({behavior:reduz?'auto':'smooth',block:'center'}); return; }
+    guarda(); proximo();
+  };
+  pinta();
+}
+/* Pergunta 6: quem entrega. Não muda a conta; aparece só na linha do pacote. */
+function telaSocio(){
+  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quem entrega a mentoria?</h1><p class="contexto">Isso aparece no resumo do seu pacote, no fim.</p>'+
+  cartoes([{v:'so',t:'Só eu'},{v:'socio',t:'Eu e um sócio'}], s.socio===true?'socio':s.socio===false?'so':null)+'</div>';
+  document.getElementById('b-voltar').onclick=anterior;
+  ligarCartoes(function(v){ s.socio=(v==='socio'); });
 }
 function telaHora(){
   var hm=horaMercado(), nv=nivelDe(pontos());
@@ -941,74 +1114,12 @@ function telaHora(){
   });
   ligarOutro('ou-hora',function(n){ if(!(n>=10&&n<=100000)) return 'Digite o valor da sua hora, a partir de R$ 10.'; s.horaInformada=n; s.horaTipo='outro'; return ''; });
 }
-function telaTemParc(){
-  app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Alguém além de você entrega parte do pacote?</h1><p class="contexto">Um especialista convidado, uma sala de evento, uma apostila feita por terceiros.</p>'+
-  cartoes([{v:'nao',t:'Não, tudo é entregue por mim'},{v:'sim',t:'Sim, tem parceiros',d:'Você marca quem são na próxima tela'}], s.temParceiros===true?'sim':s.temParceiros===false?'nao':null)+'</div>';
-  document.getElementById('b-voltar').onclick=anterior;
-  ligarCartoes(function(v){ s.temParceiros=(v==='sim'); if(!s.temParceiros){ s.sel={}; s.outros=[]; } });
-}
 function telaMercado(){
   app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Em que mercado você atua?</h1><p class="contexto">Última pergunta. O mercado entra na sua frase de autoridade.</p>'+
   cartoes(Object.keys(MERCADOS).map(function(k){return {v:k,t:MERCADOS[k].t,d:MERCADOS[k].d};}),s.mercado,'duas')+'</div>';
   document.getElementById('b-voltar').onclick=anterior;
   ligarCartoes(function(v){ s.mercado=v; });
 }
-function telaParceiros(){
-  var g=ehGrupo(), m=MERCADOS[s.mercado]||MERCADOS.outro;
-  var html='<div class="tela">'+cabecalho()+'<h1 class="enunciado">Quem são os parceiros?</h1><p class="contexto">Marque o que não é você quem entrega. Você ajusta os valores no fim.</p>';
-  CATS.forEach(function(c){
-    var itens=SERV.filter(function(x){return x.cat===c[0];}); if(!itens.length) return;
-    html+='<p class="cat">'+c[1]+'</p><div class="lista-serv">'+itens.map(cartaoServ).join('')+'</div>';
-  });
-  html+='<p class="cat">Outro parceiro</p><div class="seu-mercado"><p>Serviço que não está na lista? Escreva o nome e o valor que o parceiro cobra.<br><small>Exemplos: '+esc(m.ex)+'.</small></p><div id="outros"></div><button class="mais" id="b-mais">+ Adicionar parceiro</button></div>';
-  html+='<details class="extra"'+(CATS_EXTRA.some(function(c){return SERV.some(function(x){return x.cat===c[0]&&s.sel[x.id];});})?' open':'')+'><summary>Mais serviços com média de mercado (imagem, comunicação, livro)</summary>';
-  CATS_EXTRA.forEach(function(c){
-    var itens=SERV.filter(function(x){return x.cat===c[0];}); if(!itens.length) return;
-    html+='<p class="cat">'+c[1]+'</p><div class="lista-serv">'+itens.map(cartaoServ).join('')+'</div>';
-  });
-  html+='</details></div><div class="barra"><div class="in"><span class="info" id="b-info"></span><button class="btn" id="b-seguir">Continuar</button></div></div>';
-  app.innerHTML=html;
-  document.getElementById('b-voltar').onclick=anterior;
-  function cartaoServ(d){
-    var x=s.sel[d.id];
-    return '<div class="serv'+(x?' sel':'')+'" role="checkbox" tabindex="0" aria-checked="'+(!!x)+'" data-id="'+d.id+'"><span class="cx" aria-hidden="true">'+(x?'✓':'')+'</span><span class="txt"><span class="t">'+esc(d.nome)+'</span>'+(d.det?'<span class="d">'+esc(d.det)+'</span>':'')+
-      (x&&COM_QTD[d.un]?'<span class="qtd"><button data-q="-1" aria-label="Menos">−</button><b>'+x.qtd+'</b><span>'+(x.qtd===1?(d.un==='coffee'?'coffee por pessoa':d.un):UN_PLURAL[d.un]+(d.un==='coffee'?' por pessoa':''))+'</span><button data-q="1" aria-label="Mais">+</button></span>':'')+
-      '</span><span class="pr">média '+brl(d.med)+'<small>'+unTxt(d.un)+(g&&d.esc==='turma'?', da turma':'')+'</small></span></div>';
-  }
-  function religar(){
-    app.querySelectorAll('.serv').forEach(function(el){
-      function alterna(e){
-        if(e.target.closest('.qtd')) return;
-        var id=el.getAttribute('data-id');
-        if(s.sel[id]) delete s.sel[id]; else s.sel[id]={qtd:1,valor:SERV_ID[id].med};
-        ripple(e,el); el.outerHTML=cartaoServ(SERV_ID[id]); religar(); info();
-      }
-      el.onclick=alterna;
-      el.onkeydown=function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); alterna(e); } };
-      el.querySelectorAll('.qtd button').forEach(function(b){ b.onclick=function(e){ e.stopPropagation(); var id=el.getAttribute('data-id'); var x=s.sel[id]; x.qtd=Math.max(1,Math.min(99,x.qtd+parseInt(b.getAttribute('data-q'),10))); el.outerHTML=cartaoServ(SERV_ID[id]); religar(); info(); }; });
-    });
-  }
-  function desenharOutros(){
-    var box=document.getElementById('outros');
-    box.innerHTML=s.outros.map(function(o,i){
-      return '<div class="outro'+(g?' g':'')+'"><input class="campo nome" data-i="'+i+'" data-k="nome" placeholder="Ex.: '+esc(m.ex.split(',')[0])+'" aria-label="Nome do serviço do parceiro" value="'+esc(o.nome)+'">'+
-        '<div class="moeda"><span>R$</span><input class="campo" data-i="'+i+'" data-k="valor" inputmode="numeric" placeholder="1.500" aria-label="Valor do parceiro" value="'+(o.valor?Math.round(o.valor).toLocaleString('pt-BR'):'')+'"></div>'+
-        (g?'<select data-i="'+i+'" data-k="esc" aria-label="Como o custo se divide"><option value="pessoa"'+(o.esc!=='turma'?' selected':'')+'>por pessoa</option><option value="turma"'+(o.esc==='turma'?' selected':'')+'>pela turma</option></select>':'')+
-        '<button class="x" data-del="'+i+'" aria-label="Tirar este parceiro">×</button></div>';
-    }).join('');
-    box.querySelectorAll('input,select').forEach(function(inp){ inp.addEventListener('input',function(){ var o=s.outros[+inp.getAttribute('data-i')], k=inp.getAttribute('data-k'); o[k]= k==='valor'?num(inp.value):inp.value; info(); }); });
-    box.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ s.outros.splice(+b.getAttribute('data-del'),1); desenharOutros(); info(); }; });
-  }
-  function info(){
-    var n=Object.keys(s.sel).length+s.outros.filter(function(o){return (o.nome||'').trim()||o.valor>0;}).length;
-    var tot=parceirosLista().reduce(function(a,p){return a+p.qtd*p.valor;},0);
-    document.getElementById('b-info').textContent = n? (n===1?'1 parceiro':n+' parceiros')+' · '+brl(tot) : 'Nenhum parceiro marcado';
-  }
-  document.getElementById('b-mais').onclick=function(){ s.outros.push({nome:'',valor:0,esc:'pessoa'}); desenharOutros(); var ins=app.querySelectorAll('#outros .campo.nome'); if(ins.length) ins[ins.length-1].focus(); };
-  document.getElementById('b-seguir').onclick=proximo;
-  religar(); desenharOutros(); info();
-}
-
 /* ---------- Devolutiva ---------- */
 function cap(t){ t=String(t||''); return t.charAt(0).toUpperCase()+t.slice(1); }
 function unidadeCliente(c){ return c.g?'por participante':'por cliente'; }
@@ -1091,16 +1202,16 @@ function htmlPassos(c){
   var g=c.g, i=1, p=[];
   p.push(['Régua de quem compra igual a você', PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase(), faixaTxt(c.regua[0],c.regua[1])]);
   p.push(['Seu nível: '+c.nv.n.toLowerCase(), 'quem está nesse nível cobra por volta de', brl(c.pNivel)]);
-  p.push(['Custo de entregar', (c.Cp>0?'parceiros '+brl(c.Cp)+' + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)')+(g?' ÷ '+c.N+' pessoas':''), brl(c.Cp+c.T)]);
-  p.push(['Com lucro e impostos', (c.Cp>0?'80% sobre os parceiros, ':'')+'dividido por 0,77 (imposto 15%, comissão 7%, cobrança 1%)', brl(c.custoLucro)]);
+  p.push(['Custo de entregar', (c.Cp>0?'custos do pacote '+brl(c.Cp)+' + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)')+(g?' ÷ '+c.N+' pessoas':''), brl(c.Cp+c.T)]);
+  p.push(['Com lucro e impostos', (c.Cp>0?'80% sobre os custos do pacote, ':'')+'dividido por 0,77 (imposto 15%, comissão 7%, cobrança 1%)', brl(c.custoLucro)]);
   p.push(['O maior dos dois', c.origem==='nivel'?'vale o seu nível':'vale o custo com lucro', brl(c.sug)]);
   return p.map(function(r){ return '<div class="ps"><span class="i">'+(i++)+'</span><span class="l">'+r[0]+(r[1]?'<small>'+r[1]+'</small>':'')+'</span><span class="v">'+r[2]+'</span></div>'; }).join('')+
     '<div class="ps fim"><span class="i">'+i+'</span><span class="l">Arredondado para vender'+(g?'<small>por participante</small>':'')+'</span><span class="v">'+brl(c.vit)+'</span></div>';
 }
 function htmlEse(c,P){
-  if(!(P>0)) return {t:'<span class="big">Digite um valor</span>Mostramos quanto sobra para você depois dos parceiros e dos 23% de imposto, comissão e cobrança.',at:false};
+  if(!(P>0)) return {t:'<span class="big">Digite um valor</span>Mostramos quanto sobra para você depois dos custos do pacote e dos 23% de imposto, comissão e cobrança.',at:false};
   var r=seCobrar(c,P), g=c.g;
-  if(r.sobra<=0) return {at:true,t:'<span class="big">Faltam '+brl(-r.sobra)+'</span>Nesse valor, o que entra não paga os parceiros e os 23% de imposto, comissão e cobrança'+(g?', somando a turma de '+c.N:'')+'.'};
+  if(r.sobra<=0) return {at:true,t:'<span class="big">Faltam '+brl(-r.sobra)+'</span>Nesse valor, o que entra não paga os custos do pacote e os 23% de imposto, comissão e cobrança'+(g?', somando a turma de '+c.N:'')+'.'};
   var pct=Math.round(r.pct*100);
   var resto = r.pct>=1 ? 'É '+pct+'% da sua hora ('+brl(c.hora)+'): ela está paga'+(r.lucro>1?' e ainda ficam '+brl(r.lucro)+' de lucro':'')+'.' : 'É '+pct+'% da sua hora ('+brl(c.hora)+').';
   return {at:r.pct<1,t:'<span class="big">'+brl(r.ph)+' por hora sua</span>Sobram '+brl(r.sobra)+' para você'+(g?' na turma de '+c.N:'')+', em '+hTxt(c.H)+' de trabalho. '+resto};
@@ -1109,7 +1220,7 @@ function listaCuidados(){
   var L=(CUIDADOS_MERCADO[s.mercado]||[]).slice();
   var emp=s.comprador==='pequena'||s.comprador==='media';
   L=L.concat(emp?CUIDADOS_EMPRESA:CUIDADOS_CONSUMIDOR);
-  if(s.temParceiros) L.push(CUIDADO_NOTA);
+  if(s.temParceiros && s.periodo==null) L.push(CUIDADO_NOTA);
   return L;
 }
 function telaResultado(){
@@ -1123,7 +1234,7 @@ function telaResultado(){
   (MODO_VER&&verInfo?'<p class="aviso-ex"><b>Visão da equipe.</b> Resposta nº '+esc(verInfo.id)+(verInfo.turma?' da turma '+esc(verInfo.turma):'')+(verInfo.quando?', enviada em '+esc(verInfo.quando):'')+'. Abrir esta página não grava nada de novo.</p>':'')+
   (s.exemplo?'<p class="aviso-ex">Exemplo: João, produtor rural há 15 anos, mentora outros produtores e cobra R$ 4 mil. Para fazer a sua, use Refazer as perguntas no fim da página.</p>':'')+
   '<p class="envio" id="r-envio" aria-live="polite"></p>'+
-  sec('Seu preço')+'<div id="r-preco"></div></section>'+
+  sec('Seu preço')+'<div id="r-preco"></div>'+htmlPacote()+'</section>'+
   sec('Seu nível de autoridade')+htmlNivel(c0)+'</section>'+
   sec('O que já sustenta esse preço')+htmlSustenta()+'</section>'+
   sec('Sua frase de autoridade')+'<div id="r-frase-box">'+htmlFrase()+'</div></section>'+
@@ -1136,13 +1247,13 @@ function telaResultado(){
     '<div><label for="r-cobra">Quanto você cobra hoje</label><div class="moeda"><span>R$</span><input class="campo" id="r-cobra" inputmode="numeric" placeholder="ainda não vendi" value="'+(s.cobra>0?Math.round(s.cobra).toLocaleString('pt-BR'):'')+'"></div></div>'+
     '</div>'+(s.horaInformada>0&&s.horaInformada<c0.horaM?'<p class="nota">Você informou '+brl(s.horaInformada)+' por hora. Pelo que você construiu, o mercado paga '+brl(c0.horaM)+'. A conta usa o mercado.</p>':'')+'<p class="nota" id="r-hoje"></p></section>'+
     '<section class="sec"><h3 class="sub-t">Onde o seu preço cai no mercado</h3><div class="regua" id="r-regua"></div><p class="leitura" id="r-leitura"></p></section>'+
-    (c0.itens.length? '<section class="sec"><h3 class="sub-t">Quanto custam os parceiros</h3><p class="sec-d">Já veio a média de mercado. Troque pelo preço que o seu parceiro passou.</p><div class="tab" id="r-parc"></div></section>':'')+
+    (c0.itens.length? '<section class="sec"><h3 class="sub-t">Custos do pacote</h3><p class="sec-d">Já veio a média de mercado. Troque pelo valor que você pagaria de fato.</p><div class="tab" id="r-parc"></div></section>':'')+
     '<section class="sec"><h3 class="sub-t">E se você cobrar outro valor?</h3>'+
     '<div class="ese-box"><div><label for="r-ese" class="rot" style="margin-top:0">Preço que você quer testar'+(g?', por participante':'')+'</label><div class="moeda grande"><span>R$</span><input class="campo" id="r-ese" inputmode="numeric" placeholder="'+Math.round(c0.vit).toLocaleString('pt-BR')+'" value="'+(s.ese?Math.round(s.ese).toLocaleString('pt-BR'):'')+'"></div></div><div class="ese-out" id="r-ese-out"></div></div></section>'+
     '<section class="sec"><h3 class="sub-t">Como chegamos ao preço</h3><div class="passos" id="r-passos"></div><p class="nota" id="r-min"></p></section>'+
     '<section class="sec"><h3 class="sub-t">Cuidados</h3><ul class="cuid">'+listaCuidados().map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
     '<section class="sec"><h3 class="sub-t">Antes de divulgar</h3><ul class="cuid">'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
-    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível, e o nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os parceiros seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
+    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível, e o nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os custos do pacote seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
   '</details>'+
   '<div class="acoes"><button class="btn" id="b-pdf">Baixar PDF</button><button class="btn ghost" id="b-mudar">Mudar respostas</button><button class="btn ghost" id="b-refazer">Refazer as perguntas</button></div>'+
   '<div id="r-pdf"></div></div>';
@@ -1174,8 +1285,8 @@ function desenharParceirosRes(){
       '<span class="m">'+merc+'</span>'+
       '<span><span class="moeda"><span>R$</span><input class="campo" data-pid="'+p.id+'" inputmode="numeric" aria-label="Valor usado para '+esc(p.nome)+'" value="'+Math.round(p.valor).toLocaleString('pt-BR')+'"></span>'+(q?'<small style="display:block;font-size:12px;color:var(--mu2);margin-top:4px">'+q+'</small>':'')+'</span></div>';
   }).join('')+
-  '<div class="tr tot"><span class="n">Total dos parceiros'+(g?'<small>por participante</small>':'')+'</span><span class="m"></span><span class="tt" id="r-ptot" style="text-align:right"></span></div>';
-  box.querySelectorAll('input[data-pid]').forEach(function(inp){ inp.addEventListener('input',function(){ var id=inp.getAttribute('data-pid'), v=num(inp.value); if(id.charAt(0)==='o'){ s.outros[+id.slice(1)].valor=v; } else if(s.sel[id]) s.sel[id].valor=v; atualizar(); }); });
+  '<div class="tr tot"><span class="n">Total dos custos do pacote'+(g?'<small>por participante</small>':'')+'</span><span class="m"></span><span class="tt" id="r-ptot" style="text-align:right"></span></div>';
+  box.querySelectorAll('input[data-pid]').forEach(function(inp){ inp.addEventListener('input',function(){ var id=inp.getAttribute('data-pid'), v=num(inp.value); if(id.charAt(0)==='o'){ var oo=s.outros[+id.slice(1)]; oo.valor=v; if(oo.pacote==='livro') s.livroCusto=v; } else if(s.sel[id]) s.sel[id].valor=v; atualizar(); }); });
 }
 function atualizar(){
   var c=calcular(); window.__ultimo=c;
@@ -1199,14 +1310,14 @@ function htmlPapel(){
   var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g?' · turma de '+c.N:'')+'</p></div>';
   function sh(t){ k++; return '<div class="ps2"><b>0'+k+'</b><span>'+t+'</span></div>'; }
   var fr=fraseAutoridade(), B=[];
-  B.push(sh('Seu preço')+htmlPreco(c));
+  B.push(sh('Seu preço')+htmlPreco(c)+htmlPacote(true));
   B.push(sh('Seu nível de autoridade')+htmlNivel(c));
   B.push(sh('O que já sustenta esse preço')+htmlSustenta());
   if(fr) B.push(sh('Sua frase de autoridade')+'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic;margin-top:0">'+esc(fr)+'</p>');
   B.push(sh('Para subir de nível')+htmlSubir(c));
   B.push(sh('Onde o seu preço cai no mercado')+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p>');
-  if(c.itens.length) B.push(sh('Quanto custam os parceiros')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos parceiros</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>');
-  var linhas=[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'parceiros + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]];
+  if(c.itens.length) B.push(sh('Custos do pacote')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos custos do pacote</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>');
+  var linhas=[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'custos do pacote + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]];
   B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">Mínimo, só o custo: '+brl(c.piso)+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
   B.push(sh('Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>');
   B.push(sh('Antes de divulgar')+'<ul>'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
@@ -1290,16 +1401,17 @@ function carregarExemplo(){
   s=novo();
   s.nome='João'; s.prodNome='Mentoria para produtores rurais'; s.produto='individual'; s.mercado='agro'; s.comprador='pequena';
   s.fatos={metodo:0, mentoria:1, palestra:1, livro:1, anos:1, posic:2, clientes:0, equipe:0, credencial:0, midia:1};
-  s.cobra=4000; s.horaTipo='mercado'; s.horaInformada=null; s.encontros=6; s.duracao=2; s.extra=0;
-  s.temParceiros=false; s.exemplo=true;
+  s.cobra=4000; s.horaTipo='mercado'; s.horaInformada=null;
+  s.periodo=3; s.frequencia='semanal'; s.recebe=['aulas','comunidade']; s.socio=false; aplicarTempo(); aplicarRecebe();
+  s.exemplo=true;
   ir('resultado');
 }
 
 function desenhar(){
-  var f={capa:telaCapa,construido:telaConstruido,cobra:telaCobra,venda:telaVenda,tempo:telaTempo,hora:telaHora,temparc:telaTemParc,parceiros:telaParceiros,mercado:telaMercado,resultado:telaResultado,jafez:telaJaFez,pin:function(){ telaPin(''); },aviso:telaAvisoAtual}[vista];
+  var f={capa:telaCapa,construido:telaConstruido,cobra:telaCobra,venda:telaVenda,tempo:telaTempo,recebe:telaRecebe,socio:telaSocio,hora:telaHora,mercado:telaMercado,resultado:telaResultado,jafez:telaJaFez,pin:function(){ telaPin(''); },aviso:telaAvisoAtual}[vista];
   f();
 }
-window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade,papel:htmlPapel};
+window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade,papel:htmlPapel,aplicarRecebe:aplicarRecebe,aplicarTempo:aplicarTempo,pacote:textoPacote};
 if(MODO_VER) iniciarVer(); else if(EXEMPLO) carregarExemplo(); else desenhar();
 })();
 </script>
