@@ -290,6 +290,7 @@ details.fontes p{margin:10px 0 0}
 .lg2 small{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--k-mu)}
 .lg2 b{display:block;font-family:var(--display);font-size:24px;font-weight:600;line-height:1.15;color:var(--k-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .lg2 .d b{color:var(--k-gold)}
+@media (max-width:400px){.fbar.anc .lg2 b{font-size:21px}}
 .fbar .nun{margin:10px 0 0;font-size:14px;color:var(--k-tx)}
 .trk2 .e3{right:0;border:2px solid var(--k-gold);background:var(--k-card2)}
 .trk2 .sg{background:var(--k-gold);border:2px solid var(--k-card2)}
@@ -502,7 +503,7 @@ var ANTES = [
 ];
 
 /* ---------- Estado ---------- */
-function novo(){ return {motor:8,capacidade:null,nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,periodo:null,frequencia:null,recebe:null,eventoDias:null,livroCusto:null,socio:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
+function novo(){ return {motor:9,capacidade:null,nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,periodo:null,frequencia:null,recebe:null,eventoDias:null,livroCusto:null,socio:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
 
 /* ---------- v7: duração, o que o cliente recebe e quem entrega ---------- */
 /* Cada encontro vale 1 hora e não há horas fora dos encontros: encontros = meses × encontros por mês; duracao = 1; extra = 0.
@@ -635,7 +636,25 @@ function precoNivelV7(nv){ var r=faixaRegua(); return r[0]*Math.pow(r[1]/r[0], n
 function precoNivel(nv){ if(legado()) return precoNivelV7(nv); var f=faixaFormato(); return f[0]+nv.f*(f[1]-f[0]); }
 /* Quantas pessoas pagam a turma: (horas × hora + custos da turma) ÷ (preço × 0,77 − custos por pessoa). null se o preço não cobre nem o custo de cada pessoa. */
 function turmaSePaga(c,P){ var den=P*K-c.Cp; if(!(den>0)) return null; return Math.max(1,Math.ceil((c.H*c.hora+c.Ct)/den-1e-9)); }
-function calcular(nvx){ return legado()?calcularV7(nvx):calcularV8(nvx); }
+function calcular(nvx){ return legado()?calcularV7(nvx):(s.motor>=9?calcularV9(nvx):calcularV8(nvx)); }
+/* ---------- Motor v9: o preço parte do que o aluno já cobra ---------- */
+/* Só quando s.cobra > 0. P = o que ele cobra. Mínimo: o maior entre o mínimo da v8 e P. Sugerido: o maior entre o da v8 e P + 10%, em valor de vitrine, nunca abaixo de P + 10% (sobe para a vitrine de cima).
+   Quem respondeu "Ainda não vendi" (cobra 0) sai exatamente como no motor 8. Respostas gravadas com motor 8 seguem em calcularV8, sem âncora. */
+function vitAcima(x){ var st=x>=10000?1000:(x>=1000?100:10); return Math.ceil((x+st/10)/st)*st-st/10; }
+function vitNaoAbaixo(x){ var a=arred(x); return a>=x?a:vitAcima(x); }
+function calcularV9(nvx){
+  var c=calcularV8(nvx), P=s.cobra>0?s.cobra:0;
+  c.motor=9; c.ancora=false; c.pisoAncora=false; c.origemBase=c.origem; c.alvoCobra=null;
+  if(!(P>0)) return c;
+  var alvo=vitNaoAbaixo(P*11/10);
+  c.alvoCobra=alvo;
+  if(alvo>c.vit){ c.vit=alvo; c.origem='cobra'; c.ancora=true; }
+  if(P>c.faixa[1]) c.ancora=true;
+  if(P>c.pisoR){ c.pisoR=P; c.pisoAncora=true; }
+  c.gap=c.vit-P;
+  if(c.g) c.X=turmaSePaga(c,c.vit);
+  return c;
+}
 function calcularV8(nvx){
   var g=ehGrupo(), H=horasTotal(), hora=horaUsada(nvx), Tw=H*hora, fx=faixaFormato(), Cp=0, Ct=0;
   var itens=parceirosLista().map(function(p){ var tot=p.qtd*p.valor; p.tot=tot; p.turma=(g&&p.esc==='turma'); p.pp=tot; if(p.turma) Ct+=tot; else Cp+=tot; return p; });
@@ -673,7 +692,9 @@ function proximoNivel(c){
     .map(function(f){ return {f:f, ganho:f.ops[0][1]-f.ops[s.fatos[f.id]][1]}; })
     .sort(function(a,b){ return (b.ganho-a.ganho)||(PRIORIDADE.indexOf(a.f.id)-PRIORIDADE.indexOf(b.f.id)); });
   var soma=0; for(var k=0;k<cand.length&&soma<falta&&passos.length<3;k++){ passos.push(cand[k]); soma+=cand[k].ganho; }
-  return {alvo:alvo, falta:falta, passos:passos, alcanca:soma>=falta, preco:precoNivel(alvo), vit:calcular(alvo).vit};
+  var vitCima=calcular(alvo).vit;
+  if(s.motor>=9&&s.cobra>0) vitCima=Math.max(vitCima,vitAcima(c.vit*11/10));   /* o degrau de cima fica sempre acima do sugerido */
+  return {alvo:alvo, falta:falta, passos:passos, alcanca:soma>=falta, preco:precoNivel(alvo), vit:vitCima};
 }
 /* Frase de autoridade: só com os fatos marcados como "tenho". */
 function fraseAutoridade(){
@@ -884,7 +905,7 @@ async function comecar(){
 
 /* envio das respostas: acontece uma vez, quando a devolutiva é montada pela primeira vez */
 function montarEnvio(c){
-  var carga=JSON.parse(JSON.stringify({v:'v8',motor:8,capacidade:(ehGrupo()?null:s.capacidade),nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,periodo:s.periodo,frequencia:s.frequencia,recebe:s.recebe,eventoDias:s.eventoDias,livroCusto:s.livroCusto,socio:s.socio,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
+  var carga=JSON.parse(JSON.stringify({v:'v9',motor:9,capacidade:(ehGrupo()?null:s.capacidade),nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,periodo:s.periodo,frequencia:s.frequencia,recebe:s.recebe,eventoDias:s.eventoDias,livroCusto:s.livroCusto,socio:s.socio,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
   var resultado={pts:c.pts,nivel:c.nv.n,nivel_idx:NIVEIS.indexOf(c.nv),horaM:c.horaM,hora:c.hora,H:c.H,N:c.N,Cp:c.Cp,pisoR:c.pisoR,vit:c.vit,pNivel:c.pNivel,custoLucro:c.custoLucro,regua:c.regua,gap:c.gap,origem:c.origem,faixa:c.faixa,X:c.X};
   return {p_turma:TURMA,p_nome:ident.nome,p_contato:ident.zap,p_consentiu:true,p_carga:carga,p_resultado:resultado};
 }
@@ -1198,26 +1219,30 @@ function agendaInfo(c){
   if(c.g||!(n>0)||!em) return null;
   return {n:n, h:em*n, y:n*c.vit};
 }
-function descFaixa(c){ return (s.produto==='imersao'?'Faixa das imersões presenciais: ':'Faixa para '+mesesTxt(s.periodo>0?s.periodo:6)+': ')+faixaTxt(c.faixa[0],c.faixa[1]); }
+function descFaixa(c){ return (s.produto==='imersao'?'Faixa das imersões presenciais: ':'Faixa para '+mesesTxt(s.periodo>0?s.periodo:6)+': ')+faixaTxt(c.faixa[0],c.faixa[1])+(c.motor===9&&s.cobra>c.faixa[1]?' · você já cobra acima dela':''); }
 /* 1. Seu preço (motor v8): o sugerido grande, a faixa do piso ao teto com o ponto do sugerido, e a linha da turma ou da agenda. */
 function htmlPrecoV8(c){
-  var P=c.cobra>0?c.cobra:0, h='<div class="preco">', fx=c.faixa, span=Math.max(1,fx[1]-fx[0]);
-  function pos(v){ return Math.max(0,Math.min(100,(v-fx[0])/span*100)).toFixed(1); }
+  var P=c.cobra>0?c.cobra:0, anc=!!(c.ancora&&P>0), h='<div class="preco">', fx=c.faixa, lo=fx[0], hi=fx[1], rotD='teto da faixa';
+  /* Âncora (motor 9): quando o sugerido veio do que o aluno cobra, ou o que ele cobra passa do teto, a barra vai do que ele cobra até o maior entre o teto e o degrau de cima. */
+  if(anc){ var pnA=proximoNivel(c), cima=pnA?pnA.vit:0; lo=P; hi=Math.max(fx[1],cima,c.vit); rotD=hi===fx[1]?'teto da faixa':(cima&&hi===cima?'próximo nível':'sugerido'); }
+  var span=Math.max(1,hi-lo);
+  function pos(v){ return Math.max(0,Math.min(100,(v-lo)/span*100)).toFixed(1); }
   if(!(P>0)) h+='<div class="kick">Para começar a vender</div>';
   h+='<div class="pv">'+brl(c.vit)+'</div><div class="pu">'+unidadeCliente(c)+'</div>'+
     '<div class="pd">'+esc(PRODUTOS[s.produto].t)+' para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+'<span>'+esc(descFaixa(c))+'</span></div>';
+  if(anc) h+='<p class="pn pa">Você já vende por '+brl(P)+'. O seu preço parte desse valor, que o mercado já pagou.</p>';
   if(P>0&&c.gap<=0){
     h+='<p class="pn">Você já cobra '+brl(P)+'. '+(P<=fx[1]?'Esse valor está dentro do que o seu trabalho sustenta, e os fatos abaixo mostram por quê.':'Esse valor está acima da faixa para esse formato e essa duração. Os fatos abaixo são a sua prova nessa conversa.')+'</p>';
   }
   if(c.origem==='custo') h+='<p class="pn">O custo de entregar, com lucro, pede mais do que o seu nível costuma cobrar. Este é o preço que paga a entrega.</p>';
-  var fora=P>0&&(P<fx[0]||P>fx[1]);
-  h+='<div class="fbar"><div class="trk2" aria-hidden="true"><i class="e1"></i><i class="e3"></i>'+
-    (c.pisoR>c.pisoFaixaR+0.5?'<i class="mn" style="left:calc('+pos(c.pisoR)+'% - 1px)"></i>':'')+
+  var fora=P>0&&!anc&&(P<fx[0]||P>fx[1]);
+  h+='<div class="fbar'+(anc?' anc':'')+'"><div class="trk2" aria-hidden="true">'+(anc?'':'<i class="e1"></i>')+'<i class="e3"></i>'+
+    (c.pisoR>c.pisoFaixaR+0.5&&!c.pisoAncora?'<i class="mn" style="left:calc('+pos(c.pisoR)+'% - 1px)"></i>':'')+
     (P>0?'<i class="hj" style="left:calc('+pos(P)+'% - 7px)"></i>':'')+
     '<i class="sg" style="left:calc('+pos(c.vit)+'% - 9px)"></i></div>'+
-    '<div class="lg2"><span><small>piso da faixa</small><b>'+brl(c.pisoFaixaR)+'</b></span><span class="d"><small>teto da faixa</small><b>'+brl(fx[1])+'</b></span></div>'+
+    '<div class="lg2"><span>'+(anc?'<small>hoje você cobra</small><b>'+brl(P)+'</b>':'<small>piso da faixa</small><b>'+brl(c.pisoFaixaR)+'</b>')+'</span><span class="d"><small>'+rotD+'</small><b>'+brl(hi)+'</b></span></div>'+
     '<p class="leg2"><span><i class="k sg"></i>sugerido '+brl(c.vit)+'</span>'+(P>0?'<span><i class="k hj"></i>hoje você cobra '+brl(P)+(fora?' (fora da faixa)':'')+'</span>':'')+'</p>'+
-    '<p class="nun">Nunca abaixo de '+brl(c.pisoR)+(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa.':', o custo de entregar.')+'</p></div>';
+    '<p class="nun">Nunca abaixo de '+brl(c.pisoR)+(c.pisoAncora?', o que você já cobra.':(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa.':', o custo de entregar.'))+'</p></div>';
   if(c.g){
     h+= c.X!=null
       ? '<p class="pl">A turma se paga com <b>'+c.X+(c.X===1?' pessoa':' pessoas')+'</b><small>Cobre o seu tempo pela hora de mercado e os custos do pacote</small></p>'
@@ -1343,8 +1368,9 @@ function linhasContaV8(c){
   } else {
     L.push(['Custo de entregar', (c.Cp>0?'custos do pacote '+brl(c.Cp)+' + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)'), brl(c.Cp+c.T)]);
     L.push(['Com lucro e impostos', (c.Cp>0?'80% sobre os custos do pacote, ':'')+'dividido por 0,77 (imposto 15%, comissão 7%, cobrança 1%)', brl(c.custoLucro)]);
-    L.push(['O maior dos dois', c.origem==='nivel'?'vale o seu nível':'vale o custo com lucro', brl(c.sug)]);
+    L.push(['O maior dos dois', (c.origemBase||c.origem)==='nivel'?'vale o seu nível':'vale o custo com lucro', brl(c.sug)]);
   }
+  if(c.motor>=9&&c.cobra>0) L.push(['O que você já cobra', c.ancora?'o sugerido parte dele + 10%, que dá '+brl(c.alvoCobra):'+ 10% dá '+brl(c.alvoCobra)+', abaixo do sugerido da faixa, que vale', brl(c.cobra)]);
   return L;
 }
 function htmlPassos(c){
@@ -1415,7 +1441,7 @@ function telaResultado(){
     '<section class="sec"><h3 class="sub-t">Como chegamos ao preço</h3><div class="passos" id="r-passos"></div><p class="nota" id="r-min"></p></section>'+
     '<section class="sec"><h3 class="sub-t">Cuidados</h3><ul class="cuid">'+listaCuidados().map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
     '<section class="sec"><h3 class="sub-t">Antes de divulgar</h3><ul class="cuid">'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
-    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível.</p><p>'+(leg?'O nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.':'Faixa de preço: regra da casa de 04/11/2026. O formato e a duração da mentoria definem a faixa, e o seu nível escolhe o ponto dentro dela: valor escondido a 15% do caminho do piso ao teto, aparecendo a 40%, visível a 65%, referência a 90%. No individual, a faixa é o dobro da do grupo; no programa premium, o dobro do individual.')+'</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os custos do pacote seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
+    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível.</p><p>'+(leg?'O nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.':'Faixa de preço: regra da casa de 04/11/2026. O formato e a duração da mentoria definem a faixa, e o seu nível escolhe o ponto dentro dela: valor escondido a 15% do caminho do piso ao teto, aparecendo a 40%, visível a 65%, referência a 90%. No individual, a faixa é o dobro da do grupo; no programa premium, o dobro do individual.'+(s.motor>=9?' Se você já cobra um valor, o preço sugerido parte dele, com 10% a mais, e o mínimo nunca fica abaixo dele.':''))+'</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os custos do pacote seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
   '</details>'+
   '<div class="acoes"><button class="btn" id="b-pdf">Baixar PDF</button><button class="btn ghost" id="b-mudar">Mudar respostas</button><button class="btn ghost" id="b-refazer">Refazer as perguntas</button></div>'+
   '<div id="r-pdf"></div></div>';
@@ -1462,7 +1488,7 @@ function atualizar(){
   document.getElementById('r-regua').innerHTML=htmlRegua(c,P);
   document.getElementById('r-leitura').textContent=textoLeitura(c);
   document.getElementById('r-subir').innerHTML=htmlSubir(c);
-  document.getElementById('r-hoje').textContent= P>0 ? 'Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'. O preço sugerido é '+brl(c.vit)+'.' : 'Você ainda não vendeu a mentoria. O preço sugerido serve para começar.';
+  document.getElementById('r-hoje').textContent= P>0 ? (c.motor>=9 ? 'O que você já cobra: '+brl(P)+' · sugerido parte dele + 10%. O preço sugerido é '+brl(c.vit)+' '+unidadeCliente(c)+'.' : 'Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'. O preço sugerido é '+brl(c.vit)+'.') : 'Você ainda não vendeu a mentoria. O preço sugerido serve para começar.';
   var pt=document.getElementById('r-ptot'); if(pt) pt.textContent=brl(c.Cp);
   var ptt=document.getElementById('r-ptot-t'); if(ptt) ptt.textContent=brl(c.Ct);
   var rf=document.getElementById('r-fund'); if(rf){ var hf=htmlFundadora(c); rf.innerHTML=hf; document.getElementById('s-fund').hidden=!hf; renumerar(); }
@@ -1470,7 +1496,7 @@ function atualizar(){
   document.getElementById('r-min').textContent=legado()
     ? 'O mínimo é só o custo, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+', arredondado para '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.'
     : (c.g ? 'O mínimo é o piso da faixa: '+brl(c.pisoR)+'. Abaixo dele, o preço fica fora do que o seu formato e a sua duração sustentam.'
-           : 'O mínimo é o maior entre o piso da faixa ('+brl(c.faixa[0])+') e o custo de entregar, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+'. Fica em '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.');
+           : 'O mínimo é o maior entre o piso da faixa ('+brl(c.faixa[0])+') e o custo de entregar, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+'. Fica em '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.')+(c.pisoAncora?' Como você já cobra '+brl(c.cobra)+', o mínimo sobe para esse valor.':'');
   var e=htmlEse(c,s.ese||0), eo=document.getElementById('r-ese-out'); eo.innerHTML=e.t; eo.classList.toggle('at',e.at);
   var ip=document.getElementById('r-ese'); if(ip) ip.placeholder=Math.round(c.vit).toLocaleString('pt-BR');
 }
@@ -1491,7 +1517,7 @@ function htmlPapel(){
   B.push(sh('Onde o seu preço cai no mercado')+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p>');
   if(c.itens.length) B.push(sh('Custos do pacote')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos custos do pacote</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>');
   var linhas=legado()?[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'custos do pacote + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]]:linhasContaV8(c).map(function(r){ return [r[0]+(r[1]?': '+r[1]:''),r[2]]; });
-  B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">'+(legado()?'Mínimo, só o custo: '+brl(c.piso):'Mínimo: '+brl(c.pisoR)+(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa':', o custo de entregar, sem lucro'))+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
+  B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">'+(c.motor>=9?linhas.length+1:6)+'</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">'+(legado()?'Mínimo, só o custo: '+brl(c.piso):'Mínimo: '+brl(c.pisoR)+(c.pisoAncora?', o que você já cobra':(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa':', o custo de entregar, sem lucro')))+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
   B.push(sh('Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>');
   B.push(sh('Antes de divulgar')+'<ul>'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
     '<p class="lt" style="font-size:11px;color:#6B7280;margin-top:20px">Fontes: preços públicos pesquisados em 21 e 30/10/2026. Nível: regra da casa aprovada em 30/10/2026, calibrada no briefing de 73 alunos. Os 23%: imposto de 15% (o contador confirma), comissão de 7% e Pix de 1%. O preço sugerido não é preço validado.</p>');
