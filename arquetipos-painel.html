@@ -255,7 +255,7 @@
   <section id="v-painel" hidden>
     <div class="cartao link-card">
       <div><h3>Link para os alunos</h3>
-        <p class="ajuda">Escolha o nome da turma e mande o link para o grupo. Quem abrir já entra identificado como dessa turma.</p></div>
+        <p class="ajuda">Escolha o nome da turma e copie o link do teste. Quem abrir já entra identificado como dessa turma.</p></div>
       <div class="campo turma-campo"><label for="turma">Turma</label>
         <input id="turma" type="text" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="t2-mentor" aria-describedby="turma-dica">
         <span class="ajuda" id="turma-dica">Texto curto, sem acento e sem espaço. Deixe vazio para respostas sem turma.</span></div>
@@ -275,7 +275,7 @@
         <span class="ajuda" id="chave-aviso" hidden>Não foi possível ler a chave das turmas agora. Atualize a página; se continuar, avise o suporte.</span></div>
       <div class="link-linha"><span class="rot">Link do teste</span><code id="link-txt"></code></div>
       <div class="acoes">
-        <button type="button" class="btn pri" id="b-copiar">Copiar link para o grupo</button>
+        <button type="button" class="btn pri" id="b-copiar">Copiar link do teste</button>
         <button type="button" class="btn" id="b-abrir">Abrir o teste ↗</button>
         <button type="button" class="btn" id="b-telao">QR no telão ↗</button>
         <button type="button" class="btn" id="b-exemplo">Ver como chega ao aluno ↗</button>
@@ -406,7 +406,6 @@
   }
   function linkTeste(){ return paginaIrma('arquetipos', S.turma ? '?t=' + encodeURIComponent(S.turma) : ''); }
   function linkVer(id){ return paginaIrma('arquetipos', '?ver=' + encodeURIComponent(id)); }
-  function mensagemGrupo(){ return 'Teste de Arquétipos Febracis: responda por aqui e receba sua devolutiva: ' + linkTeste(); }
   function atualizarLink(){ $('link-txt').textContent = linkTeste(); }
   var MSG_PLANO = 'Seu plano de ação está liberado: abra de novo o link do teste no mesmo celular em que você fez.';
 
@@ -454,7 +453,7 @@
     }
   }
   async function copiarLink(){
-    if (await copiarTexto(mensagemGrupo(), $('copia'), $('copia-txt'))) toast('Mensagem copiada. É só colar no grupo.', 'ok');
+    if (await copiarTexto(linkTeste(), $('copia'), $('copia-txt'))) toast('Link do teste copiado.', 'ok');
   }
   function abrirAba(url, avisoOk){
     var w = null;
