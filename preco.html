@@ -291,6 +291,30 @@ details.fontes p{margin:10px 0 0}
 .lg2 b{display:block;font-family:var(--display);font-size:24px;font-weight:600;line-height:1.15;color:var(--k-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .lg2 .d b{color:var(--k-gold)}
 .fbar .nun{margin:10px 0 0;font-size:14px;color:var(--k-tx)}
+.trk2 .e3{right:0;border:2px solid var(--k-gold);background:var(--k-card2)}
+.trk2 .sg{background:var(--k-gold);border:2px solid var(--k-card2)}
+.trk2 .hj{width:14px;height:14px;top:-1px;background:var(--k-mu);border:2px solid var(--k-card2)}
+.trk2 .mn{width:3px;height:18px;top:-3px;border-radius:2px;background:var(--k-ink)}
+.leg2{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 0 0;font-size:13px;color:var(--k-mu)}
+.leg2 span{display:inline-flex;align-items:center;gap:6px}
+.leg2 .k{display:inline-block;width:10px;height:10px;border-radius:50%}
+.leg2 .k.sg{background:var(--k-gold)}
+.leg2 .k.hj{background:var(--k-mu)}
+.preco .pl{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--k-ln);font-size:15px;line-height:1.45;color:var(--k-tx)}
+.preco .pl b{color:var(--k-ink);font-weight:600;white-space:nowrap}
+.preco .pl small{display:block;margin-top:2px;font-size:13px;color:var(--k-mu)}
+.fund-a{margin:0 0 14px;font-size:14px;color:var(--k-mu)}
+.fund-a b{display:block;font-family:var(--display);font-size:28px;font-weight:600;line-height:1.15;color:var(--k-gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.esc{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:6px;align-items:end}
+.eg{display:flex;flex-direction:column;justify-content:flex-end;min-width:0;text-align:center}
+.eg .ev{display:block;font-size:13px;font-weight:600;color:var(--k-ink);font-variant-numeric:tabular-nums;white-space:nowrap;margin-bottom:6px}
+.eg .blk{display:block;border-radius:8px 8px 4px 4px;background:var(--k-soft);border:1px solid var(--k-gold2)}
+.eg.ini .blk{background:var(--k-card2);border:2px solid var(--k-gold)}
+.eg.fim .blk{background:var(--k-gold);border-color:var(--k-gold)}
+.eg .nm{display:block;font-size:12px;line-height:1.25;color:var(--k-mu);margin-top:8px}
+.eg.ini .nm,.eg.fim .nm{color:var(--k-ink);font-weight:600}
+.fund-t{margin:16px 0 0;font-size:15px;line-height:1.5;color:var(--k-ink)}
+.pg .fund-a b{font-size:24px}
 .deg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:end}
 .dg{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
 .dg .pin{display:block;height:16px;text-align:center}
@@ -478,7 +502,7 @@ var ANTES = [
 ];
 
 /* ---------- Estado ---------- */
-function novo(){ return {nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,periodo:null,frequencia:null,recebe:null,eventoDias:null,livroCusto:null,socio:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
+function novo(){ return {motor:8,capacidade:null,nome:'',prodNome:'',fatos:{},cobra:null,produto:null,pessoas:null,comprador:null,mercado:null,encontros:null,duracao:null,extra:null,periodo:null,frequencia:null,recebe:null,eventoDias:null,livroCusto:null,socio:null,horasManual:null,horaInformada:null,horaTipo:null,temParceiros:null,sel:{},outros:[],ese:null,exemplo:false}; }
 
 /* ---------- v7: duração, o que o cliente recebe e quem entrega ---------- */
 /* Cada encontro vale 1 hora e não há horas fora dos encontros: encontros = meses × encontros por mês; duracao = 1; extra = 0.
@@ -586,12 +610,52 @@ function tiers(){
   return m.pessoa;
 }
 function faixaRegua(){ var ts=tiers(); return [Math.min.apply(null,ts.map(function(t){return t.min;})), Math.max.apply(null,ts.map(function(t){return t.max;}))]; }
-function precoNivel(nv){ var r=faixaRegua(); return r[0]*Math.pow(r[1]/r[0], nv.f); }
-function calcular(nvx){
+/* ---------- Motor v8: faixa de preço por formato e duração ---------- */
+/* Faixa do grupo, por participante: piso de R$ 5.000 e teto que cresce com a duração. Individual: o dobro. Premium: o dobro do individual.
+   Imersão: a régua de mercado das imersões (faixaRegua). O nível escolhe o ponto dentro da faixa, em linha reta, com o f de NIVEIS.
+   Respostas gravadas antes da v8 (sem motor 8 na carga) seguem na conta antiga, guardada abaixo como calcularV7 e precoNivelV7. */
+var PISO_GRUPO = 5000;
+var TETO_GRUPO = [[1,8000],[3,10000],[6,15000],[12,25000]];   /* [meses, teto]; entre os pontos a linha é reta; acima de 12 meses vale o de 1 ano */
+var MULT_FORMATO = {grupo:1, individual:2, premium:4};
+function legado(){ return !(s.motor>=8); }
+function tetoGrupoMeses(m){
+  var P=TETO_GRUPO, n=P.length;
+  if(!(m>P[0][0])) return P[0][1];
+  if(m>=P[n-1][0]) return P[n-1][1];
+  for(var i=1;i<n;i++){ if(m<=P[i][0]){ var a=P[i-1], b=P[i]; return a[1]+(b[1]-a[1])*(m-a[0])/(b[0]-a[0]); } }
+  return P[n-1][1];
+}
+/* [piso, teto] do formato e da duração escolhidos. Sem duração (não acontece no fluxo): usa 6 meses. */
+function faixaFormato(){
+  if(s.produto==='imersao') return faixaRegua();
+  var m=s.periodo>0?s.periodo:6, k=MULT_FORMATO[s.produto]||1;
+  return [PISO_GRUPO*k, tetoGrupoMeses(m)*k];
+}
+function precoNivelV7(nv){ var r=faixaRegua(); return r[0]*Math.pow(r[1]/r[0], nv.f); }
+function precoNivel(nv){ if(legado()) return precoNivelV7(nv); var f=faixaFormato(); return f[0]+nv.f*(f[1]-f[0]); }
+/* Quantas pessoas pagam a turma: (horas × hora + custos da turma) ÷ (preço × 0,77 − custos por pessoa). null se o preço não cobre nem o custo de cada pessoa. */
+function turmaSePaga(c,P){ var den=P*K-c.Cp; if(!(den>0)) return null; return Math.max(1,Math.ceil((c.H*c.hora+c.Ct)/den-1e-9)); }
+function calcular(nvx){ return legado()?calcularV7(nvx):calcularV8(nvx); }
+function calcularV8(nvx){
+  var g=ehGrupo(), H=horasTotal(), hora=horaUsada(nvx), Tw=H*hora, fx=faixaFormato(), Cp=0, Ct=0;
+  var itens=parceirosLista().map(function(p){ var tot=p.qtd*p.valor; p.tot=tot; p.turma=(g&&p.esc==='turma'); p.pp=tot; if(p.turma) Ct+=tot; else Cp+=tot; return p; });
+  var pts=pontos(), nv=nvx||nivelDe(pts), pNivel=precoNivel(nv), piso=null, custoLucro=null, base=pNivel, origem='nivel', pisoMin=fx[0];
+  if(!g){   /* individual e premium: o custo de entregar com lucro pode passar o preço do nível; o mínimo nunca fica abaixo do custo */
+    piso=(Cp+Tw)/K; custoLucro=(Cp*(1+MARGEM)+Tw)/K; base=Math.max(pNivel,custoLucro); origem=(pNivel>=custoLucro?'nivel':'custo'); pisoMin=Math.max(fx[0],piso);
+  }
+  var vit=arred(base);
+  if(vit<pisoMin){ var st=base>=10000?1000:(base>=1000?100:10); vit=Math.ceil((base+st/10)/st)*st-st/10; }
+  var stpF=fx[0]>=1000?100:10, pisoFaixaR=Math.min(Math.ceil(fx[0]/stpF)*stpF,vit);
+  var stp=pisoMin>=1000?100:10, pisoR=Math.min(Math.ceil(pisoMin/stp)*stp,vit);
+  var c={motor:8,g:g,N:1,H:H,hora:hora,horaM:horaMercado(nvx),T:Tw,itens:itens,Cp:Cp,Ct:Ct,pts:pts,nv:nv,pNivel:pNivel,piso:piso,custoLucro:custoLucro,sug:base,origem:origem,vit:vit,pisoR:pisoR,pisoFaixaR:pisoFaixaR,faixa:fx,regua:faixaRegua(),cobra:s.cobra,gap:(s.cobra>0?vit-s.cobra:null),X:null,capacidade:(g?null:s.capacidade)};
+  if(g) c.X=turmaSePaga(c,vit);
+  return c;
+}
+function calcularV7(nvx){
   var g=ehGrupo(), N=g?Math.max(1,s.pessoas||1):1, H=horasTotal(), hora=horaUsada(nvx), Tw=H*hora/N;
   var itens=parceirosLista().map(function(p){ var tot=p.qtd*p.valor; p.tot=tot; p.pp=(g&&p.esc==='turma')?tot/N:tot; return p; });
   var Cp=itens.reduce(function(a,p){return a+p.pp;},0);
-  var pts=pontos(), nv=nvx||nivelDe(pts), pNivel=precoNivel(nv);
+  var pts=pontos(), nv=nvx||nivelDe(pts), pNivel=precoNivelV7(nv);
   var piso=(Cp+Tw)/K, custoLucro=(Cp*(1+MARGEM)+Tw)/K, base=Math.max(pNivel,custoLucro);
   var stp = piso>=1000?100:10, vit=arred(base);
   if(vit<piso){ var st=base>=10000?1000:(base>=1000?100:10); vit=Math.ceil((base+st/10)/st)*st-st/10; }
@@ -820,8 +884,8 @@ async function comecar(){
 
 /* envio das respostas: acontece uma vez, quando a devolutiva é montada pela primeira vez */
 function montarEnvio(c){
-  var carga=JSON.parse(JSON.stringify({v:'v7',nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,periodo:s.periodo,frequencia:s.frequencia,recebe:s.recebe,eventoDias:s.eventoDias,livroCusto:s.livroCusto,socio:s.socio,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
-  var resultado={pts:c.pts,nivel:c.nv.n,nivel_idx:NIVEIS.indexOf(c.nv),horaM:c.horaM,hora:c.hora,H:c.H,N:c.N,Cp:c.Cp,pisoR:c.pisoR,vit:c.vit,pNivel:c.pNivel,custoLucro:c.custoLucro,regua:c.regua,gap:c.gap,origem:c.origem};
+  var carga=JSON.parse(JSON.stringify({v:'v8',motor:8,capacidade:(ehGrupo()?null:s.capacidade),nome:ident.nome,prodNome:s.prodNome,fatos:s.fatos,cobra:s.cobra>0?s.cobra:0,produto:s.produto,pessoas:s.pessoas,comprador:s.comprador,mercado:s.mercado,encontros:s.encontros,duracao:s.duracao,extra:s.extra,periodo:s.periodo,frequencia:s.frequencia,recebe:s.recebe,eventoDias:s.eventoDias,livroCusto:s.livroCusto,socio:s.socio,horasManual:s.horasManual,horaInformada:s.horaInformada,horaTipo:s.horaTipo,temParceiros:s.temParceiros,sel:s.sel,outros:s.outros}));
+  var resultado={pts:c.pts,nivel:c.nv.n,nivel_idx:NIVEIS.indexOf(c.nv),horaM:c.horaM,hora:c.hora,H:c.H,N:c.N,Cp:c.Cp,pisoR:c.pisoR,vit:c.vit,pNivel:c.pNivel,custoLucro:c.custoLucro,regua:c.regua,gap:c.gap,origem:c.origem,faixa:c.faixa,X:c.X};
   return {p_turma:TURMA,p_nome:ident.nome,p_contato:ident.zap,p_consentiu:true,p_carga:carga,p_resultado:resultado};
 }
 async function enviarResposta(){
@@ -878,7 +942,7 @@ async function abrirVer(pin,auto){
   telaEspera('Montando a devolutiva',80); await pausa();
   var c=linha&&linha.carga;
   if(!cargaValida(c)){ telaAviso('Esta resposta não pode ser aberta aqui','Ela foi gravada num formato que esta página não lê. Fale com a equipe do Mentor de Líderes.'); return; }
-  s=Object.assign(novo(),c); delete s.v; s.nome=c.nome||linha.nome||''; s.exemplo=false;
+  s=Object.assign(novo(),c); delete s.v; s.motor=(c.motor>=8?c.motor:0); s.nome=c.nome||linha.nome||''; s.exemplo=false;
   verInfo={id:linha.id,turma:linha.turma||'',quando:fmtData(linha.criado_em)};
   vista='resultado'; desenhar(); window.scrollTo(0,0);
 }
@@ -932,19 +996,22 @@ function telaCobra(){
 function telaVenda(){
   var prodOps=Object.keys(PRODUTOS).map(function(k){return {v:k,t:PRODUTOS[k].t,d:PRODUTOS[k].d};});
   var compOps=Object.keys(COMPRADORES).map(function(k){return {v:k,t:COMPRADORES[k].t,d:COMPRADORES[k].d};});
-  var turmaOps=[5,10,20,40];
-  var g=ehGrupo();
+  var capOps=[5,10,15,20];
+  var nc=!!s.produto&&!ehGrupo();   /* individual e premium: quantos clientes ao mesmo tempo; grupo e imersão não têm limite de pessoas */
+  var capFora=s.capacidade>0&&capOps.indexOf(s.capacidade)<0;
   app.innerHTML='<div class="tela">'+cabecalho()+'<h1 class="enunciado">O que você vende, e para quem?</h1><p class="contexto">Escolha o formato e quem compra de você.</p>'+
   '<span class="rot" style="margin-top:22px">Formato</span>'+cartoes(prodOps,s.produto,'',	'prod')+
-  '<div id="l-turma"'+(g?'':' hidden')+'><span class="rot">Pessoas por turma</span><div class="chips">'+turmaOps.map(function(v){return '<button class="chip'+(s.pessoas===v?' sel':'')+'" data-p="'+v+'">'+v+'</button>';}).join('')+'<button class="chip'+(s.pessoas&&turmaOps.indexOf(s.pessoas)<0?' sel':'')+'" data-p="outro">outro</button></div>'+caixaOutro('ou-pessoas',false,'15',s.pessoas&&turmaOps.indexOf(s.pessoas)<0?s.pessoas:'')+'</div>'+
-  '<div id="l-comp"'+(s.produto&&(!g||s.pessoas)?'':' hidden')+'><span class="rot">Quem compra de você</span>'+cartoes(compOps,s.comprador,'','comp')+'</div></div>';
+  '<div id="l-cap"'+(nc?'':' hidden')+'><span class="rot">Quantos clientes você atende ao mesmo tempo?</span><div class="chips" role="radiogroup" aria-label="Clientes atendidos ao mesmo tempo">'+capOps.map(function(v){return '<button class="chip'+(s.capacidade===v?' sel':'')+'" role="radio" aria-checked="'+(s.capacidade===v)+'" data-c="'+v+'">'+(v===5?'até 5':v)+'</button>';}).join('')+'<button class="chip'+(capFora?' sel':'')+'" role="radio" aria-checked="'+capFora+'" data-c="outro">outro</button></div>'+caixaOutro('ou-cap',false,'De 1 a 200',capFora?s.capacidade:'')+'</div>'+
+  '<div id="l-comp"'+(s.produto&&(!nc||s.capacidade)?'':' hidden')+'><span class="rot">Quem compra de você</span>'+cartoes(compOps,s.comprador,'','comp')+'</div></div>';
   document.getElementById('b-voltar').onclick=anterior;
-  if(s.pessoas&&turmaOps.indexOf(s.pessoas)<0) document.getElementById('ou-pessoas').hidden=false;
-  function abre(){ var gg=ehGrupo(); document.getElementById('l-turma').hidden=!gg; document.getElementById('l-comp').hidden=!(s.produto&&(!gg||s.pessoas)); }
+  document.getElementById('ou-cap-in').setAttribute('aria-label','Clientes atendidos ao mesmo tempo, de 1 a 200');
+  if(capFora) document.getElementById('ou-cap').hidden=false;
+  function abre(){ var n=!!s.produto&&!ehGrupo(); document.getElementById('l-cap').hidden=!n; document.getElementById('l-comp').hidden=!(s.produto&&(!n||s.capacidade)); }
   function rola(id){ var el=document.getElementById(id); if(el&&!el.hidden) el.scrollIntoView({behavior:reduz?'auto':'smooth',block:'nearest'}); }
-  ligarCartoes(function(v){ s.produto=v; if(!PRODUTOS[v].g) s.pessoas=null; abre(); rola(ehGrupo()?'l-turma':'l-comp'); return false; },'prod');
-  app.querySelectorAll('.chip[data-p]').forEach(function(c){ c.onclick=function(){ var v=c.getAttribute('data-p'); if(v==='outro'){ abrirOutro('ou-pessoas'); return; } document.getElementById('ou-pessoas').hidden=true; s.pessoas=parseInt(v,10); app.querySelectorAll('.chip[data-p]').forEach(function(x){x.classList.toggle('sel',x===c);}); abre(); rola('l-comp'); }; });
-  ligarOutro('ou-pessoas',function(n){ n=Math.round(n); if(!(n>=2&&n<=2000)) return 'Digite quantas pessoas, de 2 a 2.000.'; s.pessoas=n; return ''; },function(){ app.querySelectorAll('.chip[data-p]').forEach(function(x){x.classList.toggle('sel',x.getAttribute('data-p')==='outro');}); abre(); rola('l-comp'); });
+  function marcaCap(){ app.querySelectorAll('.chip[data-c]').forEach(function(x){ var v=x.getAttribute('data-c'), on=v==='outro'?(s.capacidade>0&&capOps.indexOf(s.capacidade)<0):parseInt(v,10)===s.capacidade; x.classList.toggle('sel',!!on); x.setAttribute('aria-checked',!!on); }); }
+  ligarCartoes(function(v){ s.produto=v; abre(); rola(ehGrupo()?'l-comp':'l-cap'); return false; },'prod');
+  app.querySelectorAll('.chip[data-c]').forEach(function(c){ c.onclick=function(){ var v=c.getAttribute('data-c'); if(v==='outro'){ abrirOutro('ou-cap'); return; } document.getElementById('ou-cap').hidden=true; document.getElementById('ou-cap-e').textContent=''; s.capacidade=parseInt(v,10); marcaCap(); abre(); rola('l-comp'); }; });
+  ligarOutro('ou-cap',function(n){ if(!(n>=1&&n<=200&&n===Math.floor(n))) return 'Digite quantos clientes, de 1 a 200.'; s.capacidade=n; return ''; },function(){ marcaCap(); abre(); rola('l-comp'); });
   ligarCartoes(function(v){ s.comprador=v; },'comp');
 }
 function telaTempo(){
@@ -1124,7 +1191,67 @@ function telaMercado(){
 function cap(t){ t=String(t||''); return t.charAt(0).toUpperCase()+t.slice(1); }
 function unidadeCliente(c){ return c.g?'por participante':'por cliente'; }
 /* 1. Seu preço: o sugerido grande, a faixa do mínimo ao sugerido e, se já cobra o que o trabalho sustenta, só a constatação. */
-function htmlPreco(c){
+function htmlPreco(c){ return legado()?htmlPrecoV7(c):htmlPrecoV8(c); }
+/* Agenda de quem atende vários clientes ao mesmo tempo (individual e premium): horas por mês e faturamento do ciclo. */
+function agendaInfo(c){
+  var n=s.capacidade, em=FREQ_M[s.frequencia];
+  if(c.g||!(n>0)||!em) return null;
+  return {n:n, h:em*n, y:n*c.vit};
+}
+function descFaixa(c){ return (s.produto==='imersao'?'Faixa das imersões presenciais: ':'Faixa para '+mesesTxt(s.periodo>0?s.periodo:6)+': ')+faixaTxt(c.faixa[0],c.faixa[1]); }
+/* 1. Seu preço (motor v8): o sugerido grande, a faixa do piso ao teto com o ponto do sugerido, e a linha da turma ou da agenda. */
+function htmlPrecoV8(c){
+  var P=c.cobra>0?c.cobra:0, h='<div class="preco">', fx=c.faixa, span=Math.max(1,fx[1]-fx[0]);
+  function pos(v){ return Math.max(0,Math.min(100,(v-fx[0])/span*100)).toFixed(1); }
+  if(!(P>0)) h+='<div class="kick">Para começar a vender</div>';
+  h+='<div class="pv">'+brl(c.vit)+'</div><div class="pu">'+unidadeCliente(c)+'</div>'+
+    '<div class="pd">'+esc(PRODUTOS[s.produto].t)+' para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+'<span>'+esc(descFaixa(c))+'</span></div>';
+  if(P>0&&c.gap<=0){
+    h+='<p class="pn">Você já cobra '+brl(P)+'. '+(P<=fx[1]?'Esse valor está dentro do que o seu trabalho sustenta, e os fatos abaixo mostram por quê.':'Esse valor está acima da faixa para esse formato e essa duração. Os fatos abaixo são a sua prova nessa conversa.')+'</p>';
+  }
+  if(c.origem==='custo') h+='<p class="pn">O custo de entregar, com lucro, pede mais do que o seu nível costuma cobrar. Este é o preço que paga a entrega.</p>';
+  var fora=P>0&&(P<fx[0]||P>fx[1]);
+  h+='<div class="fbar"><div class="trk2" aria-hidden="true"><i class="e1"></i><i class="e3"></i>'+
+    (c.pisoR>c.pisoFaixaR+0.5?'<i class="mn" style="left:calc('+pos(c.pisoR)+'% - 1px)"></i>':'')+
+    (P>0?'<i class="hj" style="left:calc('+pos(P)+'% - 7px)"></i>':'')+
+    '<i class="sg" style="left:calc('+pos(c.vit)+'% - 9px)"></i></div>'+
+    '<div class="lg2"><span><small>piso da faixa</small><b>'+brl(c.pisoFaixaR)+'</b></span><span class="d"><small>teto da faixa</small><b>'+brl(fx[1])+'</b></span></div>'+
+    '<p class="leg2"><span><i class="k sg"></i>sugerido '+brl(c.vit)+'</span>'+(P>0?'<span><i class="k hj"></i>hoje você cobra '+brl(P)+(fora?' (fora da faixa)':'')+'</span>':'')+'</p>'+
+    '<p class="nun">Nunca abaixo de '+brl(c.pisoR)+(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa.':', o custo de entregar.')+'</p></div>';
+  if(c.g){
+    h+= c.X!=null
+      ? '<p class="pl">A turma se paga com <b>'+c.X+(c.X===1?' pessoa':' pessoas')+'</b><small>Cobre o seu tempo pela hora de mercado e os custos do pacote</small></p>'
+      : '<p class="pl"><b>Com esse valor por participante, os custos de cada um não ficam cobertos.</b><small>Revise os custos do pacote em "Ver a conta".</small></p>';
+  } else {
+    var ag=agendaInfo(c);
+    if(ag) h+='<p class="pl">Com <b>'+ag.n+(ag.n===1?' cliente':' clientes')+'</b> ao mesmo tempo: <b>'+hTxt(ag.h)+' por mês</b> na agenda · <b>'+brl(ag.y)+'</b> por ciclo</p>';
+  }
+  return h+'</div>';
+}
+/* Turma fundadora, só para quem respondeu "Ainda não vendi" (cobra = 0). Âncora: o teto da faixa, em valor de vitrine.
+   Escada: fundadora = sugerido; turma 2 e turma 3 em degraus iguais; valor cheio = âncora. Se o sugerido já está a menos de 10% da âncora, só fundadora e valor cheio.
+   Se o custo de entregar já leva o sugerido à âncora ou além, não há escada para subir e o bloco não aparece. */
+function escadaFundadora(c){
+  if(legado()||s.cobra!==0) return null;
+  var A=arred(c.faixa[1]), v=c.vit;
+  if(!(v<A)) return null;
+  if((A-v)/A<0.10) return {ancora:A, degraus:[v,A]};
+  var d=(A-v)/3, L=[v,arred(v+d),arred(v+2*d),A], U=[];
+  L.forEach(function(x){ if(!U.length||x>U[U.length-1]) U.push(x); });
+  return {ancora:A, degraus:U};
+}
+function htmlFundadora(c){
+  var e=escadaFundadora(c); if(!e) return '';
+  var n=e.degraus.length, nomes=n===2?['Turma fundadora','Valor cheio']:n===3?['Turma fundadora','Turma 2','Valor cheio']:['Turma fundadora','Turma 2','Turma 3','Valor cheio'];
+  var alt=n===2?[48,100]:n===3?[44,72,100]:[40,62,84,106];
+  var barras=e.degraus.map(function(v,i){
+    return '<div class="eg'+(i===0?' ini':i===n-1?' fim':'')+'"><span class="ev">'+brl(v)+'</span><span class="blk" style="height:'+alt[i]+'px"></span><span class="nm">'+nomes[i]+'</span></div>';
+  }).join('');
+  return '<p class="fund-a">Valor de mercado de uma mentoria assim<b>'+brl(e.ancora)+'</b></p>'+
+    '<div class="esc" style="--n:'+n+'" role="img" aria-label="Escada de preço por turma: '+e.degraus.map(function(v,i){return nomes[i]+' '+brl(v);}).join(', ')+'">'+barras+'</div>'+
+    '<p class="fund-t">Comece pela turma fundadora com o valor de mercado como âncora e suba a cada turma.</p>';
+}
+function htmlPrecoV7(c){
   var P=c.cobra>0?c.cobra:0, h='<div class="preco">';
   if(!(P>0)) h+='<div class="kick">Para começar a vender</div>';
   h+='<div class="pv">'+brl(c.vit)+'</div><div class="pu">'+unidadeCliente(c)+'</div>'+
@@ -1183,6 +1310,11 @@ function htmlRegua(c,P){
   return h;
 }
 function textoLeitura(c){
+  if(!legado()){
+    var t8='O mercado pratica de '+brl(c.regua[0])+' a '+brl(c.regua[1])+' em '+PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase()+(c.g?', por participante':'')+'. É só uma referência: o seu preço vem da faixa do seu formato e da sua duração.';
+    if(s.produto==='grupo') t8+=' Os comparáveis de grupo ainda são poucos.';
+    return t8;
+  }
   var t='Quem está no seu nível ('+c.nv.n.toLowerCase()+') cobra por volta de '+brl(c.pNivel)+' por '+PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase()+(c.g?', por participante':'')+'.';
   if(c.origem==='custo') t+=' Pelo custo de entregar, com lucro, o preço sobe para '+brl(c.custoLucro)+', e é esse que vale.';
   if(s.produto==='grupo') t+=' Os comparáveis de grupo ainda são poucos.';
@@ -1198,7 +1330,29 @@ function htmlSubir(c){
       ? 'Com isso, você chega a <b>'+esc(pn.alvo.n.toLowerCase())+'</b>. Nesse degrau, o seu preço sugerido passa a ser <b class="big">'+brl(pn.vit)+'</b> '+unidadeCliente(c)+'.'
       : 'Esses passos levam você na direção de <b>'+esc(pn.alvo.n.toLowerCase())+'</b>.')+'</p>';
 }
+/* "Como chegamos ao preço" no motor v8: cada linha é [título, detalhe, valor]. Serve à tela e ao PDF. */
+function linhasContaV8(c){
+  var L=[], fx=c.faixa, pct=Math.round(c.nv.f*100);
+  L.push(['Faixa para o seu formato'+(s.produto==='imersao'?'':' e duração'), (s.produto==='imersao'?'régua das imersões presenciais':PRODUTOS[s.produto].t.toLowerCase()+', '+mesesTxt(s.periodo>0?s.periodo:6)), faixaTxt(fx[0],fx[1])]);
+  L.push(['Seu nível: '+c.nv.n.toLowerCase(), 'escolhe o ponto da faixa, a '+pct+'% do caminho do piso ao teto', brl(c.pNivel)]);
+  if(c.g){
+    L.push(['Seu tempo', hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)'), brl(c.H*c.hora)]);
+    L.push(['Custos da turma', 'plataforma, sala e itens que servem à turma inteira', brl(c.Ct)]);
+    L.push(['Custos por participante', 'apostila, livro e coffee break', brl(c.Cp)]);
+    L.push(['A turma se paga com', '(tempo + custos da turma) ÷ (preço × 0,77 − custos por participante)', c.X!=null?c.X+(c.X===1?' pessoa':' pessoas'):'não se paga']);
+  } else {
+    L.push(['Custo de entregar', (c.Cp>0?'custos do pacote '+brl(c.Cp)+' + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(s.horaInformada>0&&s.horaInformada>=c.horaM?' (sua hora)':' (hora pelo mercado)'), brl(c.Cp+c.T)]);
+    L.push(['Com lucro e impostos', (c.Cp>0?'80% sobre os custos do pacote, ':'')+'dividido por 0,77 (imposto 15%, comissão 7%, cobrança 1%)', brl(c.custoLucro)]);
+    L.push(['O maior dos dois', c.origem==='nivel'?'vale o seu nível':'vale o custo com lucro', brl(c.sug)]);
+  }
+  return L;
+}
 function htmlPassos(c){
+  if(!legado()){
+    var L=linhasContaV8(c), i8=1;
+    return L.map(function(r){ return '<div class="ps"><span class="i">'+(i8++)+'</span><span class="l">'+r[0]+(r[1]?'<small>'+r[1]+'</small>':'')+'</span><span class="v">'+r[2]+'</span></div>'; }).join('')+
+      '<div class="ps fim"><span class="i">'+i8+'</span><span class="l">Arredondado para vender<small>'+unidadeCliente(c)+'</small></span><span class="v">'+brl(c.vit)+'</span></div>';
+  }
   var g=c.g, i=1, p=[];
   p.push(['Régua de quem compra igual a você', PRODUTOS[s.produto].t.toLowerCase()+' para '+COMPRADORES[s.comprador].t.toLowerCase(), faixaTxt(c.regua[0],c.regua[1])]);
   p.push(['Seu nível: '+c.nv.n.toLowerCase(), 'quem está nesse nível cobra por volta de', brl(c.pNivel)]);
@@ -1209,7 +1363,12 @@ function htmlPassos(c){
     '<div class="ps fim"><span class="i">'+i+'</span><span class="l">Arredondado para vender'+(g?'<small>por participante</small>':'')+'</span><span class="v">'+brl(c.vit)+'</span></div>';
 }
 function htmlEse(c,P){
-  if(!(P>0)) return {t:'<span class="big">Digite um valor</span>Mostramos quanto sobra para você depois dos custos do pacote e dos 23% de imposto, comissão e cobrança.',at:false};
+  if(!(P>0)) return {t:'<span class="big">Digite um valor</span>Mostramos '+(c.g&&!legado()?'com quantas pessoas a turma se paga':'quanto sobra para você')+' depois dos custos do pacote e dos 23% de imposto, comissão e cobrança.',at:false};
+  if(c.g&&!legado()){
+    var X=turmaSePaga(c,P);
+    if(X==null) return {at:true,t:'<span class="big">Os custos de cada participante não ficam cobertos</span>Nesse valor, o que entra não paga o que cada participante custa (apostila, livro, coffee break) e os 23% de imposto, comissão e cobrança.'};
+    return {at:false,t:'<span class="big">A turma se paga com '+X+(X===1?' pessoa':' pessoas')+'</span>Cobre o seu tempo ('+hTxt(c.H)+' × '+brl(c.hora)+'), os custos da turma e os custos por participante, depois dos 23% de imposto, comissão e cobrança.'};
+  }
   var r=seCobrar(c,P), g=c.g;
   if(r.sobra<=0) return {at:true,t:'<span class="big">Faltam '+brl(-r.sobra)+'</span>Nesse valor, o que entra não paga os custos do pacote e os 23% de imposto, comissão e cobrança'+(g?', somando a turma de '+c.N:'')+'.'};
   var pct=Math.round(r.pct*100);
@@ -1227,7 +1386,8 @@ function telaResultado(){
   var g=ehGrupo(), c0=calcular(), n=0;
   /* grava as respostas uma única vez, só para quem fez o teste de verdade (não no exemplo e não na visão da equipe) */
   if(ident.ok && !s.exemplo && !MODO_VER && envio.estado==='nada'){ envio.payload=montarEnvio(c0); enviarResposta(); }
-  function sec(t){ n++; return '<section class="sec"><div class="sec-h"><span class="sec-n">0'+n+'</span><h2 class="sec-t">'+t+'</h2></div>'; }
+  var leg=legado();
+  function sec(t,id,oculto){ n++; return '<section class="sec"'+(id?' id="'+id+'"':'')+(oculto?' hidden':'')+'><div class="sec-h"><span class="sec-n">0'+n+'</span><h2 class="sec-t">'+t+'</h2></div>'; }
   var sub=(s.nome?esc(s.nome)+', ':'')+esc(PRODUTOS[s.produto].t.toLowerCase())+' · '+esc(MERCADOS[s.mercado].t.toLowerCase())+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase());
   var html='<div class="tela cab">'+
   '<p class="eyebrow">Devolutiva de preço</p><h1 class="titulo">'+esc(prodNome())+'</h1><p class="sub">'+sub+'</p>'+
@@ -1235,6 +1395,7 @@ function telaResultado(){
   (s.exemplo?'<p class="aviso-ex">Exemplo: João, produtor rural há 15 anos, mentora outros produtores e cobra R$ 4 mil. Para fazer a sua, use Refazer as perguntas no fim da página.</p>':'')+
   '<p class="envio" id="r-envio" aria-live="polite"></p>'+
   sec('Seu preço')+'<div id="r-preco"></div>'+htmlPacote()+'</section>'+
+  (leg?'':sec('Como lançar: turma fundadora','s-fund',!htmlFundadora(c0))+'<div id="r-fund"></div></section>')+
   sec('Seu nível de autoridade')+htmlNivel(c0)+'</section>'+
   sec('O que já sustenta esse preço')+htmlSustenta()+'</section>'+
   sec('Sua frase de autoridade')+'<div id="r-frase-box">'+htmlFrase()+'</div></section>'+
@@ -1243,7 +1404,8 @@ function telaResultado(){
     '<section class="sec"><h3 class="sub-t">Seus números</h3><p class="sec-d">Mude aqui e o preço muda na hora.</p>'+
     '<div class="nums"><div><label for="r-hora">Sua hora (pelo mercado: '+brl(c0.horaM)+')</label><div class="moeda"><span>R$</span><input class="campo" id="r-hora" inputmode="numeric" value="'+Math.round(c0.hora).toLocaleString('pt-BR')+'"></div></div>'+
     '<div><label for="r-horas">Horas suas no total</label><input class="campo" id="r-horas" inputmode="decimal" value="'+(Math.round(horasTotal()*10)/10).toLocaleString('pt-BR')+'"></div>'+
-    (g?'<div><label for="r-pessoas">Pessoas por turma</label><input class="campo" id="r-pessoas" inputmode="numeric" value="'+s.pessoas+'"></div>':'')+
+    (g&&leg?'<div><label for="r-pessoas">Pessoas por turma</label><input class="campo" id="r-pessoas" inputmode="numeric" value="'+s.pessoas+'"></div>':'')+
+    (!g&&!leg?'<div><label for="r-cap">Clientes ao mesmo tempo</label><input class="campo" id="r-cap" inputmode="numeric" value="'+(s.capacidade>0?s.capacidade:'')+'"></div>':'')+
     '<div><label for="r-cobra">Quanto você cobra hoje</label><div class="moeda"><span>R$</span><input class="campo" id="r-cobra" inputmode="numeric" placeholder="ainda não vendi" value="'+(s.cobra>0?Math.round(s.cobra).toLocaleString('pt-BR'):'')+'"></div></div>'+
     '</div>'+(s.horaInformada>0&&s.horaInformada<c0.horaM?'<p class="nota">Você informou '+brl(s.horaInformada)+' por hora. Pelo que você construiu, o mercado paga '+brl(c0.horaM)+'. A conta usa o mercado.</p>':'')+'<p class="nota" id="r-hoje"></p></section>'+
     '<section class="sec"><h3 class="sub-t">Onde o seu preço cai no mercado</h3><div class="regua" id="r-regua"></div><p class="leitura" id="r-leitura"></p></section>'+
@@ -1253,7 +1415,7 @@ function telaResultado(){
     '<section class="sec"><h3 class="sub-t">Como chegamos ao preço</h3><div class="passos" id="r-passos"></div><p class="nota" id="r-min"></p></section>'+
     '<section class="sec"><h3 class="sub-t">Cuidados</h3><ul class="cuid">'+listaCuidados().map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
     '<section class="sec"><h3 class="sub-t">Antes de divulgar</h3><ul class="cuid">'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></section>'+
-    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível, e o nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os custos do pacote seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
+    '<details class="fontes"><summary>De onde vêm os números</summary><p>Régua do mercado: preços públicos de mentorias, consultorias e programas, pesquisados em 21 e 30/10/2026 (FreelaSemCrise, Cronoshare, GetNinjas, AB Pricing e páginas de venda). Hora pelo mercado: de R$ 150 (consultor de gestão) a R$ 1.500 (mentor técnico, hora avulsa), posicionada pelo seu nível. Confiança baixa quer dizer uma fonte só ou estimativa.</p><p>Nível: regra da casa aprovada pelo Carlos em 30/10/2026, calibrada no briefing de 73 alunos do Mentor de Líderes. Cada fato que você marcou soma ao nível.</p><p>'+(leg?'O nível posiciona o preço na régua: valor escondido a 15% do caminho, aparecendo a 40%, visível a 65%, referência a 90%.':'Faixa de preço: regra da casa de 04/11/2026. O formato e a duração da mentoria definem a faixa, e o seu nível escolhe o ponto dentro dela: valor escondido a 15% do caminho do piso ao teto, aparecendo a 40%, visível a 65%, referência a 90%. No individual, a faixa é o dobro da do grupo; no programa premium, o dobro do individual.')+'</p><p>Os 23% sobre o preço: imposto de 15% (ponto entre o Simples Nacional e o lucro presumido; o seu contador confirma), comissão de venda de 7% e taxa de 1% do Pix. Os 80% de lucro sobre os custos do pacote seguem o método validado pela Sofia em 21/10/2026.</p></details>'+
   '</details>'+
   '<div class="acoes"><button class="btn" id="b-pdf">Baixar PDF</button><button class="btn ghost" id="b-mudar">Mudar respostas</button><button class="btn ghost" id="b-refazer">Refazer as perguntas</button></div>'+
   '<div id="r-pdf"></div></div>';
@@ -1267,6 +1429,7 @@ function telaResultado(){
   liga('r-hora',function(v){ var n=num(v); s.horaInformada=n>0?n:null; s.horaTipo=n>0?'outro':'mercado'; });
   liga('r-horas',function(v){ var n=num(v); if(n>0) s.horasManual=n; });
   liga('r-pessoas',function(v){ var n=Math.round(num(v)); if(n>=1) s.pessoas=n; });
+  liga('r-cap',function(v){ var n=Math.round(num(v)); if(n>=1&&n<=200) s.capacidade=n; });
   liga('r-cobra',function(v){ var n=num(v); s.cobra=n>0?n:0; });
   liga('r-ese',function(v){ var n=num(v); s.ese=n>0?n:null; });
   var br=document.getElementById('b-refazer'); if(br) br.onclick=function(){ s=novo(); ir('capa'); };
@@ -1281,13 +1444,17 @@ function desenharParceirosRes(){
   c.itens.map(function(p){
     var d=p.ref, q=COM_QTD[p.un]&&p.qtd>1?' × '+p.qtd+' '+UN_PLURAL[p.un]:'';
     var merc = d? 'média '+brl(d.med)+' '+unTxt(d.un)+(d.min!==d.max?'<br>faixa '+brl(d.min)+' a '+brl(d.max):'')+'<br><span class="conf'+(d.conf==='alta'?' alta':'')+'">confiança '+d.conf+'</span>' : 'sem média na base';
-    return '<div class="tr"><span class="n">'+esc(p.nome)+'<small>'+(p.det?esc(p.det)+' · ':'')+(d?'fonte: '+esc(d.fonte):'informado por você')+(g&&p.esc==='turma'?' · custo da turma, dividido por pessoa':'')+'</small></span>'+
+    return '<div class="tr"><span class="n">'+esc(p.nome)+'<small>'+(p.det?esc(p.det)+' · ':'')+(d?'fonte: '+esc(d.fonte):'informado por você')+(g&&p.esc==='turma'?(legado()?' · custo da turma, dividido por pessoa':' · custo da turma'):'')+'</small></span>'+
       '<span class="m">'+merc+'</span>'+
       '<span><span class="moeda"><span>R$</span><input class="campo" data-pid="'+p.id+'" inputmode="numeric" aria-label="Valor usado para '+esc(p.nome)+'" value="'+Math.round(p.valor).toLocaleString('pt-BR')+'"></span>'+(q?'<small style="display:block;font-size:12px;color:var(--mu2);margin-top:4px">'+q+'</small>':'')+'</span></div>';
   }).join('')+
-  '<div class="tr tot"><span class="n">Total dos custos do pacote'+(g?'<small>por participante</small>':'')+'</span><span class="m"></span><span class="tt" id="r-ptot" style="text-align:right"></span></div>';
+  (g&&!legado()
+    ? '<div class="tr tot"><span class="n">Custos da turma<small>plataforma, sala e itens da turma inteira</small></span><span class="m"></span><span class="tt" id="r-ptot-t" style="text-align:right"></span></div><div class="tr tot"><span class="n">Custos por participante<small>apostila, livro e coffee break</small></span><span class="m"></span><span class="tt" id="r-ptot" style="text-align:right"></span></div>'
+    : '<div class="tr tot"><span class="n">Total dos custos do pacote'+(g?'<small>por participante</small>':'')+'</span><span class="m"></span><span class="tt" id="r-ptot" style="text-align:right"></span></div>');
   box.querySelectorAll('input[data-pid]').forEach(function(inp){ inp.addEventListener('input',function(){ var id=inp.getAttribute('data-pid'), v=num(inp.value); if(id.charAt(0)==='o'){ var oo=s.outros[+id.slice(1)]; oo.valor=v; if(oo.pacote==='livro') s.livroCusto=v; } else if(s.sel[id]) s.sel[id].valor=v; atualizar(); }); });
 }
+/* As seções numeradas seguem a ordem na tela; a da turma fundadora some para quem já vendeu e a numeração fecha. */
+function renumerar(){ var i=0; app.querySelectorAll('.tela.cab > section.sec').forEach(function(sc){ if(sc.hidden) return; i++; var e=sc.querySelector('.sec-n'); if(e) e.textContent='0'+i; }); }
 function atualizar(){
   var c=calcular(); window.__ultimo=c;
   var P=c.cobra>0?c.cobra:0;
@@ -1297,8 +1464,13 @@ function atualizar(){
   document.getElementById('r-subir').innerHTML=htmlSubir(c);
   document.getElementById('r-hoje').textContent= P>0 ? 'Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'. O preço sugerido é '+brl(c.vit)+'.' : 'Você ainda não vendeu a mentoria. O preço sugerido serve para começar.';
   var pt=document.getElementById('r-ptot'); if(pt) pt.textContent=brl(c.Cp);
+  var ptt=document.getElementById('r-ptot-t'); if(ptt) ptt.textContent=brl(c.Ct);
+  var rf=document.getElementById('r-fund'); if(rf){ var hf=htmlFundadora(c); rf.innerHTML=hf; document.getElementById('s-fund').hidden=!hf; renumerar(); }
   document.getElementById('r-passos').innerHTML=htmlPassos(c);
-  document.getElementById('r-min').textContent='O mínimo é só o custo, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+', arredondado para '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.';
+  document.getElementById('r-min').textContent=legado()
+    ? 'O mínimo é só o custo, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+', arredondado para '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.'
+    : (c.g ? 'O mínimo é o piso da faixa: '+brl(c.pisoR)+'. Abaixo dele, o preço fica fora do que o seu formato e a sua duração sustentam.'
+           : 'O mínimo é o maior entre o piso da faixa ('+brl(c.faixa[0])+') e o custo de entregar, sem lucro: ('+(c.Cp>0?brl(c.Cp)+' + ':'')+brl(c.T)+') ÷ 0,77 = '+brl(c.piso)+'. Fica em '+brl(c.pisoR)+'. Abaixo dele, a sua hora sai mais barata do que vale.');
   var e=htmlEse(c,s.ese||0), eo=document.getElementById('r-ese-out'); eo.innerHTML=e.t; eo.classList.toggle('at',e.at);
   var ip=document.getElementById('r-ese'); if(ip) ip.placeholder=Math.round(c.vit).toLocaleString('pt-BR');
 }
@@ -1307,18 +1479,19 @@ function atualizar(){
 /* PDF: a ordem é a da tela (preço, nível, o que sustenta, frase, subir) e depois a conta. Os blocos são medidos e distribuídos em páginas A4 sem cortar nenhum ao meio. */
 function htmlPapel(){
   var c=calcular(), P=c.cobra>0?c.cobra:0, g=c.g, hoje=new Date().toLocaleDateString('pt-BR'), k=0;
-  var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g?' · turma de '+c.N:'')+'</p></div>';
+  var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g&&legado()?' · turma de '+c.N:'')+'</p></div>';
   function sh(t){ k++; return '<div class="ps2"><b>0'+k+'</b><span>'+t+'</span></div>'; }
   var fr=fraseAutoridade(), B=[];
   B.push(sh('Seu preço')+htmlPreco(c)+htmlPacote(true));
+  var hf=htmlFundadora(c); if(hf) B.push(sh('Como lançar: turma fundadora')+hf);
   B.push(sh('Seu nível de autoridade')+htmlNivel(c));
   B.push(sh('O que já sustenta esse preço')+htmlSustenta());
   if(fr) B.push(sh('Sua frase de autoridade')+'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic;margin-top:0">'+esc(fr)+'</p>');
   B.push(sh('Para subir de nível')+htmlSubir(c));
   B.push(sh('Onde o seu preço cai no mercado')+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p>');
   if(c.itens.length) B.push(sh('Custos do pacote')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos custos do pacote</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>');
-  var linhas=[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'custos do pacote + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]];
-  B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">Mínimo, só o custo: '+brl(c.piso)+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
+  var linhas=legado()?[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'custos do pacote + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]]:linhasContaV8(c).map(function(r){ return [r[0]+(r[1]?': '+r[1]:''),r[2]]; });
+  B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">6</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">'+(legado()?'Mínimo, só o custo: '+brl(c.piso):'Mínimo: '+brl(c.pisoR)+(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa':', o custo de entregar, sem lucro'))+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
   B.push(sh('Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>');
   B.push(sh('Antes de divulgar')+'<ul>'+ANTES.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
     '<p class="lt" style="font-size:11px;color:#6B7280;margin-top:20px">Fontes: preços públicos pesquisados em 21 e 30/10/2026. Nível: regra da casa aprovada em 30/10/2026, calibrada no briefing de 73 alunos. Os 23%: imposto de 15% (o contador confirma), comissão de 7% e Pix de 1%. O preço sugerido não é preço validado.</p>');
@@ -1401,7 +1574,7 @@ function carregarExemplo(){
   s=novo();
   s.nome='João'; s.prodNome='Mentoria para produtores rurais'; s.produto='individual'; s.mercado='agro'; s.comprador='pequena';
   s.fatos={metodo:0, mentoria:1, palestra:1, livro:1, anos:1, posic:2, clientes:0, equipe:0, credencial:0, midia:1};
-  s.cobra=4000; s.horaTipo='mercado'; s.horaInformada=null;
+  s.cobra=4000; s.horaTipo='mercado'; s.horaInformada=null; s.capacidade=5;
   s.periodo=3; s.frequencia='semanal'; s.recebe=['aulas','comunidade']; s.socio=false; aplicarTempo(); aplicarRecebe();
   s.exemplo=true;
   ir('resultado');
@@ -1411,7 +1584,7 @@ function desenhar(){
   var f={capa:telaCapa,construido:telaConstruido,cobra:telaCobra,venda:telaVenda,tempo:telaTempo,recebe:telaRecebe,socio:telaSocio,hora:telaHora,mercado:telaMercado,resultado:telaResultado,jafez:telaJaFez,pin:function(){ telaPin(''); },aviso:telaAvisoAtual}[vista];
   f();
 }
-window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade,papel:htmlPapel,aplicarRecebe:aplicarRecebe,aplicarTempo:aplicarTempo,pacote:textoPacote};
+window.__calc={calcular:calcular,seCobrar:seCobrar,arred:arred,estado:function(){return s;},definir:function(o){s=Object.assign(novo(),o);},ir:ir,exemplo:carregarExemplo,gerarPDF:gerarPDF,tiers:tiers,pontos:pontos,proximoNivel:function(){return proximoNivel(calcular());},passos:passos,horaMercado:horaMercado,frase:fraseAutoridade,papel:htmlPapel,aplicarRecebe:aplicarRecebe,aplicarTempo:aplicarTempo,pacote:textoPacote,turmaSePaga:turmaSePaga,faixa:faixaFormato,escada:escadaFundadora,agenda:agendaInfo,tetoGrupoMeses:tetoGrupoMeses};
 if(MODO_VER) iniciarVer(); else if(EXEMPLO) carregarExemplo(); else desenhar();
 })();
 </script>
