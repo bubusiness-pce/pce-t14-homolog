@@ -287,6 +287,7 @@
   .capa-folha .fotos2{width:690px;gap:16px;margin-top:20px}
   .capa-folha .fotos2 figcaption{font-size:15px}
   .capa-folha .legenda{font-size:11.3px;margin-top:10px;padding:0 91px}
+.ex-escolha{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ex-escolha select{font:inherit;padding:6px 10px;border-radius:8px;max-width:100%}
 </style>
 </head>
 <body>
@@ -869,7 +870,15 @@ function envioHTML(){
     + '</div><div class="acoes"><button type="button" class="btn mini" id="b-reenviar">Tentar de novo</button><span class="small">O seu relatório abaixo continua valendo e pode ser baixado.</span></div></div>';
 }
 function bannerVer(){
-  if(estado.exemplo) return '<div class="faixa-ex"><b>Exemplo.</b> É assim que a devolutiva chega ao aluno. Nada aqui é gravado. <a href="' + paginaIrma("arquetipos-painel") + '">Voltar ao painel</a></div>';
+  if(estado.exemplo){
+    const alvo = IDS.includes(PARAMS.get("arq")) ? PARAMS.get("arq") : "";
+    const nomeOp = id => (estado.genero === "F" ? D.feminineName[id] : D.masculineName[id]) || D.archetypes[id].name;
+    const ops = '<option value="">Aluno de exemplo (misto)</option>' + IDS.map(id => '<option value="' + id + '"' + (id === alvo ? ' selected' : '') + '>' + esc(nomeOp(id)) + '</option>').join("");
+    return '<div class="faixa-ex"><b>Exemplo.</b> É assim que a devolutiva chega ao aluno. Nada aqui é gravado. <a href="' + paginaIrma("arquetipos-painel") + '">Voltar ao painel</a>'
+      + '<div class="ex-escolha"><label for="ex-arq">Ver a devolutiva de</label> <select id="ex-arq">' + ops + '</select>'
+      + (alvo ? ' <select id="ex-g" aria-label="Gênero"><option value="F"' + (estado.genero === "F" ? ' selected' : '') + '>Feminino</option><option value="M"' + (estado.genero !== "F" ? ' selected' : '') + '>Masculino</option></select>' : '')
+      + '</div></div>';
+  }
   const v = estado.verInfo; if(!v) return "";
   return '<div class="aviso"><b>Visão do time.</b> Resposta nº ' + esc(v.id) + ' de ' + esc(estado.nome) + (v.turma ? ' · turma ' + esc(v.turma) : '')
     + (estado.contato ? ' · WhatsApp ' + esc(estado.contato) : '') + (v.quando ? ' · enviada em ' + esc(v.quando) : '') + '. <a href="' + paginaIrma("arquetipos-painel") + '" style="color:var(--accent-soft);font-weight:700">Voltar ao painel</a></div>';
@@ -893,11 +902,21 @@ function resultado(r){
   secoes(r, "tela").forEach(s => { h += '<section class="cartao rel rel-secao">' + s.join("") + '</section>'; });
   h += barraBaixar();
   $("#tela-resultado").innerHTML = h;
+  if(estado.exemplo) ligarSeletorExemplo();
   document.querySelectorAll("[data-baixar]").forEach(b => b.onclick = () => baixar());
   const ct = $("#c-tarefas");
   if(ct) ct.onchange = () => { estado.comTarefas = ct.checked; resultado(atual); const c = $("#c-tarefas"); if(c) c.focus(); };
   ligarEnvio();
   mostrar("tela-resultado");
+}
+function ligarSeletorExemplo(){
+  const a = $("#ex-arq"), g = $("#ex-g");
+  const ir = () => {
+    const p = new URLSearchParams(location.search); p.set("exemplo", "1");
+    if(a.value){ p.set("arq", a.value); p.set("g", g ? g.value : "M"); } else { p.delete("arq"); p.delete("g"); }
+    location.search = p.toString();
+  };
+  if(a) a.onchange = ir; if(g) g.onchange = ir;
 }
 function ligarEnvio(){
   const b = $("#b-reenviar"); if(b) b.onclick = () => reenviar();
@@ -1143,11 +1162,22 @@ function iniciarVer(){
 function iniciarExemplo(){
   estado.somenteLeitura = true; estado.exemplo = true;
   estado.nome = "Aluno de Exemplo"; estado.contato = ""; estado.genero = "";
-  // Motor 2 com escolhas fixas: 12 fatos (índices 0, 3 e 9), as notas de sempre e as 5 situações respondidas com os dois primeiros finalistas (3 e 2 escolhas)
   estado.motor = 2;
-  estado.fatos = new Set([0, 3, 9]); estado.respostas = D.statements.map((_, i) => (i * 7) % 5 + 1);
-  const fin = finalistasAtuais();
-  estado.situ = [fin[0], fin[0], fin[1], fin[0], fin[1]]; estado.desempate = [];
+  const alvo = IDS.includes(PARAMS.get("arq")) ? PARAMS.get("arq") : "";
+  if(alvo){
+    // 04/11/2026: exemplo de um arquétipo escolhido (nota 5 nas 3 afirmações dele, 1 a 4 nas outras, o fato dele e as 5 situações nele)
+    estado.genero = PARAMS.get("g") === "F" ? "F" : "M";
+    const iF = D.v2.fatos.findIndex(x => x.id === alvo);
+    estado.fatos = new Set(iF >= 0 ? [iF] : []);
+    estado.respostas = D.statements.map((s, i) => s.id === alvo ? 5 : (i * 7) % 4 + 1);
+    const fin = finalistasAtuais();
+    estado.situ = Array(MOTOR.funil).fill(fin.includes(alvo) ? alvo : fin[0]); estado.desempate = [];
+  } else {
+    // Motor 2 com escolhas fixas: 12 fatos (índices 0, 3 e 9), as notas de sempre e as 5 situações respondidas com os dois primeiros finalistas (3 e 2 escolhas)
+    estado.fatos = new Set([0, 3, 9]); estado.respostas = D.statements.map((_, i) => (i * 7) % 5 + 1);
+    const fin = finalistasAtuais();
+    estado.situ = [fin[0], fin[0], fin[1], fin[0], fin[1]]; estado.desempate = [];
+  }
   estado.comTarefas = PLANO_URL;
   $("#topo-sub").textContent = "Exemplo";
   resultado(completar(calcular()));
