@@ -326,7 +326,7 @@
         <span class="dica" id="c-nome-dica">Aparece na capa do seu relatório.</span></div>
       <div class="campo"><label for="c-zap">WhatsApp com DDD</label>
         <input id="c-zap" type="tel" inputmode="tel" autocomplete="tel" maxlength="40" placeholder="(11) 91234-5678" required aria-required="true" aria-describedby="c-zap-dica">
-        <span class="dica" id="c-zap-dica">Cada WhatsApp faz o teste uma vez.</span></div>
+        <span class="dica" id="c-zap-dica">Se fizer o teste de novo com este número, vale a resposta mais recente.</span></div>
       <div class="campo"><label for="c-genero">Gênero (opcional)</label>
         <select id="c-genero"><option value="">Prefiro não especificar</option><option value="F">Feminino</option><option value="M">Masculino</option></select>
         <span class="dica">Ajusta o nome do arquétipo, como Sábio ou Sábia.</span></div>
@@ -520,7 +520,7 @@ function nomeOk(n){ return n.split(" ").filter(p => (p.match(/\p{L}/gu) || []).l
 // mesma normalização do banco: só dígitos; com 12 ou mais e começando em 55, tira o 55; senão tira os zeros à esquerda; vale de 10 a 13 dígitos
 function zapNorm(z){ const d = String(z || "").replace(/\D/g, ""); return (d.length >= 12 && d.startsWith("55")) ? d.slice(2) : d.replace(/^0+/, ""); }
 function zapOk(z){ const n = zapNorm(z).length; return n >= 10 && n <= 13; }
-const DICA_ZAP = "Cada WhatsApp faz o teste uma vez.";
+const DICA_ZAP = "Se fizer o teste de novo com este número, vale a resposta mais recente.";
 function erroCampo(idCampo, idDica, msg, padrao){
   const c = $("#" + idCampo), d = $("#" + idDica);
   if(msg){ c.setAttribute("aria-invalid", "true"); d.textContent = msg; d.classList.add("erro-txt"); c.focus(); }
@@ -536,9 +536,11 @@ async function zapJaFez(zap){
     return !res.error && !!res.data && res.data.ja_fez === true;
   }catch(e){ return false; }
 }
-function telaJaFez(){
-  telaAviso("Este WhatsApp já fez o teste", "Cada WhatsApp faz o teste uma vez. Se você ainda não recebeu a sua devolutiva ou precisa refazer o teste, fale com o time da Febracis.",
-    '<button type="button" class="btn mini" id="b-outro-zap">Usar outro WhatsApp</button>');
+// desde 06/11 quem já fez pode refazer quando quiser: a resposta nova substitui a anterior no banco (pedido do Carlos)
+function telaJaFez(seguir){
+  telaAviso("Este WhatsApp já fez o teste", "Você pode fazer de novo. A resposta nova substitui a anterior, e o time passa a ver só o resultado novo.",
+    '<button type="button" class="btn mini" id="b-refazer-zap">Fazer o teste de novo</button><button type="button" class="btn mini sec" id="b-outro-zap">Usar outro WhatsApp</button>');
+  $("#b-refazer-zap").onclick = seguir;
   $("#b-outro-zap").onclick = () => { mostrar("tela-capa"); const c = $("#c-zap"); c.value = ""; c.focus(); };
 }
 let conferindo = false;
@@ -553,9 +555,10 @@ $("#f-ident").addEventListener("submit", async ev => {
   if(!zapOk(zap)){ erroCampo("c-zap", "c-zap-dica", "Digite o WhatsApp com DDD.", ""); return; }
   conferindo = true; $("#b-comecar").disabled = true;
   try{
-    if(await zapJaFez(zap)){ telaJaFez(); return; }
-    estado.nome = nome; estado.contato = zap; estado.genero = $("#c-genero").value;
-    mostrar("tela-fatos");
+    const genero = $("#c-genero").value;
+    const seguir = () => { estado.nome = nome; estado.contato = zap; estado.genero = genero; mostrar("tela-fatos"); };
+    if(await zapJaFez(zap)){ telaJaFez(seguir); return; }
+    seguir();
   }finally{ conferindo = false; $("#b-comecar").disabled = false; }
 });
 
@@ -856,6 +859,12 @@ function barraBaixar(){
     + '<button type="button" class="btn" data-baixar>Baixar PDF</button>'
     + '<div class="prog" role="status" aria-live="polite"><p class="status"></p><div class="barra det" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i></i></div></div></div>';
 }
+// fim da devolutiva: quem respondeu pode fazer o teste de novo (o aviso "o time liberou" no topo continua quando for o caso)
+function refazerHTML(){
+  if(estado.somenteLeitura || estado.novoLiberado) return "";
+  return '<div class="aviso" style="margin-top:18px"><b>Quer fazer o teste de novo?</b> A resposta nova substitui esta, e o time passa a ver só o resultado novo.'
+    + '<div class="acoes" style="margin-top:10px"><button type="button" class="btn mini sec" id="b-refazer">Fazer o teste de novo</button><span class="small" id="refazer-aviso"></span></div></div>';
+}
 function envioHTML(){
   const e = estado.envio;
   if(estado.somenteLeitura) return "";
@@ -900,6 +909,7 @@ function resultado(r){
   h += '<section class="capa-tela" aria-label="Capa do relatório">' + capaHTML(r) + '</section>';
   secoes(r, "tela").forEach(s => { h += '<section class="cartao rel rel-secao">' + s.join("") + '</section>'; });
   h += barraBaixar();
+  h += refazerHTML();
   $("#tela-resultado").innerHTML = h;
   if(estado.exemplo) ligarSeletorExemplo();
   document.querySelectorAll("[data-baixar]").forEach(b => b.onclick = () => baixar());
