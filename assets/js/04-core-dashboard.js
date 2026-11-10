@@ -4141,9 +4141,24 @@ function manualLoadCache(){
 // Na produção ele entra pelas tabelas manualpce_cards e manual_cards. NÃO copiar este trecho para o pce-t14.
 function homologCardAnjo(state){
   // 30/10/2026: o Anjo já está na tabela de cards (produção); daqui só sai o Teste de Arquétipos, até o "aprovado" do Carlos
-  if (state['gamificacao-ao-vivo-arquetipos']) return state;
   var ordem = 0;
   Object.keys(state).forEach(function(k){ if (state[k]._sectionId === 'gamificacao-ao-vivo') ordem = Math.max(ordem, state[k]._displayOrder || 0); });
+  // 10/11/2026: Teste de Arquétipos no tema do Mentor de Líderes, card novo ao lado do atual, só aqui até o "aprovado" do Carlos
+  if (!state['gamificacao-ao-vivo-arquetipos-melid']) {
+    var irmao = state['gamificacao-ao-vivo-arquetipos'];
+    state['gamificacao-ao-vivo-arquetipos-melid'] = {
+      tag: 'Teste · Arquétipos',
+      title: 'Teste de Arquétipos · Mentor de Líderes',
+      desc: 'O mesmo teste de arquétipos de comunicação, com a cara do Mentor de Líderes. O aluno responde pelo link e recebe a devolutiva em PDF. Link e respostas: pelo Painel, com o PIN.',
+      days: [], acaoCS: [], anexos: [],
+      _coverUrl: 'assets/img/capas/v2/capa-arquetipos-melid.png',
+      _sectionId: 'gamificacao-ao-vivo',
+      _displayOrder: irmao ? (irmao._displayOrder || 0) + 0.5 : ordem + 2,
+      _updatedAt: null, _updatedByName: '',
+      externalUrl: 'https://bubusiness-pce.github.io/pce-t14-homolog/arquetipos-melid-painel.html'
+    };
+  }
+  if (state['gamificacao-ao-vivo-arquetipos']) return state;
   state['gamificacao-ao-vivo-arquetipos'] = {
     tag: 'Teste · Arquétipos',
     title: 'Teste de Arquétipos',

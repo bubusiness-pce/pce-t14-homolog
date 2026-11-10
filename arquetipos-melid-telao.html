@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!--
+  Teste de Arquétipos · telão · Mentor de Líderes, visual do GPT de 10/11/2026 (HOMOLOG, 30/10/2026)
+  Gerado por montar_febracis.py a partir de modelo_telao_febracis.html. Não edite o arquivo gerado.
+  Página só do QR, aberta numa aba própria pelo botão "QR no telão" do painel do time. Não mostra nenhum nome de aluno
+  e não tem caminho de volta para o painel. Lê só a contagem pública gamificacao_arq_telao(p_turma), sem PIN, a cada 30 s e só com a aba visível.
+  Visual do anjo-telao.html (mesma identidade Febracis).
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000A2E">
+<meta name="robots" content="noindex">
+<title>[HOMOLOG] Teste de Arquétipos · Telão · Mentor de Líderes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    color-scheme:dark;
+    --aguia:none;
+    --bg:#000A2E;
+    --line:rgba(234,229,225,.15);
+    --cream:#EAE5E1;
+    --muted:rgba(234,229,225,.72);
+    --accent:#D8A038;
+    --accent-2:#B98300;
+    --accent-soft:#F2C86B;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;height:100%}
+  body{
+    background:
+      radial-gradient(1200px 700px at 80% -10%, rgba(0,88,216,.30), transparent 60%),
+      linear-gradient(180deg,#001B5E 0%,var(--bg) 55%,#000024 100%);
+    background-attachment:fixed;
+    color:var(--cream);
+    font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  body.quieto{cursor:none}
+  h2,p{margin:0}
+  :focus-visible{outline:3px solid var(--accent-soft);outline-offset:2px;border-radius:6px}
+  .kicker{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-size:clamp(16px,2.8vh,26px)}
+  .barra{height:8px;background:rgba(0,0,0,.4);border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:6px}
+  .barra>i{display:block;height:100%;width:38%;background:linear-gradient(90deg,var(--accent-2),var(--accent-soft));border-radius:inherit;animation:desliza 1.1s ease-in-out infinite}
+  @keyframes desliza{0%{margin-left:-38%}100%{margin-left:100%}}
+  #telao{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.6vh,18px);padding:20px;text-align:center;
+    background:radial-gradient(1000px 600px at 50% -10%,rgba(0,88,216,.34),transparent 65%),linear-gradient(180deg,#001B5E 0%,var(--bg) 55%,#000024 100%);overflow:auto}
+  #telao .t-mk{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #telao .t-mk div{height:min(86vh,80vw);aspect-ratio:549/900;opacity:.07;background-color:var(--accent);-webkit-mask:var(--aguia) center/contain no-repeat;mask:var(--aguia) center/contain no-repeat}
+  #telao>*:not(.t-mk){position:relative}
+  #telao .t-logo{height:clamp(44px,8vh,84px);width:auto}
+  #telao h2{font-size:clamp(26px,5.2vh,56px);font-weight:900;line-height:1.15;text-wrap:balance;max-width:22ch}
+  #telao .qr{background:#fff;padding:clamp(10px,1.8vh,18px);border-radius:16px;line-height:0;box-shadow:0 18px 48px rgba(0,0,0,.45)}
+  #telao .qr img,#telao .qr canvas{display:block}
+  #telao .t-cont{width:min(560px,92vw);font-variant-numeric:tabular-nums}
+  #telao .t-cont p{font-size:clamp(16px,2.6vh,24px);font-weight:600;margin-top:6px}
+  #telao .t-cont strong{color:var(--accent-soft);font-size:1.25em}
+  #telao .t-cont .barra{height:12px}
+  #telao .t-url{font-size:clamp(14px,2.2vh,20px);color:var(--cream);font-weight:600;word-break:break-all;max-width:90vw}
+  .tela-cheia{position:fixed;top:calc(14px + env(safe-area-inset-top));right:calc(14px + env(safe-area-inset-right));z-index:60;appearance:none;cursor:pointer;
+    border:1px solid var(--line);background:rgba(0,12,72,.7);color:var(--cream);font:700 14px 'Montserrat',system-ui,sans-serif;padding:10px 16px;border-radius:12px;transition:opacity .3s}
+  body.quieto .tela-cheia{opacity:0;pointer-events:none}
+  @media (prefers-reduced-motion: reduce){.barra>i{animation:none;width:100%;opacity:.5}.tela-cheia{transition:none}}
+
+:root{--aguia:none;--bg:#0B1426;--panel:#111C33;--line:#24304A;--line-2:#2A3654;--cream:#F3EEE3;--muted:#B8BFCC;--faint:#8E97A8;--accent:#D9B872;--accent-2:#C9A45C;--accent-soft:#D9B872;--accent-bg:rgba(217,184,114,.10);--ink:#0B1426;--ok:#9FC6B0;--ok-bg:rgba(159,198,176,.1);--fonte:'Inter',sans-serif;--cond:'Cormorant Garamond',serif}
+body{background:#0B1426;font-family:var(--fonte);color:var(--cream)}
+
+#telao{background:#0B1426;gap:clamp(10px,1.8vh,20px);padding:4vh 5vw}
+#telao .t-mk{display:none}
+#telao .t-logo{height:clamp(48px,8vh,86px);width:auto;margin-bottom:1vh}
+.kicker{font:500 clamp(14px,2vh,22px)/1.4 var(--fonte);letter-spacing:.18em}
+#telao h2{font:500 clamp(36px,6.5vh,72px)/1.05 var(--cond);max-width:30ch}
+#telao .qr{padding:18px;border-radius:8px;box-shadow:0 0 0 1px #D9B872,0 16px 48px #0003;margin:6px 0}
+#telao .t-url{font:500 clamp(18px,2.8vh,30px)/1.5 var(--fonte);color:#F3EEE3;max-width:92vw}
+#telao .t-cont{width:min(680px,90vw);padding-top:1.5vh;border-top:1px solid #2A3654}
+#telao .t-cont p{font:400 clamp(21px,3.2vh,35px)/1.2 var(--fonte);color:#DCD6CA}
+#telao .t-cont strong{font:600 1.8em/1 var(--cond);color:var(--accent);vertical-align:-.04em}
+.tela-cheia{font:500 12px var(--fonte);background:#111C33;border-radius:6px;color:#B8BFCC}
+
+</style>
+</head>
+<body>
+<button class="tela-cheia" id="tela-cheia" type="button">Tela cheia</button>
+<main id="telao" aria-label="QR do Teste de Arquétipos">
+  <div class="t-mk" aria-hidden="true"><div></div></div>
+  <img class="t-logo" alt="Mentor de Líderes" src="assets/melid/logo-melid.svg">
+  <p class="kicker">Teste de Arquétipos</p>
+  <h2>Aponte a câmera e faça o seu teste</h2>
+  <div class="qr" id="t-qr" role="img" aria-label="QR para fazer o Teste de Arquétipos"></div>
+  <p class="t-url" id="t-url"></p>
+  <div class="t-cont" aria-live="polite"><div class="barra" id="t-barra" role="progressbar" aria-label="Carregando o contador"><i></i></div><p id="t-texto">Carregando o contador…</p></div>
+</main>
+<script>
+(function(){
+  "use strict";
+  var SUPABASE_URL = 'https://pggcbvafkwyqyvlkiyti.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnZ2NidmFma3d5cXl2bGtpeXRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTY5NDMsImV4cCI6MjEwMTA5Mjk0M30.y2FaXpreVN_eeFMmlWDuQUXCN3C69qI8ooTcRl2k7ZI';
+  var CADA_MS = 30000;   // o contador se atualiza a cada 30 s, e só com a aba visível
+  var $ = function(id){ return document.getElementById(id); };
+  function limpaTurma(t){
+    return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+  }
+  var turma = '';
+  try { turma = limpaTurma(new URLSearchParams(location.search).get('t')); } catch (e) {}
+  var SB = null;
+  try { if (window.supabase && window.supabase.createClient) SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { SB = null; }
+  var timer = null, carregou = false;
+
+  function linkAluno(){
+    var arq = location.protocol === 'file:' ? 'arquetipos-melid.html' : 'arquetipos-melid';   // no servidor o endereço é curto, sem .html
+    var q = turma ? '?t=' + encodeURIComponent(turma) : '';
+    try { return new URL(arq + q, location.href).href; }
+    catch (e) { return arq + q; }
+  }
+  function tamanhoQR(){ return Math.floor(Math.max(180, Math.min(window.innerWidth * 0.78, window.innerHeight * 0.46, 560))); }
+  function desenharQR(){
+    var alvo = $('t-qr'); if (!alvo) return;
+    alvo.innerHTML = '';
+    var link = linkAluno(), tam = tamanhoQR();
+    if (window.QRCode) {
+      try { new QRCode(alvo, {text: link, width: tam, height: tam, colorDark: '#000A2E', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M}); return; }
+      catch (e) {}
+    }
+    alvo.style.cssText = 'max-width:' + tam + 'px;color:#000A2E;font-weight:700;word-break:break-all;line-height:1.4;font-size:16px';
+    alvo.textContent = link;
+  }
+  function mostrar(n){
+    carregou = true;
+    $('t-barra').hidden = true;
+    var t = $('t-texto');
+    if (n === 0) t.textContent = 'Seja a primeira pessoa a fazer o teste';
+    else if (n === 1) t.innerHTML = '<strong>1</strong> já fez o teste';
+    else t.innerHTML = '<strong>' + n.toLocaleString('pt-BR') + '</strong> já fizeram o teste';
+  }
+  function agendar(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){ if (document.visibilityState === 'visible') ler(); else agendar(); }, CADA_MS);
+  }
+  async function ler(){
+    if (!SB) { if (!carregou) { $('t-barra').hidden = true; $('t-texto').textContent = 'Sem conexão com o sistema. Recarregue a página.'; } return; }
+    try {
+      var r = await SB.rpc('gamificacao_arq_telao', {p_turma: turma});
+      if (!r.error && r.data && r.data.total != null) mostrar(Number(r.data.total) || 0);
+      else if (!carregou) { $('t-barra').hidden = true; $('t-texto').textContent = 'Não foi possível carregar o contador.'; }
+    } catch (e) {
+      if (!carregou) { $('t-barra').hidden = true; $('t-texto').textContent = 'Não foi possível carregar o contador.'; }
+    }
+    agendar();
+  }
+
+  // tela cheia: o botão some em tela cheia e quando o mouse fica parado
+  function emTelaCheia(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function ajustarBotao(){ $('tela-cheia').hidden = emTelaCheia(); }
+  $('tela-cheia').addEventListener('click', function(){
+    var el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!f) return;
+    try { var p = f.call(el); if (p && p.catch) p.catch(function(){}); } catch (e) {}
+  });
+  document.addEventListener('fullscreenchange', ajustarBotao);
+  document.addEventListener('webkitfullscreenchange', ajustarBotao);
+  var parado = null;
+  document.addEventListener('mousemove', function(){
+    document.body.classList.remove('quieto');
+    clearTimeout(parado);
+    parado = setTimeout(function(){ document.body.classList.add('quieto'); }, 3000);
+  });
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') ler(); });
+  var redim = null;
+  window.addEventListener('resize', function(){ clearTimeout(redim); redim = setTimeout(desenharQR, 150); });
+
+  $('t-url').textContent = linkAluno();
+  desenharQR();
+  ler();
+})();
+</script>
+</body>
+</html>

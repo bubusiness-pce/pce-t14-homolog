@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<!--
+  Teste de Arquétipos · painel do time · Mentor de Líderes, visual do GPT de 10/11/2026 (HOMOLOG, 30/10/2026)
+  Gerado por montar_febracis.py a partir de modelo_painel_febracis.html. Não edite o arquivo gerado.
+  Leitura, chave do plano de ação por turma, liberação em lote, novo teste e exclusão só pelas funções gamificacao_arq_t_* (PIN dos placares).
+  A devolutiva de cada aluno abre em arquetipos?ver=<id>; os PDFs em lote, em arquetipos?lote=<ids>&plano=1; o exemplo, em arquetipos?exemplo=1&plano=0|1.
+  Visual, PIN e inicialização do Supabase seguem a página anjo-painel.html.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000A2E">
+<meta name="robots" content="noindex">
+<title>[HOMOLOG] Teste de Arquétipos · Painel do time · Mentor de Líderes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    color-scheme:dark;
+    --aguia:none;
+    --bg:#000A2E; --panel:#001854;
+    --line:rgba(234,229,225,.15); --line-2:rgba(234,229,225,.28);
+    --cream:#EAE5E1; --muted:rgba(234,229,225,.72); --faint:rgba(234,229,225,.5);
+    --accent:#D8A038; --accent-2:#B98300; --accent-soft:#F2C86B; --accent-bg:rgba(216,160,56,.14);
+    --ink:#141008; --ok:#63F858; --ok-bg:rgba(99,248,88,.13);
+    --bad:#FF7B7B; --bad-bg:rgba(255,123,123,.13); --bad-line:rgba(255,123,123,.5);
+    --fonte:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    --cond:'Barlow Condensed','Arial Narrow',sans-serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{
+    background-color:var(--bg);
+    background-image:radial-gradient(1200px 700px at 80% -10%, rgba(0,88,216,.30), transparent 60%), linear-gradient(180deg,#001B5E 0%,var(--bg) 55%,#000024 100%);
+    background-attachment:fixed;color:var(--cream);font-family:var(--fonte);font-size:15px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;min-height:100dvh;overflow-x:hidden;
+  }
+  h1,h2,h3,p{margin:0}
+  h2,h3{text-wrap:balance;line-height:1.2}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  :focus-visible{outline:3px solid var(--accent-soft);outline-offset:2px;border-radius:6px}
+  [tabindex="-1"]:focus{outline:none}
+  button{font-family:inherit}
+
+  #mark-bg{position:fixed;inset:0;z-index:0;pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #mark-bg .mk{height:min(78vh,80vw);aspect-ratio:549/900;opacity:.07;transform:translateY(4vh);background-color:var(--accent);
+    -webkit-mask:var(--aguia) center/contain no-repeat;mask:var(--aguia) center/contain no-repeat}
+
+  /* barra do topo, sempre visível */
+  header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;padding:12px clamp(16px,4vw,40px);border-bottom:1px solid var(--line);
+    background:rgba(0,10,46,.93);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  header.top .logo{height:44px;width:auto;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+  .titles{display:flex;flex-direction:column;line-height:1.1}
+  .kicker{font-family:var(--cond);font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-size:14px}
+  header.top h1{font-size:clamp(17px,2.4vw,23px);font-weight:800}
+  .spacer{flex:1 1 auto;min-width:8px}
+  .conn{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+  .conn .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+  .conn.on .dot{background:var(--ok)}
+  #espera{position:fixed;top:0;left:0;right:0;z-index:30;height:3px;background:transparent;overflow:hidden}
+  #espera i{display:block;height:100%;width:34%;visibility:hidden;background:linear-gradient(90deg,var(--accent-2),var(--accent-soft));animation:desliza 1.1s ease-in-out infinite}
+  #espera.on i{visibility:visible}
+  @keyframes desliza{0%{margin-left:-34%}100%{margin-left:100%}}
+
+  main{position:relative;z-index:1;width:100%;max-width:1200px;margin:0 auto;padding:clamp(16px,3vw,28px) clamp(16px,4vw,40px) 90px}
+
+  .btn{appearance:none;cursor:pointer;border:1px solid var(--line-2);background:rgba(0,12,72,.55);color:var(--cream);font:700 14px var(--fonte);padding:11px 18px;min-height:42px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+  .btn:hover{border-color:var(--accent);color:var(--accent-soft)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+  .btn.pri:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--ink)}
+  .btn.perigo{border-color:var(--bad-line);color:var(--bad);background:var(--bad-bg)}
+  .btn.perigo:hover{background:rgba(255,123,123,.22);border-color:var(--bad);color:var(--bad)}
+  .btn.mini{min-height:34px;padding:6px 12px;font-size:12.5px;border-radius:9px}
+
+  .secao-tit{font-family:var(--cond);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-size:13px;margin:22px 0 8px}
+  .cartao{background:rgba(0,24,84,.72);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}
+  .cartao h3{font-size:17px;font-weight:800;margin-bottom:4px}
+  .ajuda{color:var(--muted);font-size:13.5px}
+  .acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+  .campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .campo label{font-size:13px;font-weight:700;color:var(--muted)}
+  input[type=text],input[type=password]{width:100%;background:rgba(0,10,46,.75);color:var(--cream);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;min-height:44px;font:500 15px var(--fonte)}
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(216,160,56,.3)}
+  input::placeholder{color:var(--muted);opacity:.8}
+  .pin-campo{max-width:260px}
+  .pin-err{color:var(--bad);font-size:14px;font-weight:700}
+
+  /* link para os alunos */
+  .link-card{display:flex;flex-direction:column;gap:12px}
+  .turma-campo{max-width:320px}
+  .link-linha{display:flex;flex-direction:column;gap:4px}
+  .link-linha .rot{font-size:13px;font-weight:700;color:var(--muted)}
+  .link-linha code{display:block;font:600 14px ui-monospace,Consolas,monospace;color:var(--accent-soft);background:rgba(0,10,46,.75);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;overflow-wrap:anywhere;word-break:break-all}
+  .copia textarea{width:100%;min-height:0;font:500 14px var(--fonte);background:rgba(0,10,46,.75);color:var(--cream);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;resize:vertical}
+  .copia p{font-size:13.5px;color:var(--muted);margin-bottom:6px}
+
+  /* chave do plano de ação da turma */
+  .chave{display:flex;flex-direction:column;gap:12px;padding:16px;border:2px solid var(--accent);border-radius:16px;background:rgba(216,160,56,.08)}
+  .chave-kicker{font:800 11.5px var(--fonte);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-soft)}
+  .chave h4{margin:4px 0 0;font:800 19px/1.3 var(--fonte);color:var(--cream)}
+  .chave-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .opcao{appearance:none;cursor:pointer;text-align:left;display:grid;grid-template-columns:24px 1fr;column-gap:12px;row-gap:4px;align-items:start;
+    padding:16px;border-radius:14px;border:2px solid var(--line-2);background:rgba(0,12,72,.6);color:var(--cream);font:inherit;transition:border-color .15s,background .15s}
+  .opcao:hover{border-color:var(--accent)}
+  .op-marca{grid-row:1 / span 2;width:24px;height:24px;border-radius:50%;border:2px solid var(--muted);margin-top:1px}
+  .op-titulo{font:800 17px/1.25 var(--fonte)}
+  .op-texto{font-size:13.5px;line-height:1.45;color:var(--muted)}
+  .opcao[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--ink)}
+  .opcao[aria-pressed="true"] .op-texto{color:var(--ink)}
+  .opcao[aria-pressed="true"] .op-marca{border-color:var(--ink);background:var(--ink);box-shadow:inset 0 0 0 5px var(--accent)}
+  .chave-status{margin:0;font-size:15.5px;line-height:1.4}
+  .chave-status b{color:var(--accent-soft)}
+
+  /* seleção e ações em lote */
+  .chk{display:inline-flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;font-weight:700}
+  .chk input{width:22px;height:22px;accent-color:#D8A038;flex:none;cursor:pointer;margin:0}
+  .lista-topo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:2px 16px;margin-bottom:6px}
+  .tabela td.nm .chk{font-weight:700;min-height:36px}
+  .tabela tr.apagada td:not(.ac):not(.nm){opacity:.5}
+  .tabela tr.apagada td.nm .chk{opacity:.5}
+  .pill.novo{background:rgba(234,229,225,.1);color:var(--cream);margin-left:8px;font-weight:600}
+  #lote-barra{position:sticky;bottom:10px;z-index:15;margin-top:14px;background:rgba(0,12,72,.97);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+  #lote-barra .tit{font-weight:800}
+  .aviso-lote{font-size:13.5px;color:var(--accent-soft);font-weight:600}
+  .msg-liberado{margin-bottom:14px;padding:14px 16px;border-radius:14px;border:1px solid rgba(216,160,56,.5);background:var(--accent-bg);display:flex;flex-direction:column;gap:10px}
+  .msg-liberado q{display:block;quotes:none;font-weight:600;color:var(--cream)}
+  .msg-liberado textarea{width:100%;font:500 14px var(--fonte);background:rgba(0,10,46,.75);color:var(--cream);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;resize:vertical}
+  .tabela tr.conf-neutro td{background:var(--accent-bg);padding:12px 10px}
+  .confirma-caixa.neutra{border-color:rgba(216,160,56,.5);background:rgba(0,12,72,.6)}
+
+  /* PIN */
+  .gate{max-width:400px;margin:5vh auto;text-align:center;background:linear-gradient(180deg,rgba(0,36,132,.5),rgba(0,12,72,.78));border:1px solid var(--line);border-radius:20px;padding:32px 26px}
+  .gate h2{font-size:22px;margin-bottom:6px}
+  .gate p{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .gate input{text-align:center;letter-spacing:.4em;font-size:22px;font-weight:800;padding:12px;min-height:54px}
+  .gate .btn{width:100%;margin-top:14px;min-height:48px;font-size:15px}
+  .gate-err{color:var(--bad);font-size:14px;margin-top:12px;min-height:20px}
+
+  /* números */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin-top:14px}
+  .kpi{background:rgba(0,24,84,.72);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+  .kpi .num{font-size:32px;font-weight:900;line-height:1.05;color:var(--accent-soft);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .kpi .num.txt{font-size:22px;line-height:1.2}
+  .kpi .num small{font-size:15px;color:var(--muted);font-weight:600}
+  .kpi .rot{font-size:13px;color:var(--muted)}
+
+  /* filtro por turma */
+  .filtro{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:22px 0 10px}
+  .filtro .secao-tit{margin:0}
+  .dias{display:inline-flex;border:1px solid var(--line-2);border-radius:11px;overflow-x:auto;max-width:100%}
+  .dias button{appearance:none;border:0;background:none;padding:9px 14px;min-height:40px;font:700 13px var(--fonte);color:var(--muted);cursor:pointer;white-space:nowrap}
+  .dias button[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent-soft)}
+  .dias button:hover{color:var(--accent-soft)}
+
+  /* tabela de respostas */
+  .rolagem{overflow-x:auto}
+  .tabela{width:100%;border-collapse:collapse;font-size:13.5px;min-width:1040px}
+  .tabela th{text-align:left;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .tabela td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .tabela td.nm{font-weight:700}
+  .tabela .quando{color:var(--muted);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tabela .ac{text-align:right;min-width:210px}
+  .tabela .ac .btn{margin-left:6px}
+  .tabela tr.conf td{background:var(--bad-bg);padding:12px 10px}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+  .pill.ouro{background:var(--accent-bg);color:var(--accent-soft)}
+  .pill.neutro{background:rgba(234,229,225,.08);color:var(--muted)}
+  .vazio{text-align:center;padding:34px 18px;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .vazio h3{font-size:19px}
+  .vazio p{max-width:48ch;color:var(--muted)}
+
+  .confirma-caixa{padding:14px 16px;border-radius:14px;border:1px solid var(--bad-line);background:var(--bad-bg);display:flex;flex-direction:column;gap:12px;max-width:560px;text-align:left;white-space:normal}
+  .confirma-caixa p{font-size:14.5px}
+
+  .espera{display:flex;flex-direction:column;gap:12px;text-align:center;max-width:420px;margin:8vh auto}
+  .espera .etapa{font-family:var(--cond);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-size:15px}
+  .espera h2{font-size:19px}
+  .barra{height:9px;border-radius:99px;background:rgba(0,0,0,.4);border:1px solid var(--line);overflow:hidden}
+  .barra>i{display:block;height:100%;width:38%;border-radius:inherit;background:linear-gradient(90deg,var(--accent-2),var(--accent-soft));animation:desliza 1.1s ease-in-out infinite}
+
+  #toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:80;align-items:center;width:min(92vw,560px);pointer-events:none}
+  .toast{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);color:var(--cream);padding:12px 16px;border-radius:11px;font-size:14px;font-weight:600;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:subir .25s ease}
+  .toast.err{border-left-color:var(--bad)}
+  .toast.ok{border-left-color:var(--ok)}
+  @keyframes subir{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* telas estreitas: cada resposta vira um cartão */
+  @media (max-width:820px){
+    .tabela{min-width:0}
+    .tabela thead{display:none}
+    .tabela,.tabela tbody,.tabela tr,.tabela td{display:block;width:100%}
+    .tabela tr{padding:12px 4px;border-bottom:1px solid var(--line-2)}
+    .tabela td{border:0;padding:3px 6px;display:flex;justify-content:space-between;gap:14px;text-align:right}
+    .tabela td[data-l]::before{content:attr(data-l);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:700;text-align:left;flex:none}
+    .tabela td.nm{font-size:16px;justify-content:flex-start;text-align:left;padding-bottom:6px}
+    .tabela td.ac{justify-content:flex-start;padding-top:8px;gap:8px}
+    .tabela td.ac .btn{margin-left:0}
+    .tabela tr.conf{padding:0}
+    .tabela tr.conf td,.tabela tr.conf-neutro td{display:block;padding:12px}
+    .tabela td.ac{flex-wrap:wrap}
+  }
+  @media (max-width:600px){
+    header.top{padding:10px 16px;gap:6px 12px}
+    header.top .logo{height:34px}
+    .kicker{font-size:12px}
+  }
+  @media (max-width:640px){.chave-opcoes{grid-template-columns:1fr}}
+  @media (max-width:480px){.btn{white-space:normal}.cartao{padding:14px}.acoes .btn{flex:1 1 100%}
+    #lote-barra{bottom:6px}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}#espera i,.barra>i{width:100%;opacity:.5}}
+
+:root{--aguia:none;--bg:#0B1426;--panel:#111C33;--line:#24304A;--line-2:#2A3654;--cream:#F3EEE3;--muted:#B8BFCC;--faint:#8E97A8;--accent:#D9B872;--accent-2:#C9A45C;--accent-soft:#D9B872;--accent-bg:rgba(217,184,114,.10);--ink:#0B1426;--ok:#9FC6B0;--ok-bg:rgba(159,198,176,.1);--fonte:'Inter',sans-serif;--cond:'Cormorant Garamond',serif}
+body{background:#0B1426;font-family:var(--fonte);color:var(--cream)}
+
+#mark-bg{display:none}
+header.top{background:rgba(11,20,38,.97);padding:20px 40px;gap:16px 24px}
+header.top .logo{width:148px;height:auto;filter:none;padding-right:24px;border-right:1px solid var(--line-2);box-sizing:content-box}
+.kicker,.secao-tit,.espera .etapa{font:500 11px/1.6 var(--fonte);letter-spacing:.17em}
+header.top h1{font:500 30px/1.1 var(--cond);margin-top:4px}
+h2,h3,.cartao h3,.chave h4{font-family:var(--cond);font-weight:500}
+main{max-width:1360px;padding-top:28px}
+.btn{background:#16223D;border-color:var(--line-2);border-radius:8px;min-height:48px;font-weight:500;transition:background .16s,border-color .16s}
+.btn.mini{min-height:40px;font-size:12px;border-radius:6px}
+.cartao,.kpi{background:var(--panel);border-radius:12px;padding:22px}
+.cartao h3{font-size:27px;margin-bottom:8px}
+.ajuda{line-height:1.7}
+input[type=text],input[type=password],.link-linha code,.copia textarea,.msg-liberado textarea{background:#0B1426;border-radius:7px;min-height:48px}
+input:focus{box-shadow:0 0 0 3px rgba(217,184,114,.14)}
+.chave{border:1px solid #726344;border-radius:10px;background:rgba(217,184,114,.04);padding:20px}
+.chave h4{font-size:27px}
+.chave-kicker{font-weight:500}
+.opcao{background:#111C33;border-width:1px;border-radius:8px;padding:18px}
+.op-titulo{font-size:15px;font-weight:600}
+.chk,.campo label,.link-linha .rot{font-weight:500}
+.chk input{accent-color:var(--accent)}
+.gate{max-width:440px;margin:9vh auto;background:#111C33;border-radius:12px;padding:40px 32px;border-top:2px solid var(--accent);box-shadow:0 24px 60px #0002}
+.gate::before{content:'';display:block;width:48px;height:56px;margin:0 auto 24px;background:url('assets/melid/lion-melid.svg') center/contain no-repeat}
+.gate h2{font-size:38px;font-weight:500}.gate p{margin:12px 0 26px;line-height:1.6}.gate input{font-weight:500}
+.kpis{gap:16px}.kpi{border-top:2px solid #726344;gap:8px}.kpi .num{font:500 46px/1 var(--cond)}.kpi .num.txt{font:500 29px/1.2 var(--cond)}
+.dias{border-radius:7px}.dias button{font-weight:500;min-height:44px}
+.tabela{min-width:1040px;font-size:13px}.tabela th{font-weight:500;letter-spacing:.1em;padding:14px 10px}.tabela td{padding:15px 10px}.tabela td.nm,.tabela td.nm .chk{font-weight:500}
+.pill{font-weight:500;border-radius:5px;font-size:11px;padding:5px 8px}
+#lote-barra{background:#16223D}.confirma-caixa.neutra{background:#16223D}
+@media(min-width:821px){.tabela tbody tr:hover{background:#16223D}}
+@media(max-width:820px){.tabela{min-width:0}.tabela tr{background:#111C33;border:1px solid var(--line);border-radius:10px;padding:16px 10px;margin:12px 0}.tabela td{padding:5px 6px}.tabela td.nm{font-size:17px;padding-bottom:14px}.tabela td.ac{padding-top:14px}.tabela td.ac .btn{min-height:48px}.tabela td[data-l]::before{font-weight:500;font-size:10px}.rolagem{overflow:visible}}
+@media(max-width:600px){header.top{padding:16px;gap:12px 16px}header.top .logo{width:108px;height:auto;padding-right:16px}.kicker{font-size:9px;letter-spacing:.1em}header.top h1{font-size:25px}.conn{font-size:11px}main{padding:22px 16px 70px}.cartao{padding:18px}.gate{padding:32px 22px;margin:6vh auto}.gate h2{font-size:34px}.kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:16px}.kpi .num.txt{font-size:24px}.kpi .rot{font-size:11px}.chave{padding:16px}.btn.mini{min-height:44px}}
+
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;text-align:center">Este painel precisa de JavaScript para funcionar.</p></noscript>
+<div id="mark-bg" aria-hidden="true"><div class="mk"></div></div>
+<header class="top">
+  <img class="logo" id="logo" alt="Mentor de Líderes">
+  <div class="titles">
+    <span class="kicker">Teste de Arquétipos</span>
+    <h1>Painel do time</h1>
+  </div>
+  <span class="spacer"></span>
+  <span class="conn" id="conn" hidden><span class="dot"></span><span id="conn-txt"></span></span>
+  <button class="btn mini" id="b-atualizar" type="button" hidden>Atualizar</button>
+</header>
+<div id="espera" aria-hidden="true"><i></i></div>
+<main>
+  <section id="v-gate" hidden>
+    <div class="gate">
+      <h2 tabindex="-1">Painel do time</h2>
+      <p>Digite o PIN de operação dos placares.</p>
+      <form id="f-pin" novalidate>
+        <label class="sr" for="pin">PIN de operação</label>
+        <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="• • • •" autocomplete="off">
+        <button class="btn pri" type="submit">Entrar</button>
+      </form>
+      <div class="gate-err" id="gate-err" role="alert"></div>
+    </div>
+  </section>
+
+  <section id="v-espera" hidden>
+    <div class="espera" aria-busy="true">
+      <p class="etapa" id="esp-etapa"></p>
+      <h2 id="esp-titulo"></h2>
+      <div class="barra" role="progressbar" id="esp-barra"><i></i></div>
+    </div>
+  </section>
+
+  <section id="v-painel" hidden>
+    <div class="cartao link-card">
+      <div><h3>Link para os alunos</h3>
+        <p class="ajuda">Escolha o nome da turma e copie o link do teste. Quem abrir já entra identificado como dessa turma.</p></div>
+      <div class="campo turma-campo"><label for="turma">Turma</label>
+        <input id="turma" type="text" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="t2-mentor" aria-describedby="turma-dica">
+        <span class="ajuda" id="turma-dica">Texto curto, sem acento e sem espaço. Deixe vazio para respostas sem turma.</span></div>
+      <div class="chave">
+        <div><span class="chave-kicker">Decisão do time</span>
+          <h4 id="chave-rot">O que o aluno desta turma recebe ao terminar o teste?</h4></div>
+        <div class="chave-opcoes" id="chave" role="group" aria-labelledby="chave-rot">
+          <button type="button" class="opcao" data-chave="0" aria-pressed="true"><span class="op-marca" aria-hidden="true"></span>
+            <span class="op-titulo">Só o diagnóstico</span>
+            <span class="op-texto">A devolutiva na hora. O plano de ação fica guardado para vocês liberarem depois, como bônus.</span></button>
+          <button type="button" class="opcao" data-chave="1" aria-pressed="false"><span class="op-marca" aria-hidden="true"></span>
+            <span class="op-titulo">Diagnóstico + plano de ação</span>
+            <span class="op-texto">A devolutiva e o plano de ação juntos, na hora.</span></button>
+        </div>
+        <p class="chave-status" id="chave-status" aria-live="polite"></p>
+        <span class="ajuda">Vale para quem terminar o teste daqui em diante. Quem já fez sem o plano recebe quando vocês liberarem na lista abaixo.</span>
+        <span class="ajuda" id="chave-aviso" hidden>Não foi possível ler a chave das turmas agora. Atualize a página; se continuar, avise o suporte.</span></div>
+      <div class="link-linha"><span class="rot">Link do teste</span><code id="link-txt"></code></div>
+      <div class="acoes">
+        <button type="button" class="btn pri" id="b-copiar">Copiar link do teste</button>
+        <button type="button" class="btn" id="b-abrir">Abrir o teste ↗</button>
+        <button type="button" class="btn" id="b-telao">QR no telão ↗</button>
+        <button type="button" class="btn" id="b-exemplo">Ver como chega ao aluno ↗</button>
+      </div>
+      <div class="copia" id="copia" hidden><p>O navegador não deixou copiar sozinho. Selecione o texto abaixo e copie.</p><textarea id="copia-txt" rows="3" readonly></textarea></div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="filtro"><span class="secao-tit">Respostas</span><div class="dias" id="filtros" role="group" aria-label="Filtrar por turma"></div></div>
+    <div class="cartao" id="lista"></div>
+  </section>
+</main>
+<div id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Projeto "ACOMPANHAMENTO - TIME CS" (pggcbvafkwyqyvlkiyti), o mesmo da anjo-painel.html.
+  var SUPABASE_URL = 'https://pggcbvafkwyqyvlkiyti.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnZ2NidmFma3d5cXl2bGtpeXRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTY5NDMsImV4cCI6MjEwMTA5Mjk0M30.y2FaXpreVN_eeFMmlWDuQUXCN3C69qI8ooTcRl2k7ZI';
+  var PIN_KEY = 'febracis_gam_pin_v1';   // o mesmo PIN dos placares: quem entrou em um já entra nos outros
+  var TURMA_KEY = 'febracis_arq_turma_v1';
+  var AUTO_MS = 60000;                   // atualização automática, só com a aba visível
+  var MSG_REDE = 'Não conseguimos falar com o servidor. Confira a internet e tente de novo.';
+
+  var SB = null;
+  try { if (window.supabase && window.supabase.createClient) SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+  catch (e) { SB = null; }
+
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function plural(n, um, varios){ return n === 1 ? um : varios; }
+  function limpaTurma(t){
+    return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+  }
+
+  // ---------- datas (sempre no calendário de Brasília) ----------
+  var TZ = 'America/Sao_Paulo';
+  function partes(d){
+    var o = {};
+    new Intl.DateTimeFormat('pt-BR', {timeZone:TZ, day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23'}).formatToParts(d).forEach(function(x){ o[x.type] = x.value; });
+    return o;
+  }
+  function fmtQuando(iso){
+    if (!iso) return '–';
+    var d = new Date(iso); if (isNaN(d.getTime())) return '–';
+    var p = partes(d); return p.day + '/' + p.month + ' ' + p.hour + ':' + p.minute;
+  }
+  function fmtHora(d){ var p = partes(d); return p.hour + ':' + p.minute; }
+
+  // ---------- estado ----------
+  var S = {
+    fase: 'gate',        // gate | espera | painel
+    pin: '', gateErro: '',
+    linhas: [], turmas: [], turmasOk: true, carregouUmaVez: false,
+    sel: {},                        // ids marcados na lista (texto -> true)
+    loteConf: null,                 // 'liberar' | 'tirar' | null: confirmação das ações em lote
+    confRefazer: null,              // {id, nome}: confirmação de "Liberar novo teste"
+    msgLiberada: false,             // mostra a frase pronta para o grupo depois de liberar o plano
+    turma: '', filtro: '',          // filtro '' = todas as turmas
+    confirmar: null,                // {id, nome}
+    pinConf: '', pinErro: '',
+    busy: false, atualizadoEm: null, confirmando: false
+  };
+  try { S.turma = limpaTurma(localStorage.getItem(TURMA_KEY) || ''); } catch (e) {}
+
+  // ---------- chamadas ao banco ----------
+  async function rpc(fn, args){
+    if (!SB) throw new Error('O sistema não carregou. Confira a internet e recarregue a página.');
+    var r = await SB.rpc(fn, args);
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  function ehPin(e){ return /PIN\s*inv/i.test((e && e.message) || ''); }
+  function textoErro(e){
+    var m = (e && e.message) || '';
+    if (/fetch|network|failed to load/i.test(m)) return MSG_REDE;
+    return m || 'Algo não deu certo. Tente de novo.';
+  }
+  function pinGuardado(){ try { return sessionStorage.getItem(PIN_KEY) || ''; } catch (e) { return ''; } }
+  function guardarPin(p){ try { sessionStorage.setItem(PIN_KEY, p); } catch (e) {} }
+  function esquecerPin(){ try { sessionStorage.removeItem(PIN_KEY); } catch (e) {} }
+
+  // ---------- espera: barra no topo e etapa atual ----------
+  function esperar(on, txt){
+    $('espera').className = on ? 'on' : '';
+    if (on) { $('conn').hidden = false; $('conn-txt').textContent = txt || 'Atualizando…'; }
+    else cabecalho();
+  }
+  function cabecalho(){
+    var logado = S.fase === 'painel';
+    $('conn').hidden = !(logado && S.atualizadoEm);
+    $('conn').className = 'conn' + (logado && S.atualizadoEm ? ' on' : '');
+    $('conn-txt').textContent = logado && S.atualizadoEm ? 'Atualizado às ' + fmtHora(S.atualizadoEm) : '';
+    $('b-atualizar').hidden = !logado;
+  }
+  function telaEspera(n, de, titulo){
+    $('esp-etapa').textContent = 'Etapa ' + n + ' de ' + de;
+    $('esp-titulo').textContent = titulo;
+    $('esp-barra').setAttribute('aria-label', 'Etapa ' + n + ' de ' + de + ': ' + titulo);
+    mostrarFase('espera');
+  }
+  function toast(msg, tipo){
+    var t = document.createElement('div');
+    t.className = 'toast' + (tipo ? ' ' + tipo : '');
+    if (tipo === 'err') t.setAttribute('role', 'alert');
+    t.textContent = msg;
+    $('toasts').appendChild(t);
+    setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, tipo === 'err' ? 8000 : 4500);
+  }
+  function mostrarFase(f){
+    S.fase = f;
+    $('v-gate').hidden = f !== 'gate'; $('v-espera').hidden = f !== 'espera'; $('v-painel').hidden = f !== 'painel';
+    cabecalho();
+  }
+
+  // ---------- links ----------
+  function paginaIrma(nome, consulta){
+    var arq = location.protocol === 'file:' ? nome + '.html' : nome;   // no servidor o endereço é curto, sem .html
+    try { return new URL(arq + (consulta || ''), location.href).href; }
+    catch (e) { return arq + (consulta || ''); }
+  }
+  function linkTeste(){ return paginaIrma('arquetipos-melid', S.turma ? '?t=' + encodeURIComponent(S.turma) : ''); }
+  function linkVer(id){ return paginaIrma('arquetipos-melid', '?ver=' + encodeURIComponent(id)); }
+  function atualizarLink(){ $('link-txt').textContent = linkTeste(); }
+  var MSG_PLANO = 'Seu plano de ação está liberado: abra de novo o link do teste no mesmo celular em que você fez.';
+
+  // ---------- chave do plano de ação por turma ----------
+  function chaveDa(turma){
+    for (var i = 0; i < S.turmas.length; i++) if ((S.turmas[i].turma || '') === turma) return S.turmas[i].plano_junto === true;
+    return false;   // turma sem linha conta como "depois"
+  }
+  function nomeTurma(turma){ return turma ? 'turma ' + turma : 'respostas sem turma'; }
+  function desenharChave(){
+    var junto = chaveDa(S.turma);
+    var bs = $('chave').querySelectorAll('button');
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', String((bs[i].getAttribute('data-chave') === '1') === junto));
+    $('chave-status').innerHTML = (S.turma ? 'Turma <b>' + esc(S.turma) + '</b>' : 'Respostas <b>sem turma</b>') + ': o aluno recebe <b>'
+      + (junto ? 'o diagnóstico e o plano de ação' : 'só o diagnóstico') + '</b>.';
+    $('chave-aviso').hidden = S.turmasOk;
+  }
+  async function gravarChave(junto){
+    if (S.busy || chaveDa(S.turma) === junto) return;
+    var turma = S.turma;
+    S.busy = true; esperar(true, 'Gravando o plano de ação da turma…');
+    try {
+      await rpc('gamificacao_arq_t_turma', {p_pin: S.pin, p_turma: turma, p_plano_junto: junto});
+      var achou = false;
+      S.turmas.forEach(function(x){ if ((x.turma || '') === turma) { x.plano_junto = junto; achou = true; } });
+      if (!achou) S.turmas.push({turma: turma, plano_junto: junto});
+      S.turmasOk = true; desenharChave();
+      toast('Plano de ação, ' + nomeTurma(turma) + ': ' + (junto ? 'vai junto com a devolutiva.' : 'fica para depois, o time libera.'), 'ok');
+    } catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+
+  async function copiarTexto(txt, caixa, ta){
+    try {
+      await navigator.clipboard.writeText(txt);
+      caixa.hidden = true; return true;
+    } catch (e) {
+      caixa.hidden = false; ta.value = txt; ta.focus(); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (x) {}
+      if (ok) caixa.hidden = true;
+      return ok;
+    }
+  }
+  async function copiarLink(){
+    if (await copiarTexto(linkTeste(), $('copia'), $('copia-txt'))) toast('Link do teste copiado.', 'ok');
+  }
+  function abrirAba(url, avisoOk){
+    var w = null;
+    try { w = window.open(url, '_blank'); } catch (e) { w = null; }   // sem noopener: a aba nova herda o PIN guardado nesta sessão
+    if (w) { if (avisoOk) toast(avisoOk, 'ok'); }
+    else toast('O navegador bloqueou a aba nova. Libere pop-ups para este site ou abra: ' + url, 'err');
+  }
+
+  // ---------- contas em cima da lista ----------
+  function visiveis(){ return S.linhas.filter(function(r){ return !S.filtro || (S.filtro === '__sem' ? !r.turma : r.turma === S.filtro); }); }
+  function turmasDaLista(){
+    var vistos = {}, out = [];
+    S.linhas.forEach(function(r){ var t = r.turma || ''; if (t && !vistos[t]) { vistos[t] = 1; out.push(t); } });
+    out.sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+    return out;
+  }
+  function comPlano(r){ return !!(r.plano_junto || r.plano_liberado_em); }
+  function fmtDia(iso){
+    var d = new Date(iso); if (!iso || isNaN(d.getTime())) return '';
+    var p = partes(d); return p.day + '/' + p.month;
+  }
+  function planoCelula(r){
+    if (r.plano_junto) return '<span class="pill ouro">junto</span>';
+    if (r.plano_liberado_em) return '<span class="pill ouro">liberado ' + esc(fmtDia(r.plano_liberado_em)) + '</span>';
+    return '<span class="pill neutro">não</span>';
+  }
+  function idsMarcados(){
+    return Object.keys(S.sel).sort(function(a, b){ return Number(a) - Number(b); });
+  }
+  function nomePrincipal(r){
+    var x = r.resultado || {};
+    if (!x.principalNome) return '–';
+    return x.segundoDomNome ? x.principalNome + ' e ' + x.segundoDomNome : x.principalNome;
+  }
+  function maisComum(rs){
+    var cont = {}, nome = {}, max = 0;
+    rs.forEach(function(r){
+      var x = r.resultado; if (!x || !x.principal) return;
+      cont[x.principal] = (cont[x.principal] || 0) + 1; nome[x.principal] = nome[x.principal] || x.principalNome || x.principal;
+      if (cont[x.principal] > max) max = cont[x.principal];
+    });
+    if (!max) return null;
+    var topo = Object.keys(cont).filter(function(k){ return cont[k] === max; });
+    return {n: max, nomes: topo.map(function(k){ return nome[k]; })};
+  }
+
+  // ---------- desenho ----------
+  function desenhar(){
+    var vis = visiveis(), turmas = turmasDaLista();
+    if (S.filtro && S.filtro !== '__sem' && turmas.indexOf(S.filtro) < 0) { S.filtro = ''; vis = visiveis(); }
+    var mc = maisComum(vis);
+    var nPlano = vis.filter(comPlano).length;
+    var rotTurma = S.filtro === '__sem' ? 'Respostas sem turma' : S.filtro ? 'Respostas da turma ' + esc(S.filtro) : 'Respostas em todas as turmas';
+    var mcTxt = !mc ? '–' : (mc.nomes.length > 2 ? 'Empate entre ' + mc.nomes.length + ' arquétipos' : mc.nomes.join(' e '));
+    $('kpis').innerHTML =
+      '<div class="kpi"><span class="num">' + S.linhas.length + '</span><span class="rot">Total de respostas</span></div>' +
+      '<div class="kpi"><span class="num">' + vis.length + '</span><span class="rot">' + rotTurma + '</span></div>' +
+      '<div class="kpi"><span class="num">' + nPlano + ' <small>de ' + vis.length + '</small></span><span class="rot">Com o plano de ação (junto ou liberado)' + (S.filtro ? ' na turma' : '') + '</span></div>' +
+      '<div class="kpi"><span class="num txt">' + esc(mcTxt) + (mc ? ' <small>(' + mc.n + ' de ' + vis.length + ')</small>' : '') + '</span><span class="rot">Arquétipo mais comum' + (S.filtro ? ' na turma' : '') + '</span></div>';
+
+    var f = '<button type="button" data-f="" aria-pressed="' + (!S.filtro) + '">Todas</button>';
+    turmas.forEach(function(t){ f += '<button type="button" data-f="' + esc(t) + '" aria-pressed="' + (S.filtro === t) + '">' + esc(t) + '</button>'; });
+    var temSemTurma = S.linhas.some(function(r){ return !r.turma; });
+    if (temSemTurma) f += '<button type="button" data-f="__sem" aria-pressed="' + (S.filtro === '__sem') + '">Sem turma</button>';
+    $('filtros').innerHTML = f;
+
+    desenharChave();
+    desenharLista(vis);
+  }
+  function barraLote(){
+    var ids = idsMarcados(), n = ids.length;
+    if (!n) return '';
+    var junto = S.linhas.filter(function(r){ return S.sel[String(r.id)] && r.plano_junto; }).length;
+    var h = '<div id="lote-barra" role="region" aria-label="Ações para as respostas marcadas"><span class="tit">' + n + ' ' + plural(n, 'resposta marcada', 'respostas marcadas') + '</span>';
+    if (S.loteConf) {
+      var lib = S.loteConf === 'liberar';
+      h += '<div class="confirma-caixa neutra" role="alertdialog" aria-label="Confirmação"><p>' +
+        (lib ? 'Liberar o plano de ação para ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '? Quem abrir de novo o link do teste no mesmo celular passa a ver o plano.'
+             : 'Tirar o plano de ação de ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '? Ao abrir de novo o link, elas deixam de ver o plano.' +
+               (junto ? ' ' + junto + ' ' + plural(junto, 'recebeu', 'receberam') + ' o plano junto com a devolutiva e ' + plural(junto, 'continua', 'continuam') + ' com ele.' : '')) +
+        '</p><div class="acoes"><button type="button" class="btn pri" data-acao="lote-confirmar">' + (lib ? 'Sim, liberar o plano' : 'Sim, tirar o plano') + '</button>' +
+        '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div>';
+    } else {
+      h += '<div class="acoes">' +
+        '<button type="button" class="btn pri" data-acao="lote-liberar">Liberar o plano (' + n + ')</button>' +
+        '<button type="button" class="btn" data-acao="lote-tirar">Tirar o plano (' + n + ')</button>' +
+        '<button type="button" class="btn" data-acao="lote-pdf"' + (n > 300 ? ' disabled' : '') + '>Baixar PDFs com o plano (' + n + ') ↓</button>' +
+        '<button type="button" class="btn" data-acao="lote-limpar">Limpar a seleção</button></div>';
+      if (n > 300) h += '<p class="aviso-lote" role="status">Para baixar os PDFs, divida em grupos de até 300. Você marcou ' + n + '.</p>';
+    }
+    return h + '</div>';
+  }
+  function desenharLista(vis){
+    var box = $('lista');
+    var foco = document.activeElement, focoSel = foco && foco.getAttribute ? foco.getAttribute('data-sel') : null;
+    var focoTodos = foco && foco.id === 'sel-todos';
+    var pinAberto = foco && foco.id === 'pin-conf';
+    if (!vis.length) {
+      box.innerHTML = '<div class="vazio"><h3>Ninguém respondeu ainda.</h3><p>Copie o link e mande para a turma.</p></div>';
+      return;
+    }
+    var marcadasVis = vis.filter(function(r){ return S.sel[String(r.id)]; }).length;
+    var h = '';
+    if (S.msgLiberada) {
+      h += '<div class="msg-liberado"><b>Plano liberado. Mande este aviso para o grupo:</b><q>' + esc(MSG_PLANO) + '</q>' +
+        '<div class="acoes"><button type="button" class="btn pri" data-acao="copiar-plano">Copiar mensagem</button><button type="button" class="btn" data-acao="fechar-plano">Fechar</button></div>' +
+        '<div id="copia-plano" hidden><p class="ajuda">O navegador não deixou copiar sozinho. Selecione o texto abaixo e copie.</p><textarea id="copia-plano-txt" rows="3" readonly></textarea></div></div>';
+    }
+    h += '<div class="lista-topo"><label class="chk"><input type="checkbox" id="sel-todos"' + (marcadasVis === vis.length ? ' checked' : '') + '> Selecionar todos (' + vis.length + ')</label>' +
+      '<span class="ajuda">' + (marcadasVis ? marcadasVis + ' ' + plural(marcadasVis, 'marcada', 'marcadas') + ' neste filtro' : 'Marque as respostas para liberar o plano ou baixar os PDFs.') + '</span></div>';
+    h += '<div class="rolagem"><table class="tabela"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Turma</th><th>Arquétipo principal</th><th>Secundário</th><th>Plano</th><th>Quando</th><th></th></tr></thead><tbody>';
+    vis.forEach(function(r){
+      var x = r.resultado || {}, id = String(r.id);
+      h += '<tr' + (r.refazer_liberado ? ' class="apagada"' : '') + '><td class="nm"><label class="chk"><input type="checkbox" data-sel="' + esc(id) + '"' + (S.sel[id] ? ' checked' : '') + '> ' + esc(r.nome) + '</label>' +
+        (r.refazer_liberado ? ' <span class="pill novo">novo teste liberado</span>' : '') + '</td>' +
+        '<td data-l="WhatsApp">' + (r.contato ? esc(r.contato) : '–') + '</td>' +
+        '<td data-l="Turma">' + (r.turma ? '<span class="pill neutro">' + esc(r.turma) + '</span>' : '–') + '</td>' +
+        '<td data-l="Principal">' + (x.principalNome ? '<span class="pill ouro">' + esc(nomePrincipal(r)) + '</span>' : '–') + '</td>' +
+        '<td data-l="Secundário">' + esc(x.secundarioNome || '–') + '</td>' +
+        '<td data-l="Plano">' + planoCelula(r) + '</td>' +
+        '<td data-l="Quando" class="quando">' + esc(fmtQuando(r.criado_em)) + '</td>' +
+        '<td class="ac"><button type="button" class="btn mini" data-acao="ver" data-id="' + esc(id) + '">Ver devolutiva</button>' +
+        (r.refazer_liberado ? '' : '<button type="button" class="btn mini" data-acao="pedir-refazer" data-id="' + esc(id) + '">Liberar novo teste</button>') +
+        '<button type="button" class="btn mini perigo" data-acao="pedir-excluir" data-id="' + esc(id) + '">Excluir</button></td></tr>';
+      if (S.confRefazer && String(S.confRefazer.id) === id) {
+        h += '<tr class="conf-neutro"><td colspan="8"><div class="confirma-caixa neutra" role="alertdialog" aria-label="Confirmação">' +
+          '<p>A resposta fica guardada e este WhatsApp pode fazer o teste de novo.</p>' +
+          '<div class="acoes"><button type="button" class="btn pri" data-acao="confirmar-refazer">Sim, liberar novo teste</button>' +
+          '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div></td></tr>';
+      }
+      if (S.confirmar && String(S.confirmar.id) === id) {
+        h += '<tr class="conf"><td colspan="8"><div class="confirma-caixa" role="alertdialog" aria-label="Confirmação">' +
+          '<p>Excluir de vez a resposta de <b>' + esc(r.nome) + '</b>? Some a devolutiva e o resultado. Não dá para desfazer.</p>' +
+          '<div class="campo pin-campo"><label for="pin-conf">Digite o PIN para confirmar</label>' +
+          '<input id="pin-conf" type="password" inputmode="numeric" maxlength="12" autocomplete="off" value="' + esc(S.pinConf) + '"></div>' +
+          (S.pinErro ? '<p class="pin-err" id="pin-err" role="alert">' + esc(S.pinErro) + '</p>' : '') +
+          '<div class="acoes"><button type="button" class="btn perigo" data-acao="confirmar-excluir">Sim, excluir de vez</button>' +
+          '<button type="button" class="btn" data-acao="cancelar">Cancelar</button></div></div></td></tr>';
+      }
+    });
+    box.innerHTML = h + '</tbody></table></div>' + barraLote();
+    var st = $('sel-todos'); if (st) st.indeterminate = marcadasVis > 0 && marcadasVis < vis.length;
+    var pc = $('pin-conf'); if (pc && (pinAberto || S.focarPin)) { S.focarPin = false; pc.focus(); }
+    if (focoSel) { var cx = box.querySelector('input[data-sel="' + focoSel + '"]'); if (cx) cx.focus(); }
+    if (focoTodos && st) st.focus();
+  }
+
+  // ---------- fluxo ----------
+  function irParaGate(msg){
+    esquecerPin(); S.pin = ''; S.gateErro = msg || ''; S.linhas = []; S.turmas = []; S.sel = {}; S.loteConf = null; S.confRefazer = null; S.msgLiberada = false; S.confirmar = null; S.atualizadoEm = null;
+    $('gate-err').textContent = S.gateErro; $('pin').value = '';
+    mostrarFase('gate'); esperar(false);
+    var p = $('pin'); if (p) p.focus();
+  }
+  async function carregar(){
+    var res = await Promise.all([
+      rpc('gamificacao_arq_t_lista', {p_pin: S.pin, p_turma: null}),
+      rpc('gamificacao_arq_t_turmas', {p_pin: S.pin}).then(function(x){ return {v: x}; }, function(e){ return {e: e}; })
+    ]);
+    S.linhas = Array.isArray(res[0]) ? res[0] : [];
+    if (res[1].e) {
+      if (ehPin(res[1].e)) throw res[1].e;
+      S.turmasOk = false;   // a lista segue valendo; só a chave das turmas não carregou
+    } else { S.turmas = Array.isArray(res[1].v) ? res[1].v : []; S.turmasOk = true; }
+    var existe = {}; S.linhas.forEach(function(r){ existe[String(r.id)] = true; });
+    Object.keys(S.sel).forEach(function(k){ if (!existe[k]) delete S.sel[k]; });
+    if (!idsMarcados().length) S.loteConf = null;
+    S.atualizadoEm = new Date();
+  }
+  async function entrarComPin(pin, auto){
+    if (S.busy) return;
+    S.busy = true;
+    telaEspera(1, 2, 'Conferindo o PIN');
+    esperar(true, 'Conferindo o PIN…');
+    try {
+      S.pin = pin;
+      telaEspera(2, 2, 'Carregando as respostas');
+      await carregar();
+      guardarPin(pin);
+      S.carregouUmaVez = true;
+      atualizarLink();
+      mostrarFase('painel'); desenhar();
+    } catch (e) {
+      if (ehPin(e)) irParaGate(auto ? '' : 'PIN inválido.');
+      else { irParaGate(''); $('gate-err').textContent = textoErro(e); }
+    } finally { S.busy = false; esperar(false); }
+  }
+  async function atualizar(quieto){
+    if (S.busy || S.fase !== 'painel') return;
+    S.busy = true; esperar(true, 'Atualizando as respostas…');
+    try { await carregar(); desenhar(); }
+    catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else if (!quieto) toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+  async function excluir(){
+    var c = S.confirmar; if (!c || S.confirmando) return;
+    var f = $('pin-conf'), pin = String((f ? f.value : S.pinConf) || '').trim();
+    S.pinConf = pin;
+    if (!pin) { S.pinErro = 'Digite o PIN.'; S.focarPin = true; desenhar(); return; }
+    S.pinErro = ''; S.confirmando = true;
+    while (S.busy) await new Promise(function(r){ setTimeout(r, 100); });
+    S.busy = true; esperar(true, 'Excluindo a resposta…');
+    try {
+      await rpc('gamificacao_arq_t_excluir', {p_pin: pin, p_id: Number(c.id)});
+      S.confirmar = null; S.pinConf = ''; S.pinErro = '';
+      await carregar(); desenhar(); toast('Resposta excluída.', 'ok');
+    } catch (e) {
+      if (ehPin(e)) { S.pinErro = 'PIN inválido'; S.focarPin = true; desenhar(); }
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; S.confirmando = false; esperar(false); }
+  }
+
+  async function loteAplicar(){
+    var liberar = S.loteConf === 'liberar', ids = idsMarcados().map(Number);
+    if (!ids.length || S.busy) return;
+    S.busy = true; esperar(true, liberar ? 'Liberando o plano de ação…' : 'Tirando o plano de ação…');
+    try {
+      var r = await rpc('gamificacao_arq_t_liberar', {p_pin: S.pin, p_ids: ids, p_liberar: liberar});
+      var n = r && r.alterados != null ? r.alterados : ids.length;
+      S.loteConf = null; S.sel = {}; S.msgLiberada = liberar;
+      await carregar(); desenhar();
+      toast(liberar ? 'Plano de ação liberado para ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '.' : 'Plano de ação tirado de ' + n + ' ' + plural(n, 'pessoa', 'pessoas') + '.', 'ok');
+    } catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+  async function refazer(){
+    var c = S.confRefazer; if (!c || S.busy) return;
+    S.busy = true; esperar(true, 'Liberando um novo teste…');
+    try {
+      await rpc('gamificacao_arq_t_refazer', {p_pin: S.pin, p_id: Number(c.id)});
+      S.confRefazer = null;
+      await carregar(); desenhar();
+      toast('Novo teste liberado para ' + c.nome + '. O WhatsApp dessa pessoa pode fazer o teste de novo.', 'ok');
+    } catch (e) {
+      if (ehPin(e)) irParaGate('PIN inválido. Entre de novo.');
+      else toast(textoErro(e), 'err');
+    } finally { S.busy = false; esperar(false); }
+  }
+  function limparConfirmacoes(){ S.confirmar = null; S.pinConf = ''; S.pinErro = ''; S.confRefazer = null; S.loteConf = null; }
+
+  // ---------- eventos ----------
+  $('f-pin').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var v = ($('pin').value || '').trim();
+    if (!v) { $('gate-err').textContent = 'Digite o PIN.'; $('pin').focus(); return; }
+    entrarComPin(v, false);
+  });
+  $('b-atualizar').addEventListener('click', function(){ atualizar(false); });
+  $('b-copiar').addEventListener('click', copiarLink);
+  $('b-abrir').addEventListener('click', function(){ abrirAba(linkTeste(), 'O teste abriu numa aba nova.'); });
+  $('b-telao').addEventListener('click', function(){ abrirAba(paginaIrma('arquetipos-melid-telao', S.turma ? '?t=' + encodeURIComponent(S.turma) : ''), 'O telão abriu numa aba nova.'); });
+  $('b-exemplo').addEventListener('click', function(){ abrirAba(paginaIrma('arquetipos-melid', '?exemplo=1&plano=' + (chaveDa(S.turma) ? '1' : '0')), 'O exemplo abriu numa aba nova.'); });
+  $('chave').addEventListener('click', function(ev){
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (b && b.hasAttribute('data-chave')) gravarChave(b.getAttribute('data-chave') === '1');
+  });
+  $('turma').value = S.turma;
+  $('turma').addEventListener('input', function(){
+    var v = limpaTurma(this.value);
+    if (v !== this.value) this.value = v;
+    S.turma = v; try { localStorage.setItem(TURMA_KEY, v); } catch (e) {}
+    atualizarLink(); desenharChave(); $('copia').hidden = true;
+  });
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (!b || b.disabled) return;
+    if (b.hasAttribute('data-f') && b.parentNode.id === 'filtros') {
+      S.filtro = b.getAttribute('data-f'); limparConfirmacoes(); S.sel = {}; desenhar(); return;
+    }
+    var a = b.getAttribute('data-acao'); if (!a) return;
+    var id = b.getAttribute('data-id');
+    if (a === 'ver') abrirAba(linkVer(id), '');
+    else if (a === 'pedir-excluir') {
+      var r = S.linhas.filter(function(x){ return String(x.id) === String(id); })[0];
+      limparConfirmacoes(); S.confirmar = {id: id, nome: r ? r.nome : ''}; S.focarPin = true; desenhar();
+    }
+    else if (a === 'pedir-refazer') {
+      var q = S.linhas.filter(function(x){ return String(x.id) === String(id); })[0];
+      limparConfirmacoes(); S.confRefazer = {id: id, nome: q ? q.nome : ''}; desenhar();
+    }
+    else if (a === 'confirmar-refazer') refazer();
+    else if (a === 'confirmar-excluir') excluir();
+    else if (a === 'lote-liberar') { limparConfirmacoes(); S.loteConf = 'liberar'; desenhar(); }
+    else if (a === 'lote-tirar') { limparConfirmacoes(); S.loteConf = 'tirar'; desenhar(); }
+    else if (a === 'lote-confirmar') loteAplicar();
+    else if (a === 'lote-limpar') { limparConfirmacoes(); S.sel = {}; desenhar(); }
+    else if (a === 'lote-pdf') {
+      var ids = idsMarcados();
+      if (ids.length > 300) { toast('Para baixar os PDFs, divida em grupos de até 300.', 'err'); return; }
+      abrirAba(paginaIrma('arquetipos-melid', '?lote=' + ids.join(',') + '&plano=1'), 'Os PDFs estão sendo gerados numa aba nova.');
+    }
+    else if (a === 'copiar-plano') { copiarTexto(MSG_PLANO, $('copia-plano'), $('copia-plano-txt')).then(function(ok){ if (ok) toast('Mensagem copiada. É só colar no grupo.', 'ok'); }); }
+    else if (a === 'fechar-plano') { S.msgLiberada = false; desenhar(); }
+    else if (a === 'cancelar') { limparConfirmacoes(); desenhar(); }
+  });
+  document.addEventListener('change', function(ev){
+    var el = ev.target; if (!el || !el.id && !el.hasAttribute('data-sel')) return;
+    if (el.hasAttribute('data-sel')) {
+      var id = el.getAttribute('data-sel');
+      if (el.checked) S.sel[id] = true; else delete S.sel[id];
+      S.loteConf = null; desenhar();
+    } else if (el.id === 'sel-todos') {
+      visiveis().forEach(function(r){ if (el.checked) S.sel[String(r.id)] = true; else delete S.sel[String(r.id)]; });
+      S.loteConf = null; desenhar();
+    }
+  });
+  document.addEventListener('input', function(ev){
+    if (ev.target.id === 'pin-conf') { S.pinConf = ev.target.value; var pe = $('pin-err'); if (pe && pe.parentNode) pe.parentNode.removeChild(pe); S.pinErro = ''; }
+  });
+  document.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter' && ev.target && ev.target.id === 'pin-conf') { ev.preventDefault(); excluir(); return; }
+    if (ev.key === 'Escape' && (S.confirmar || S.confRefazer || S.loteConf)) { limparConfirmacoes(); desenhar(); }
+  });
+
+  // atualização automática: só com a aba visível e sem confirmação aberta (para não apagar o PIN que está sendo digitado)
+  function ocupado(){ return S.confirmar || S.confRefazer || S.loteConf; }
+  setInterval(function(){ if (document.visibilityState === 'visible' && !ocupado()) atualizar(true); }, AUTO_MS);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && S.atualizadoEm && !ocupado() && Date.now() - S.atualizadoEm.getTime() > AUTO_MS) atualizar(true);
+  });
+
+  // ---------- início ----------
+  $('logo').src = "assets/melid/logo-melid.svg";
+  mostrarFase('gate');
+  var guardado = pinGuardado();
+  if (guardado) entrarComPin(guardado, true);
+  else { var p0 = $('pin'); if (p0) p0.focus(); }
+})();
+</script>
+</body>
+</html>
