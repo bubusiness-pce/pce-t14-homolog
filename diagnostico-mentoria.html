@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0B1426">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex">
-<title>[HOMOLOG] Diagnóstico do Negócio de Mentoria</title>
+<title>[HOMOLOG] DEM · Diagnóstico Empresarial MELID</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -545,20 +545,51 @@
   <button type="button" id="continuar-cel" class="v3-btn v3-spotlight anda">Continuar <span class="conta" id="conta-cel"></span></button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="diagnostico-mentoria-motor.js"></script>
 <script>
-const MODO = 'validacao'; // 'validacao' | 'producao'
+// validação: aberta do disco ou com ?validacao=1 no endereço; nos outros casos, produção
+const MODO = (location.protocol === 'file:' || new URLSearchParams(location.search).get('validacao') === '1') ? 'validacao' : 'producao';
 
 /* ======================================================================
-   BANCO: todo acesso a dados passa por aqui (para ligar ao banco depois)
+   BANCO: todo acesso a dados passa por aqui
+   Produção: banco do PCE (pcedash), função diagmentoria_enviar. Validação: fichas locais.
    ====================================================================== */
+const SUPABASE_URL = "https://amibetbgzwaayhyxnank.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtaWJldGJnendhYXloeXhuYW5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDI0MjgsImV4cCI6MjA5MzU3ODQyOH0.Sg6u0i8FWV2fhuyBfqmLeINqK2Q2RR1G2KqMXB3-Ydw";
+let SB = null;
+// só a produção fala com o banco; sem sessão guardada (nada vai para o localStorage)
+try {
+  if (MODO === 'producao' && window.supabase && window.supabase.createClient) {
+    SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  }
+} catch (e) { SB = null; }
+
 const BANCO = {
   CHAVE: 'dnm_fichas_locais',
   _falharVezes: 0, // gancho de teste (só file://)
+  /* Devolve uma Promise. Em caso de recusa, o erro leva `msgBanco` (a frase do banco para mostrar ao aluno). */
   gravar(ficha) {
     if (MODO === 'producao') {
-      // LIGAR AO BANCO DO PCE
-      return Promise.reject(new Error('BANCO.gravar: a gravação no banco do PCE ainda não foi ligada.'));
+      if (!SB) return Promise.reject(new Error('O sistema não carregou.'));
+      const chamada = SB.rpc('diagmentoria_enviar', {
+        p_turma: ficha.turma,
+        p_nome: ficha.nome,
+        p_email: ficha.email,
+        p_telefone: ficha.telefone,
+        p_consentiu: ficha.consentiu,
+        p_versao: ficha.versao_formulario,
+        p_respostas: ficha.respostas,
+        p_resultado: ficha
+      });
+      const limite = new Promise(function (_, nao) { setTimeout(function () { nao(new Error('O envio demorou demais.')); }, 25000); });
+      return Promise.race([chamada, limite]).then(function (res) {
+        if (res.error) throw new Error(res.error.message || 'falha na chamada');
+        if (!res.data || res.data.ok !== true) {
+          throw Object.assign(new Error('recusado'), { codigo: res.data && res.data.erro, msgBanco: (res.data && res.data.msg) || '' });
+        }
+        return res.data;
+      });
     }
     if (BANCO._falharVezes > 0) {
       BANCO._falharVezes -= 1;
@@ -589,7 +620,9 @@ const TRAVA_MS = 400;   // depois de uma tela nova, ignora o resto de um clique 
 const ESPERA_MIN_MS = 1500;
 const ARQUIVO = location.protocol === 'file:';
 const params = new URLSearchParams(location.search);
-const TURMA = (params.get('t') || '').trim();
+const limpaTurma = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').slice(0, 40); };
+const TURMA = limpaTurma(params.get('t'));
+const MSG_FALHA_ENVIO = 'Não conseguimos gravar as suas respostas. Confira a internet e tente de novo.';
 const menosMovimento = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
 const temMouse = window.matchMedia ? window.matchMedia('(hover: hover)').matches : false;
 
@@ -971,7 +1004,7 @@ function telaEspera() {
     '<h2 class="v3-title" id="etapa-envio" tabindex="-1" data-foco aria-live="polite">' + ETAPAS_ENVIO[0] + '</h2>' +
     '<div class="barra-envio"><div class="trilho" role="progressbar" aria-label="Envio das respostas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="trilho"><span id="barra-envio"></span></div><span class="pct" id="pct">0%</span></div>' +
     '<ol class="etapas" id="etapas">' + lista + '</ol>' +
-    '<div class="falha" id="falha" role="alert" hidden><p>Não conseguimos gravar as suas respostas. Confira a internet e tente de novo.</p>' +
+    '<div class="falha" id="falha" role="alert" hidden><p id="falha-msg">' + MSG_FALHA_ENVIO + '</p>' +
     '<button type="button" id="enviar-de-novo" class="v3-btn v3-spotlight anda">Enviar de novo</button></div>' +
     '</div>';
 }
@@ -1024,20 +1057,23 @@ function gravarAgora() {
     try { E.ficha = montarFicha(); }
     catch (err) { envio.gravando = false; mostrarFalha(); return; }
   }
-  BANCO.gravar(E.ficha).then(function () {
+  BANCO.gravar(E.ficha).then(function (res) {
     envio.gravando = false;
     envio.resolvido = true;
     E.enviado = true;
-  }, function () {
+    E.retornoBanco = res || null;
+  }, function (err) {
     envio.gravando = false;
-    mostrarFalha();
+    mostrarFalha(err && err.msgBanco);
   });
 }
 
-function mostrarFalha() {
+function mostrarFalha(msgBanco) {
   envio.falhou = true;
   pararEnvio();
   const f = $('#falha');
+  const m = $('#falha-msg');
+  if (m) m.textContent = msgBanco || MSG_FALHA_ENVIO;
   if (f) f.hidden = false;
   atualizarRodape();
 }
