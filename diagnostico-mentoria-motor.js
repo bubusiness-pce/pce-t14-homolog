@@ -5,7 +5,7 @@
 (function (raiz) {
   'use strict';
 
-  const VERSAO = 'v1-2026-11-17';
+  const VERSAO = 'v2-2026-11-17';
 
   const BLOCOS = ['Momento e vendas', 'Back-office', 'Time e estrutura'];
 
@@ -48,8 +48,9 @@
       titulo: 'Quanto a sua mentoria faturou por mês, em média, nos últimos três meses?',
       contexto: 'Uma faixa aproximada basta.',
       paraQue: 'Dá ao Bruno o tamanho do negócio antes da conversa.',
-      nota: 'Faixas sugeridas. Ajustar se o perfil da turma pedir outras.',
-      opcoes: ['Até R$ 10 mil', 'De R$ 10 mil a R$ 30 mil', 'De R$ 30 mil a R$ 100 mil', 'De R$ 100 mil a R$ 300 mil', 'Acima de R$ 300 mil']
+      // Faixas iguais às do formulário do MELID validado pela Sofia (Diagnóstico de Autoridade, pergunta A7,
+      // faturamento como mentor). Ordem do Carlos em 17/11/2026: não mudar sem ele.
+      opcoes: ['Até R$ 10 mil por mês', 'De R$ 10 mil a R$ 30 mil por mês', 'De R$ 30 mil a R$ 100 mil por mês', 'Acima de R$ 100 mil por mês']
     },
     canais: {
       bloco: 0, tipo: 'varias',
@@ -280,7 +281,7 @@
     // ---------- momento e vendas
     if (jv) {
       p.v += m === 3 ? 3 : 1;
-      p.v += [3, 2, 1, 0, 0][r.fat] || 0;
+      p.v += [3, 2, 1, 0][r.fat] || 0;
       const nCanais = lista(r, 'canais').length;
       p.v += nCanais === 1 ? 2 : nCanais === 2 ? 1 : 0;
       const formas = lista(r, 'plataforma');
