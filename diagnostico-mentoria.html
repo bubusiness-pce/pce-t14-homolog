@@ -485,6 +485,37 @@
   .falha .v3-btn { width: 100%; }
   @media (min-width: 640px) { .falha .v3-btn { width: auto; min-width: 240px; align-self: flex-start; } }
 
+  /* Devolutiva (só quando o time liga no painel, ou na prévia) */
+  .intro.com-devolutiva { justify-content: flex-start; }
+  .devolutiva { margin-top: 20px; padding-top: 28px; border-top: 1px solid var(--v3-line); display: flex; flex-direction: column; }
+  .devolutiva .dv-titulo { text-wrap: balance; }
+  .secao { margin-top: 32px; padding-top: 22px; border-top: 1px solid var(--v3-line); }
+  .secao-tit { margin: 0 0 18px; }
+  .secao-tit .num { color: var(--v3-gold); }
+  .secao-tit .nome { color: var(--v3-ivory); }
+  .dv-etapa { margin: 20px 0 0; font-size: 16px; font-weight: 600; line-height: 1.5; color: var(--v3-ivory); }
+  .dv-texto { margin: 10px 0 0; max-width: 640px; font-size: 17px; line-height: 1.7; color: var(--v3-body); }
+  .secao-tit + .dv-texto { margin-top: 0; }
+  .dv-pontos { list-style: none; margin: 18px 0 0; padding: 0; max-width: 640px; display: flex; flex-direction: column; gap: 12px; }
+  .dv-pontos li { position: relative; padding-left: 22px; font-size: 17px; line-height: 1.6; color: var(--v3-ivory); }
+  .dv-pontos li::before { content: ""; position: absolute; left: 2px; top: 0.62em; width: 7px; height: 7px; border-radius: 9999px; background: var(--v3-gold); }
+  .dv-discretas { margin-top: 28px; display: flex; flex-direction: column; gap: 6px; max-width: 640px; }
+  .dv-discretas p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--v3-muted-2); }
+  .dv-fecho { margin-top: 28px; padding: 20px; border: 1px solid var(--v3-line-2); border-radius: 10px; background: var(--v3-surface); font-family: var(--serif); font-weight: 500; font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.4rem); line-height: 1.45; color: var(--v3-body); }
+  @media (min-width: 640px) { .dv-fecho { padding: 22px 26px; } }
+  .esteira { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .no { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; min-width: 0; }
+  .no + .no::before { content: ""; position: absolute; top: 13.5px; left: -50%; right: 50%; height: 1px; background: var(--v3-line-2); z-index: 0; }
+  .no-antes::before, .no-atual::before { background: var(--v3-gold) !important; }
+  .no-c { position: relative; z-index: 1; width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: var(--v3-navy); border: 1px solid var(--v3-line-2); color: var(--v3-muted-2); }
+  .no-nome { font-size: 12px; line-height: 1.3; color: var(--v3-muted-2); padding: 0 2px; hyphens: auto; -webkit-hyphens: auto; }
+  .no-antes .no-c { border-color: var(--v3-gold); color: var(--v3-gold); }
+  .no-antes .no-nome { color: var(--v3-muted); }
+  .no-atual .no-c { background: var(--v3-gold); border-color: var(--v3-gold); color: var(--v3-navy); box-shadow: 0 0 0 4px var(--v3-gold-soft); }
+  .no-atual .no-nome { color: var(--v3-ivory); font-weight: 600; }
+  @media (max-width: 639px) { .esteira { margin-left: -8px; margin-right: -8px; } }
+  @media (max-width: 399px) { .esteira { margin-left: -12px; margin-right: -12px; } .no-nome { letter-spacing: -0.01em; padding: 0; } }
+
   /* Área só da validação, no fim */
   .area-validacao { margin-top: 16px; padding-top: 24px; border-top: 1px solid var(--v3-line); display: flex; flex-direction: column; gap: 14px; }
   .area-validacao .rotulo-validacao { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--v3-muted-2); }
@@ -547,6 +578,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="diagnostico-mentoria-motor.js"></script>
+<script src="diagnostico-mentoria-devolutiva.js"></script>
 <script>
 // validação: aberta do disco ou com ?validacao=1 no endereço; nos outros casos, produção
 const MODO = (location.protocol === 'file:' || new URLSearchParams(location.search).get('validacao') === '1') ? 'validacao' : 'producao';
@@ -568,6 +600,21 @@ try {
 const BANCO = {
   CHAVE: 'dnm_fichas_locais',
   _falharVezes: 0, // gancho de teste (só file://)
+  /* Chave da devolutiva, ligada pelo time no painel. Promise que sempre resolve true/false, nunca rejeita:
+     falha, demora de mais de 4 s ou função ausente = false. Em validação, só `&devolutiva=1` liga. */
+  config() {
+    if (MODO !== 'producao') return Promise.resolve(new URLSearchParams(location.search).get('devolutiva') === '1');
+    return new Promise(function (resolve) {
+      const relogio = setTimeout(function () { resolve(false); }, 4000);
+      const fim = function (v) { clearTimeout(relogio); resolve(v); };
+      try {
+        if (!SB) { fim(false); return; }
+        Promise.resolve(SB.rpc('diagmentoria_config')).then(function (res) {
+          fim(!!(res && !res.error && res.data && res.data.devolutiva === true));
+        }, function () { fim(false); });
+      } catch (e) { fim(false); }
+    });
+  },
   /* Devolve uma Promise. Em caso de recusa, o erro leva `msgBanco` (a frase do banco para mostrar ao aluno). */
   gravar(ficha) {
     if (MODO === 'producao') {
@@ -1042,8 +1089,18 @@ function pararEnvio() {
   envio.ativo = false;
 }
 
+/* Chave da devolutiva: pedida uma vez por página, durante a espera. Nunca segura a gravação. */
+const CHAVE = { promessa: null, valor: false };
+function pedirChave() {
+  if (!CHAVE.promessa) {
+    CHAVE.promessa = BANCO.config().then(function (v) { CHAVE.valor = v === true; return CHAVE.valor; }, function () { CHAVE.valor = false; return false; });
+  }
+  return CHAVE.promessa;
+}
+
 function iniciarEnvio(congelar) {
   pararEnvio();
+  if (!congelar) pedirChave();
   envio = { ativo: true, gravando: false, raf: 0, pct: 0, inicio: performance.now(), resolvido: false, falhou: false, congelar: !!congelar, fechadoEm: 0 };
   pintarEnvio(0);
   if (!congelar) gravarAgora();
@@ -1091,7 +1148,9 @@ function passoEnvio(agora) {
   pintarEnvio(envio.pct);
   if (envio.pct >= 100) {
     envio.ativo = false;
-    setTimeout(function () { if (E.tela === 'espera' && E.enviado) irPara({ tela: 'fim' }); }, 380);
+    setTimeout(function () {
+      (CHAVE.promessa || Promise.resolve(false)).then(function () { if (E.tela === 'espera' && E.enviado) irPara({ tela: 'fim' }); });
+    }, 380);
     return;
   }
   envio.raf = requestAnimationFrame(passoEnvio);
@@ -1117,15 +1176,52 @@ function pintarEnvio(pct) {
 /* ======================================================================
    Tela 19 · Fim (o aluno só vê "recebemos")
    ====================================================================== */
+function respostasDoCaminho() {
+  const r = {};
+  MOTOR.sequencia(E.respostas).forEach(function (id) { if (E.respostas[id] !== undefined) r[id] = Array.isArray(E.respostas[id]) ? E.respostas[id].slice() : E.respostas[id]; });
+  return r;
+}
+function esteira(etapa) {
+  return '<ol class="esteira" aria-label="Etapa ' + etapa + ' de 5">' + MOTOR.ETAPAS.map(function (e, i) {
+    const n = i + 1;
+    const st = n < etapa ? 'antes' : n === etapa ? 'atual' : 'depois';
+    return '<li class="no no-' + st + '"' + (n === etapa ? ' aria-current="step"' : '') + '>' +
+      '<span class="no-c">' + n + '</span><span class="no-nome">' + esc(e.nome) + '</span></li>';
+  }).join('') + '</ol>';
+}
+function secao(num, nome, corpo) {
+  return '<section class="secao"><h3 class="v3-eyebrow secao-tit"><span class="num">' + num + '</span> · <span class="nome">' + esc(nome) + '</span></h3>' + corpo + '</section>';
+}
+/* O texto vem de diagnostico-mentoria-devolutiva.js; se faltar ou falhar, a tela final fica a de hoje */
+function htmlDevolutiva() {
+  let dv = null;
+  try { dv = window.DEM_DEVOLUTIVA ? DEM_DEVOLUTIVA.montar(respostasDoCaminho(), E.contato.nome) : null; } catch (e) { dv = null; }
+  if (!dv || !dv.etapa) return '';
+  const pontos = (dv.pontos || []).filter(Boolean);
+  let h = '<section class="devolutiva" aria-labelledby="dv-titulo">' +
+    '<h2 class="v3-title dv-titulo" id="dv-titulo">' + esc(dv.titulo) + '</h2>' +
+    secao('01', 'Onde você está', esteira(dv.etapa) +
+      '<p class="dv-etapa">Etapa ' + dv.etapa + ' de 5 · ' + esc(dv.etapaNome) + '</p>' +
+      '<p class="dv-texto">' + esc(dv.ondeEsta) + '</p>') +
+    secao('02', 'O que pede atenção agora', '<p class="dv-texto">' + esc(dv.atencao) + '</p>' +
+      (pontos.length ? '<ul class="dv-pontos">' + pontos.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : ''));
+  if (dv.encaminhado || dv.prioridade) {
+    h += '<div class="dv-discretas">' + (dv.encaminhado ? '<p>' + esc(dv.encaminhado) + '</p>' : '') + (dv.prioridade ? '<p>' + esc(dv.prioridade) + '</p>' : '') + '</div>';
+  }
+  if (dv.fecho) h += '<div class="dv-fecho">' + esc(dv.fecho) + '</div>';
+  return h + '</section>';
+}
+
 function telaFim() {
   const nome = primeiroNome(E.contato.nome);
-  let h = '<div class="intro">' +
+  const devolutiva = (PREVIA || CHAVE.valor) ? htmlDevolutiva() : '';
+  let h = '<div class="intro' + (devolutiva ? ' com-devolutiva' : '') + '">' +
     '<p class="v3-eyebrow">Diagnóstico concluído</p>' +
     '<h1 class="v3-display" tabindex="-1" data-foco>Obrigado' + (nome ? ', ' + esc(nome) : '') + '.</h1>' +
     '<div class="v3-rule" aria-hidden="true"></div>' +
     '<p class="v3-lead lead">Recebemos as suas respostas.</p>' +
-    '<p class="v3-context apoio">Elas já estão com o nosso time e preparam a sua conversa individual.</p>';
-  if (MODO === 'validacao') {
+    (devolutiva || '<p class="v3-context apoio">Elas já estão com o nosso time e preparam a sua conversa individual.</p>');
+  if (MODO === 'validacao' && !PREVIA) {
     h += '<div class="area-validacao">' +
       '<p class="rotulo-validacao">Só na versão de validação</p>' +
       '<div class="botoes">' +
@@ -1231,8 +1327,19 @@ $('#voltar').addEventListener('click', function () { if (!travado()) voltar(); }
 let ARQUIVO_GANCHO = false;
 let GANCHO_CONGELAR = false;
 let GANCHO_ERRO = false;
+/* Prévia para o time: ?previa=devolutiva[:0|1|2] abre a tela final com a devolutiva, com um exemplo do motor, sem gravar nada */
+let PREVIA = false;
+(function previa() {
+  const m = /^devolutiva(?::(\d))?$/.exec(params.get('previa') || '');
+  if (!m) return;
+  const x = MOTOR.EXEMPLOS[Number(m[1] || 0)] || MOTOR.EXEMPLOS[0];
+  PREVIA = true;
+  E.contato = Object.assign({}, x.contato);
+  E.respostas = JSON.parse(JSON.stringify(x.respostas));
+  E.tela = 'fim';
+})();
 (function gancho() {
-  if (!ARQUIVO) return;
+  if (!ARQUIVO || PREVIA) return;
   const pedido = params.get('tela');
   if (params.get('falhar') === '1') BANCO._falharVezes = 1;
   if (!pedido) return;
@@ -1272,7 +1379,10 @@ let GANCHO_ERRO = false;
   }
 })();
 
-if (MODO === 'validacao') $('#faixa').hidden = false;
+if (PREVIA) { $('#faixa').textContent = 'PRÉVIA · é assim que o aluno vê quando a devolutiva está ligada'; $('#faixa').hidden = false; }
+else if (MODO === 'validacao') $('#faixa').hidden = false;
+// validação: &devolutiva=1 força a devolutiva ligada (também nos ganchos de teste)
+if (MODO === 'validacao') CHAVE.valor = params.get('devolutiva') === '1';
 render();
 </script>
 </body>

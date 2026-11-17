@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0B1426">
+<meta name="robots" content="noindex">
+<title>[HOMOLOG] DEM · Telão</title>
+<link rel="icon" type="image/png" href="diagnostico-mentoria-leao.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  Telão do DEM: só o QR code do link do aluno, para projetar. Sem PIN, sem dado de aluno, sem chamada ao banco.
+  Abre ocupando a janela inteira; o primeiro clique, toque ou tecla põe em tela cheia (o navegador exige um gesto).
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #0B1426; color-scheme: dark; overflow: hidden; }
+  body { cursor: pointer; }
+  body.cheia { cursor: none; }
+</style>
+</head>
+<body>
+<main id="telao" aria-label="QR code do DEM para o telão"></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="diagnostico-mentoria-qr.js"></script>
+<script>
+'use strict';
+(function () {
+  const el = document.getElementById('telao');
+  let link = 'diagnostico-mentoria.html?t=fop';
+  // gancho de teste (só do disco): ?base= troca o endereço-base, para provar o QR com o link de produção
+  const base = location.protocol === 'file:' ? new URLSearchParams(location.search).get('base') : '';
+  try { link = new URL('diagnostico-mentoria.html?t=fop', base || location.href).href; } catch (e) { /* segue com o relativo */ }
+
+  function emTelaCheia() { return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement); }
+  function pedirTelaCheia() {
+    const d = document.documentElement;
+    const f = d.requestFullscreen || d.webkitRequestFullscreen || d.msRequestFullscreen;
+    if (!f || emTelaCheia()) return;
+    try { const r = f.call(d); if (r && r.catch) r.catch(function () { /* o navegador recusou: segue na janela */ }); } catch (e) { /* idem */ }
+  }
+  function marcar() {
+    const cheia = emTelaCheia();
+    document.body.classList.toggle('cheia', cheia);
+    const dica = el.querySelector('.dem-telao-dica');
+    if (dica) dica.hidden = cheia;
+  }
+
+  function montar() {
+    try {
+      DEM_QR.montarTelao(el, link, { dica: 'Clique na tela para tela cheia' });
+    } catch (e) {
+      el.textContent = e.message;
+      el.style.cssText = 'color:#F3EEE3;font:16px Inter,system-ui,sans-serif;padding:24px';
+      return;
+    }
+    marcar();
+  }
+
+  DEM_QR.pronto().then(function () {
+    const fontes = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    fontes.then(montar, montar);
+  });
+
+  let redim = null;
+  window.addEventListener('resize', function () { clearTimeout(redim); redim = setTimeout(function () { DEM_QR.ajustarTelao(el, link); }, 120); });
+  ['fullscreenchange', 'webkitfullscreenchange', 'MSFullscreenChange'].forEach(function (ev) {
+    document.addEventListener(ev, function () { marcar(); setTimeout(function () { DEM_QR.ajustarTelao(el, link); }, 80); });
+  });
+  document.addEventListener('click', pedirTelaCheia);
+  document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') pedirTelaCheia(); });
+  document.addEventListener('touchend', pedirTelaCheia, { passive: true });
+})();
+</script>
+</body>
+</html>
