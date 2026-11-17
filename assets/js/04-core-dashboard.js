@@ -4158,6 +4158,20 @@ function homologCardAnjo(state){
       externalUrl: 'https://bubusiness-pce.github.io/pce-t14-homolog/arquetipos-melid-painel.html'
     };
   }
+  // 17/11/2026: DEM · Diagnóstico Empresarial MELID, card novo no fim da seção, só aqui até o "aprovado" do Carlos
+  if (!state['gamificacao-ao-vivo-diagnostico-mentoria']) {
+    state['gamificacao-ao-vivo-diagnostico-mentoria'] = {
+      tag: 'Validação · Mentor de Líderes',
+      title: 'DEM · Diagnóstico Empresarial MELID',
+      desc: 'O aluno do Mentor de Líderes informa nome, e-mail e WhatsApp e responde 15 perguntas de marcar, em cerca de 5 minutos, sobre a mentoria dele como negócio: vendas, back-office e time. No Painel, o time abre a ficha do aluno: etapa de 1 a 5, o grupo que mais dói, pontos de atenção, roteiro da conversa de 1 hora e soluções a apresentar. Versão de validação: ainda não grava no banco.',
+      days: [], acaoCS: [], anexos: [],
+      _coverUrl: 'assets/img/capas/v2/capa-diagnostico-mentoria.png',
+      _sectionId: 'gamificacao-ao-vivo',
+      _displayOrder: ordem + 1,
+      _updatedAt: null, _updatedByName: '',
+      externalUrl: 'https://bubusiness-pce.github.io/pce-t14-homolog/diagnostico-mentoria-painel.html'
+    };
+  }
   if (state['gamificacao-ao-vivo-arquetipos']) return state;
   state['gamificacao-ao-vivo-arquetipos'] = {
     tag: 'Teste · Arquétipos',
