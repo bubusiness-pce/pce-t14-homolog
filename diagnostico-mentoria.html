@@ -516,6 +516,24 @@
   @media (max-width: 639px) { .esteira { margin-left: -8px; margin-right: -8px; } }
   @media (max-width: 399px) { .esteira { margin-left: -12px; margin-right: -12px; } .no-nome { letter-spacing: -0.01em; padding: 0; } }
 
+  /* Baixar a devolutiva em PDF (só quando a devolutiva aparece) */
+  .pdf-bloco { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+  .pdf-bloco .btn-contorno { width: 100%; }
+  .pdf-bloco .btn-contorno:disabled { opacity: 0.45; cursor: not-allowed; }
+  .pdf-seta { width: 16px; height: 16px; flex-shrink: 0; }
+  .pdf-prog { display: flex; flex-direction: column; gap: 8px; }
+  .pdf-etapa { margin: 0; font-size: 14px; line-height: 1.45; color: var(--v3-ivory); }
+  .pdf-prog .barra-envio { gap: 12px; }
+  .pdf-prog .trilho { height: 4px; }
+  .pdf-prog .pct { font-size: 13px; min-width: 2.8em; }
+  .pdf-msg { margin: 0; font-size: 14px; line-height: 1.5; color: var(--v3-muted); }
+  .pdf-msg.erro-pdf { color: var(--v3-gold-strong); }
+  .pdf-interno { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--v3-line-2); border-radius: 10px; background: var(--v3-surface); }
+  .pdf-interno p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--v3-body); }
+  .pdf-link { font-size: 14px; line-height: 1.45; color: var(--v3-gold); word-break: break-all; }
+  .pdf-interno .btn-texto { align-self: flex-start; margin-left: -0.5rem; }
+  @media (min-width: 640px) { .pdf-bloco .btn-contorno { width: auto; align-self: flex-start; } }
+
   /* Área só da validação, no fim */
   .area-validacao { margin-top: 16px; padding-top: 24px; border-top: 1px solid var(--v3-line); display: flex; flex-direction: column; gap: 14px; }
   .area-validacao .rotulo-validacao { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--v3-muted-2); }
@@ -579,6 +597,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="diagnostico-mentoria-motor.js"></script>
 <script src="diagnostico-mentoria-devolutiva.js"></script>
+<script src="diagnostico-mentoria-pdf.js"></script>
 <script>
 // validação: aberta do disco ou com ?validacao=1 no endereço; nos outros casos, produção
 const MODO = (location.protocol === 'file:' || new URLSearchParams(location.search).get('validacao') === '1') ? 'validacao' : 'producao';
@@ -1200,6 +1219,7 @@ function htmlDevolutiva() {
   const pontos = (dv.pontos || []).filter(Boolean);
   let h = '<section class="devolutiva" aria-labelledby="dv-titulo">' +
     '<h2 class="v3-title dv-titulo" id="dv-titulo">' + esc(dv.titulo) + '</h2>' +
+    htmlBotaoPdf('topo') +
     secao('01', 'Onde você está', esteira(dv.etapa) +
       '<p class="dv-etapa">Etapa ' + dv.etapa + ' de 5 · ' + esc(dv.etapaNome) + '</p>' +
       '<p class="dv-texto">' + esc(dv.ondeEsta) + '</p>') +
@@ -1209,7 +1229,131 @@ function htmlDevolutiva() {
     h += '<div class="dv-discretas">' + (dv.encaminhado ? '<p>' + esc(dv.encaminhado) + '</p>' : '') + (dv.prioridade ? '<p>' + esc(dv.prioridade) + '</p>' : '') + '</div>';
   }
   if (dv.fecho) h += '<div class="dv-fecho">' + esc(dv.fecho) + '</div>';
+  h += htmlBotaoPdf('fim');
   return h + '</section>';
+}
+
+/* ---------- PDF da devolutiva: nada aqui toca na gravação da ficha ---------- */
+const PDF_ETAPAS = ['Preparando o gerador', 'Montando a página', 'Baixando o arquivo'];
+const BAIXAR_SVG = '<svg class="pdf-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"/><path d="m6 11 6 6 6-6"/><path d="M5 20h14"/></svg>';
+let pdfTrabalho = null; // { onde, raf, pct, alvo, inicio, etapa }
+function htmlBotaoPdf(onde) {
+  if (!window.DEM_PDF) return '';
+  return '<div class="pdf-bloco" data-pdf="' + onde + '">' +
+    '<button type="button" class="btn-contorno pdf-botao">Baixar devolutiva em PDF ' + BAIXAR_SVG + '</button>' +
+    '<div class="pdf-prog" hidden>' +
+      '<p class="pdf-etapa" aria-live="polite">' + PDF_ETAPAS[0] + '</p>' +
+      '<div class="barra-envio"><div class="trilho" role="progressbar" aria-label="Geração do PDF" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><span class="pct">0%</span></div>' +
+    '</div>' +
+    '<p class="pdf-msg" role="status" hidden></p>' +
+    '<div class="pdf-interno" hidden></div>' +
+    '</div>';
+}
+function pintarPdf(bloco, pct) {
+  const p = Math.round(pct);
+  bloco.querySelector('.trilho > span').style.width = pct + '%';
+  bloco.querySelector('.pct').textContent = p + '%';
+  bloco.querySelector('.trilho').setAttribute('aria-valuenow', String(p));
+  const etapa = PDF_ETAPAS[pdfTrabalho ? pdfTrabalho.etapa : 0];
+  const el = bloco.querySelector('.pdf-etapa');
+  if (el.textContent !== etapa) el.textContent = etapa;
+}
+function passoPdf(agora) {
+  const w = pdfTrabalho;
+  if (!w || w.fechado) return;
+  // o gerador avisa 8, 40 e 55 a 95; entre um aviso e outro a barra anda devagar, sem passar de 96%
+  const teto = [36, 52, 96][w.etapa];
+  const creep = w.base + (teto - w.base) * (1 - Math.exp(-(agora - w.desde) / 2500));
+  const alvo = Math.min(96, Math.max(w.alvo, creep));
+  w.pct = Math.max(w.pct, w.pct + (alvo - w.pct) * 0.18);
+  pintarPdf(w.bloco, w.pct);
+  w.raf = requestAnimationFrame(passoPdf);
+}
+function avisoPdf(texto, pct) {
+  const w = pdfTrabalho;
+  if (!w || w.fechado || typeof pct !== 'number') return;
+  const etapa = pct >= 55 ? 2 : pct >= 40 ? 1 : 0;
+  if (etapa > w.etapa) { w.etapa = etapa; w.base = w.pct; w.desde = performance.now(); }
+  w.alvo = Math.min(96, Math.max(w.alvo, pct));
+}
+function blocosPdf() { return document.querySelectorAll('.pdf-bloco'); }
+function linkDaPagina() {
+  const u = new URL(location.href);
+  u.hash = '';
+  return u.href;
+}
+function baixarPdf(bloco) {
+  if (pdfTrabalho) return; // clique duplo, ou o outro botão durante a geração: uma vez só
+  blocosPdf().forEach(function (b) {
+    b.querySelector('.pdf-msg').hidden = true;
+    b.querySelector('.pdf-interno').hidden = true;
+  });
+  let interno = false;
+  try { interno = !!(window.DEM_PDF && DEM_PDF.navegadorInterno()); } catch (e) { interno = false; }
+  if (interno) {
+    const caixa = bloco.querySelector('.pdf-interno');
+    const link = linkDaPagina();
+    caixa.innerHTML = '<p>Para baixar o PDF, abra este link no navegador do celular.</p>' +
+      '<a class="pdf-link" href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(link) + '</a>' +
+      '<button type="button" class="btn-texto pdf-copiar">Copiar link</button>';
+    caixa.hidden = false;
+    caixa.querySelector('.pdf-copiar').addEventListener('click', function (e) { copiarLink(link, e.currentTarget); });
+    return;
+  }
+  pdfTrabalho = { bloco: bloco, pct: 0, alvo: 0, etapa: 0, base: 0, desde: performance.now(), raf: 0, fechado: false };
+  blocosPdf().forEach(function (b) { b.querySelector('.pdf-botao').disabled = true; });
+  const prog = bloco.querySelector('.pdf-prog');
+  prog.hidden = false;
+  pintarPdf(bloco, 0);
+  pdfTrabalho.raf = requestAnimationFrame(passoPdf);
+  let promessa;
+  try {
+    promessa = Promise.resolve(DEM_PDF.baixar(respostasDoCaminho(), E.contato.nome, { tema: 'claro', aviso: avisoPdf }));
+  } catch (e) { promessa = Promise.reject(e); }
+  promessa.then(function () { fecharPdf(true); }, function () { fecharPdf(false); });
+}
+function fecharPdf(deuCerto) {
+  const w = pdfTrabalho;
+  if (!w) return;
+  w.fechado = true;
+  cancelAnimationFrame(w.raf);
+  const terminar = function () {
+    if (!document.body.contains(w.bloco)) { pdfTrabalho = null; return; }
+    w.bloco.querySelector('.pdf-prog').hidden = true;
+    const msg = w.bloco.querySelector('.pdf-msg');
+    msg.textContent = deuCerto ? 'PDF baixado.' : 'Não conseguimos gerar o PDF. Tente de novo.';
+    msg.classList.toggle('erro-pdf', !deuCerto);
+    msg.hidden = false;
+    blocosPdf().forEach(function (b) { b.querySelector('.pdf-botao').disabled = false; });
+    pdfTrabalho = null;
+  };
+  if (deuCerto) {
+    pdfTrabalho.etapa = 2;
+    pintarPdf(w.bloco, 100);
+    setTimeout(terminar, 450);
+  } else {
+    terminar();
+  }
+}
+function copiarLink(link, botao) {
+  const feito = function () { botao.textContent = 'Link copiado'; };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(feito, function () { if (copiarAntigo(link)) feito(); });
+      return;
+    }
+  } catch (e) { /* segue para o jeito antigo */ }
+  if (copiarAntigo(link)) feito();
+}
+function copiarAntigo(link) {
+  try {
+    const t = document.createElement('textarea');
+    t.value = link; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(t); t.select();
+    const ok = document.execCommand('copy');
+    t.remove();
+    return ok;
+  } catch (e) { return false; }
 }
 
 function telaFim() {
@@ -1295,6 +1439,9 @@ function ligarTela() {
     });
     iniciarEnvio(GANCHO_CONGELAR);
   } else if (E.tela === 'fim') {
+    blocosPdf().forEach(function (b) {
+      b.querySelector('.pdf-botao').addEventListener('click', function () { baixarPdf(b); });
+    });
     const ver = $('#ver-ficha');
     if (ver) ver.addEventListener('click', function () {
       const w = window.open('diagnostico-mentoria-painel.html#ultima', '_blank', 'noopener');

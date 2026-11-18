@@ -901,6 +901,21 @@ html.com-telao, html.com-telao body { overflow: hidden; }
 @media (hover: hover) { .dev-ver:hover { color: var(--v3-gold-hover); } }
 @media (max-width: 639px) { .dev-acoes .botao-sec { width: 100%; } }
 #dev-aviso, #dev-nota { margin: 0; }
+/* Ficha: Voltar e devolutiva em PDF */
+.ficha-barra { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 20px; margin-bottom: 12px; }
+.ficha-barra .voltar { margin-bottom: 0; }
+.ficha-barra-fim { margin: 36px 0 0; padding-top: 18px; border-top: 1px solid var(--v3-line); }
+.ficha-barra-fim .voltar-fim { margin-top: 0; }
+.pdf-acao { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 480px; text-align: right; }
+.pdf-acao .pdf-apoio, .pdf-acao .aviso { margin: 0; font-size: 13px; }
+.pdf-acao .espera { width: 100%; min-width: 260px; text-align: left; }
+.botao-pdf:disabled { opacity: 0.5; cursor: not-allowed; }
+.pdf-enche { animation: none; transition: width 0.4s var(--v3-ease); }
+@media (max-width: 639px) {
+  .ficha-barra { flex-direction: column; align-items: stretch; }
+  .pdf-acao { align-items: stretch; max-width: none; text-align: left; }
+  .pdf-acao .espera { min-width: 0; }
+}
 /* Produção: espera, atualizar, aviso, lista vazia, excluir */
 .link-card {
   display: flex;
@@ -1194,9 +1209,24 @@ html.com-telao, html.com-telao body { overflow: hidden; }
   </section>
 
   <section id="vista-ficha" class="conteudo" hidden aria-label="Ficha do aluno">
-    <button type="button" class="v3-back voltar" data-acao="voltar"><span aria-hidden="true">&larr;</span> Voltar para a lista</button>
+    <div class="ficha-barra">
+      <button type="button" class="v3-back voltar" data-acao="voltar"><span aria-hidden="true">&larr;</span> Voltar para a lista</button>
+      <div class="pdf-acao">
+        <button type="button" class="botao-sec botao-pdf" data-acao="pdf" disabled>Baixar devolutiva do aluno em PDF</button>
+        <p class="v3-hint pdf-apoio">É o mesmo PDF que o aluno baixa quando a devolutiva está ligada.</p>
+        <div class="espera pdf-espera" role="status" hidden></div>
+        <p class="aviso pdf-aviso" role="status" hidden></p>
+      </div>
+    </div>
     <article class="ficha" id="ficha" tabindex="-1"></article>
-    <button type="button" class="v3-back voltar voltar-fim" data-acao="voltar"><span aria-hidden="true">&larr;</span> Voltar para a lista</button>
+    <div class="ficha-barra ficha-barra-fim">
+      <button type="button" class="v3-back voltar" data-acao="voltar"><span aria-hidden="true">&larr;</span> Voltar para a lista</button>
+      <div class="pdf-acao">
+        <button type="button" class="botao-sec botao-pdf" data-acao="pdf" disabled>Baixar devolutiva do aluno em PDF</button>
+        <div class="espera pdf-espera" role="status" hidden></div>
+        <p class="aviso pdf-aviso" role="status" hidden></p>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -1206,6 +1236,8 @@ html.com-telao, html.com-telao body { overflow: hidden; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="diagnostico-mentoria-qr.js"></script>
 <script src="diagnostico-mentoria-motor.js"></script>
+<script src="diagnostico-mentoria-devolutiva.js"></script>
+<script src="diagnostico-mentoria-pdf.js"></script>
 <script>
 'use strict';
 /* Gancho de teste: só vale abrindo do disco (file:). ?simular= liga a produção com o banco simulado. */
@@ -1664,6 +1696,10 @@ function respostasCompletas(respostas) {
 }
 
 function desenharFicha() {
+  desenharFichaConteudo();
+  atualizarPDF();
+}
+function desenharFichaConteudo() {
   const alvo = $('ficha');
   const f = achar(estado.aberta);
   if (!f) { alvo.innerHTML = '<p class="vazio">Esta ficha não está mais na lista.</p>'; return; }
@@ -1753,6 +1789,58 @@ function abrirFicha(f) {
   }).then(function () {
     f.pedindo = false;
     if (estado.liberado && estado.vista === 'ficha' && estado.aberta === f.chave) desenharFicha();
+  });
+}
+
+/* ---------- devolutiva do aluno em PDF (o mesmo PDF que o aluno baixa), na ficha aberta ---------- */
+const PDF_ETAPAS = ['Preparando o gerador', 'Montando a página', 'Baixando o arquivo'];
+const pdfEstado = { gerando: false, msg: null };    // msg: { chave, texto, ok, caixa }
+function devolutivaPossivel(f) {
+  try {
+    return !!(f && f.respostas && MOTOR.completo(f.respostas) && window.DEM_DEVOLUTIVA && DEM_DEVOLUTIVA.montar(f.respostas, f.nome));
+  } catch (e) { return false; }
+}
+function etapaPDF(el, pct) {
+  const n = pct >= 55 ? 3 : pct >= 40 ? 2 : 1;
+  el.innerHTML = '<div class="espera-trilho"><div class="espera-enche pdf-enche" style="width:' + Math.max(4, Math.min(96, pct)) + '%"></div></div>' +
+    '<p class="espera-txt">Etapa ' + n + ' de 3 · ' + PDF_ETAPAS[n - 1] + '</p>';
+  el.hidden = false;
+}
+function atualizarPDF() {
+  const f = achar(estado.aberta);
+  const carregando = !f || (f.origem === 'banco' && !f.carregada);
+  const pode = !carregando && devolutivaPossivel(f);
+  if (pdfEstado.msg && (!f || pdfEstado.msg.chave !== f.chave)) pdfEstado.msg = null;
+  document.querySelectorAll('#vista-ficha .pdf-acao').forEach(function (caixa, i) {
+    caixa.querySelector('.botao-pdf').disabled = pdfEstado.gerando || !pode;
+    const av = caixa.querySelector('.pdf-aviso');
+    let texto = '', ok = false;
+    if (pdfEstado.msg && pdfEstado.msg.caixa === caixa) { texto = pdfEstado.msg.texto; ok = pdfEstado.msg.ok; }
+    else if (!carregando && !pode && i === 0) texto = 'Respostas incompletas: não dá para gerar a devolutiva.';
+    av.textContent = texto;
+    av.className = 'aviso pdf-aviso' + (ok ? ' aviso-ok' : '');
+    av.hidden = !texto;
+  });
+}
+function gerarPDF(btn) {
+  const f = achar(estado.aberta);
+  if (pdfEstado.gerando || !devolutivaPossivel(f)) return;        // clique duplo gera uma vez só
+  const caixa = btn.closest('.pdf-acao'), esp = caixa.querySelector('.pdf-espera');
+  pdfEstado.gerando = true;
+  pdfEstado.msg = null;
+  atualizarPDF();
+  etapaPDF(esp, 4);
+  Promise.resolve().then(function () {
+    if (!window.DEM_PDF) throw new Error('O gerador de PDF não carregou.');
+    return DEM_PDF.baixar(f.respostas, f.nome, { tema: 'claro', aviso: function (txt, pct) { if (pct < 100) etapaPDF(esp, pct); } });
+  }).then(function () {
+    pdfEstado.msg = { chave: f.chave, texto: 'PDF baixado.', ok: true, caixa: caixa };
+  }, function () {
+    pdfEstado.msg = { chave: f.chave, texto: 'Não conseguimos gerar o PDF. Tente de novo.', ok: false, caixa: caixa };
+  }).then(function () {
+    pdfEstado.gerando = false;
+    esp.hidden = true; esp.innerHTML = '';
+    atualizarPDF();
   });
 }
 
@@ -2226,6 +2314,7 @@ document.addEventListener('click', function (e) {
   if (!b || b.disabled) return;
   const acao = b.getAttribute('data-acao');
   if (acao === 'voltar') voltarParaLista();
+  else if (acao === 'pdf') gerarPDF(b);
   else if (acao === 'pedir-excluir') { estado.confirmar = estado.aberta; desenharExcluir(); }
   else if (acao === 'cancelar-excluir') { estado.confirmar = null; desenharExcluir(); }
   else if (acao === 'confirmar-excluir') excluir();
