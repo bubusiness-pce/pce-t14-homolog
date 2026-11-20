@@ -1161,7 +1161,7 @@ function telaRecebe(){
       document.getElementById('ou-ev').hidden=true; document.getElementById('ou-ev-e').textContent=''; s.eventoDias=parseInt(v,10); pinta();
     };
   });
-  ligarOutro('ou-ev',function(n){ if(!(n>=1&&n<=10&&n===Math.floor(n))) return 'Digite os dias de evento, de 1 a 10.'; s.eventoDias=n; return ''; },pinta);
+  if(document.getElementById('ou-ev')) ligarOutro('ou-ev',function(n){ if(!(n>=1&&n<=10&&n===Math.floor(n))) return 'Digite os dias de evento, de 1 a 10.'; s.eventoDias=n; return ''; },pinta);
   var inp=document.getElementById('rc-livro');
   if(inp) inp.addEventListener('input',function(){ document.getElementById('e-livro').textContent=''; var raw=inp.value.trim(), n=num(raw); if(raw!==''&&n>=0&&n<=5000) s.livroCusto=n; });
   document.getElementById('b-seguir').onclick=function(){
