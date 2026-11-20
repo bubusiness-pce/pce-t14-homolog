@@ -700,7 +700,7 @@ function proximoNivel(c){
 function fraseAutoridade(){
   var f=s.fatos, m=(MERCADOS[s.mercado]||MERCADOS.outro).fr, partes=[];
   var anos = f.anos===0?'Com mais de 20 anos': f.anos===1?'Com mais de 10 anos': null;
-  var abre = anos? anos+(s.mercado&&s.mercado!=='outro'&&s.mercado!=='financas'?' em '+m:' de mercado'):'Na '+m;
+  var abre = anos? anos+(s.mercado&&s.mercado!=='outro'&&s.mercado!=='financas'?' em '+m:' de mercado'):({varejo:'No',agro:'No',servicos:'Em',humano:'Em'}[s.mercado]||'Na')+' '+m;
   if(f.clientes===0) partes.push('já levei resultado comprovado a mais de 20 clientes');
   else if(f.clientes===1) partes.push('tenho clientes com resultado comprovado');
   if(f.metodo===0) partes.push('aplico um método próprio');
@@ -1480,7 +1480,7 @@ function desenharParceirosRes(){
   box.querySelectorAll('input[data-pid]').forEach(function(inp){ inp.addEventListener('input',function(){ var id=inp.getAttribute('data-pid'), v=num(inp.value); if(id.charAt(0)==='o'){ var oo=s.outros[+id.slice(1)]; oo.valor=v; if(oo.pacote==='livro') s.livroCusto=v; } else if(s.sel[id]) s.sel[id].valor=v; atualizar(); }); });
 }
 /* As seções numeradas seguem a ordem na tela; a da turma fundadora some para quem já vendeu e a numeração fecha. */
-function renumerar(){ var i=0; app.querySelectorAll('.tela.cab > section.sec').forEach(function(sc){ if(sc.hidden) return; i++; var e=sc.querySelector('.sec-n'); if(e) e.textContent='0'+i; }); }
+function renumerar(){ var i=0; app.querySelectorAll('.tela.cab > section.sec').forEach(function(sc){ if(sc.hidden) return; i++; var e=sc.querySelector('.sec-n'); if(e) e.textContent=(i<10?'0':'')+i; }); }
 function atualizar(){
   var c=calcular(); window.__ultimo=c;
   var P=c.cobra>0?c.cobra:0;
@@ -1488,7 +1488,7 @@ function atualizar(){
   document.getElementById('r-regua').innerHTML=htmlRegua(c,P);
   document.getElementById('r-leitura').textContent=textoLeitura(c);
   document.getElementById('r-subir').innerHTML=htmlSubir(c);
-  document.getElementById('r-hoje').textContent= P>0 ? (c.motor>=9 ? 'O que você já cobra: '+brl(P)+' · sugerido parte dele + 10%. O preço sugerido é '+brl(c.vit)+' '+unidadeCliente(c)+'.' : 'Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'. O preço sugerido é '+brl(c.vit)+'.') : 'Você ainda não vendeu a mentoria. O preço sugerido serve para começar.';
+  document.getElementById('r-hoje').textContent= P>0 ? (c.motor>=9 ? 'O que você já cobra: '+brl(P)+(c.ancora?' · sugerido parte dele + 10%':'')+'. O preço sugerido é '+brl(c.vit)+' '+unidadeCliente(c)+'.' : 'Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'. O preço sugerido é '+brl(c.vit)+'.') : 'Você ainda não vendeu a mentoria. O preço sugerido serve para começar.';
   var pt=document.getElementById('r-ptot'); if(pt) pt.textContent=brl(c.Cp);
   var ptt=document.getElementById('r-ptot-t'); if(ptt) ptt.textContent=brl(c.Ct);
   var rf=document.getElementById('r-fund'); if(rf){ var hf=htmlFundadora(c); rf.innerHTML=hf; document.getElementById('s-fund').hidden=!hf; renumerar(); }
@@ -1506,7 +1506,7 @@ function atualizar(){
 function htmlPapel(){
   var c=calcular(), P=c.cobra>0?c.cobra:0, g=c.g, hoje=new Date().toLocaleDateString('pt-BR'), k=0;
   var band='<div class="band"><div class="e">Mentor de Líderes · devolutiva de preço</div><h1>'+esc(prodNome())+'</h1><p>'+(s.nome?esc(s.nome)+' · ':'')+esc(PRODUTOS[s.produto].t)+' · '+esc(MERCADOS[s.mercado].t)+' · vendida para '+esc(COMPRADORES[s.comprador].t.toLowerCase())+(g&&legado()?' · turma de '+c.N:'')+'</p></div>';
-  function sh(t){ k++; return '<div class="ps2"><b>0'+k+'</b><span>'+t+'</span></div>'; }
+  function sh(t){ k++; return '<div class="ps2"><b>'+(k<10?'0':'')+k+'</b><span>'+t+'</span></div>'; }
   var fr=fraseAutoridade(), B=[];
   B.push(sh('Seu preço')+htmlPreco(c)+htmlPacote(true));
   var hf=htmlFundadora(c); if(hf) B.push(sh('Como lançar: turma fundadora')+hf);
@@ -1515,7 +1515,7 @@ function htmlPapel(){
   if(fr) B.push(sh('Sua frase de autoridade')+'<p class="lt" style="border-left:3px solid #8C6A2B;padding-left:10px;font-style:italic;margin-top:0">'+esc(fr)+'</p>');
   B.push(sh('Para subir de nível')+htmlSubir(c));
   B.push(sh('Onde o seu preço cai no mercado')+'<div class="rg">'+htmlRegua(c,P)+'</div><p class="lt">'+esc(textoLeitura(c))+'</p>');
-  if(c.itens.length) B.push(sh('Custos do pacote')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+'<tr class="t"><td>Total dos custos do pacote</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr></table>');
+  if(c.itens.length) B.push(sh('Custos do pacote')+'<table><tr><th>Serviço</th><th>Média de mercado</th><th class="r">Valor usado</th></tr>'+c.itens.map(function(p){ var d=p.ref; return '<tr><td>'+esc(p.nome)+'<small>'+(d?'fonte: '+esc(d.fonte)+' · confiança '+d.conf:'informado por você')+'</small></td><td>'+(d?brl(d.med)+' '+unTxt(d.un):'sem média')+'</td><td class="r">'+brl(p.valor)+(p.qtd>1?' × '+p.qtd:'')+'</td></tr>'; }).join('')+(g&&!legado()?'<tr class="t"><td>Custos da turma</td><td></td><td class="r">'+brl(c.Ct)+'</td></tr><tr class="t"><td>Custos por participante</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr>':'<tr class="t"><td>Total dos custos do pacote</td><td></td><td class="r">'+brl(c.Cp)+'</td></tr>')+'</table>');
   var linhas=legado()?[['Régua de quem compra igual a você',faixaTxt(c.regua[0],c.regua[1])],['Seu nível ('+c.nv.n.toLowerCase()+'): quem está nele cobra por volta de',brl(c.pNivel)],['Custo de entregar: '+(c.Cp>0?'custos do pacote + ':'')+hTxt(c.H)+' × '+brl(c.hora)+(g?' ÷ '+c.N:''),brl(c.Cp+c.T)],['Com lucro, ÷ 0,77 (imposto 15%, comissão 7%, cobrança 1%)',brl(c.custoLucro)],['O maior dos dois',brl(c.sug)]]:linhasContaV8(c).map(function(r){ return [r[0]+(r[1]?': '+r[1]:''),r[2]]; });
   B.push(sh('Como chegamos ao preço')+linhas.map(function(r,i){return '<div class="pp"><span class="i">'+(i+1)+'</span><span>'+r[0]+'</span><span class="v">'+r[1]+'</span></div>';}).join('')+'<div class="pp f"><span class="i">'+(c.motor>=9?linhas.length+1:6)+'</span><span>Arredondado para vender</span><span class="v">'+brl(c.vit)+'</span></div><p class="lt">'+(legado()?'Mínimo, só o custo: '+brl(c.piso):'Mínimo: '+brl(c.pisoR)+(c.pisoAncora?', o que você já cobra':(c.g||c.pisoR<=c.pisoFaixaR?', o piso da faixa':', o custo de entregar, sem lucro')))+'. Hora pelo mercado no seu nível: '+brl(c.horaM)+'.'+(P>0?' Hoje você cobra '+brl(P)+' '+unidadeCliente(c)+'.':'')+'</p>');
   B.push(sh('Cuidados')+'<ul>'+listaCuidados().map(function(x){return '<li>'+x.replace(/<small>\s*/,' <span style="color:#6B7280">(').replace('</small>',')</span>')+'</li>';}).join('')+'</ul>');
